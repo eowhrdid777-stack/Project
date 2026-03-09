@@ -1,92 +1,65 @@
-"""Global configuration for the memristor-SNN project.
+#----------------------device_model---------------------
 
-Only project-wide settings are kept here.
-Local temporary variables should stay inside each module.
-"""
+# -------------------------------
+# Device conductance range
+# -------------------------------
+G_MIN = 1e-6
+G_MAX = 100e-6
+G_INIT = 30e-6
 
-# =========================
-# Random / reproducibility
-# =========================
+# -------------------------------
+# Pulse response
+# -------------------------------
+# 1 pulse당 기본 변화량
+G_POT_STEP = 1.2e-6
+G_DEP_STEP = 1.2e-6
+
+# 1.0이면 거의 linear
+# 1.2 ~ 1.5면 약한 soft-bound
+# 2.0 이상이면 강한 비선형
+G_POT_BETA = 1.2
+G_DEP_BETA = 1.2
+
+# pot/dep asymmetry용 추가 스케일
+POT_SCALE = 1.0
+DEP_SCALE = 1.0
+
+# -------------------------------
+# D2D / C2C variation on step size
+# -------------------------------
+ENABLE_D2D_STEP_VARIATION = True
+CV_D2D_STEP = 0.05
+
+ENABLE_C2C_STEP_NOISE = True
+CV_C2C_STEP = 0.02
+
+# -------------------------------
+# Retention
+# -------------------------------
+ENABLE_RETENTION = True
+RETENTION_GAMMA = 0.0
+G_RCP = G_INIT
+
+# -------------------------------
+# Random seed
+# -------------------------------
 SEED = 42
 
-# =========================
-# Environment (placeholder)
-# =========================
-MAP_H = 12
-MAP_W = 12
-N_SURVIVORS = 3
-MAX_STEPS = 300
+# ------------------------conductance_modulation--------------------------------
 
-# =========================
-# Sensor / encoding
-# =========================
-N_DISTANCE_SENSORS = 3
-SENSOR_LEVELS = 5
-USE_DELTA_SENSOR = True
+# -------------------------------------------------
+# Conductance modulation / programming controller
+# -------------------------------------------------
 
-# Example input/output sizes
-N_INPUT = 30
-N_HIDDEN = 32
-N_OUTPUT = 5
+# 이 값을 넘으면 recenter 시작
+RECENTER_TRIGGER_FRACTION = 0.90
 
-# =========================
-# Differential memristor synapse
-# =========================
-USE_DIFFERENTIAL = True
+# recenter 후 높은 쪽 conductance를 대략 어디까지 내릴지
+# 예: 0.65 * G_MAX 정도
+RECENTER_TARGET_FRACTION = 0.65
 
-# Crossbar shape for a single layer (example default)
-DEVICE_ROWS = 4
-DEVICE_COLS = 3
+# target 도달 판정 허용오차
+PROGRAM_TOLERANCE = 1e-6
 
-# Conductance range [S]
-G_MIN = 1e-3
-G_MAX = 10e-3
-G_INIT = 5e-3
-
-# Pulse-count model
-N_PULSE_MIN = 0
-N_PULSE_MAX = 200
-N_PULSE_INIT = 70
-
-# Monotonic potentiation curve:
-# G(n) = G_0 + P_fast*(1-exp(-p_fast*n)) + P_slow*(1-exp(-p_slow*n))
-# We solve P_slow internally so that G(N_PULSE_MAX) ~= G_MAX.
-P_FAST_AMP = 1e-3
-P_FAST_RATE = 0.05
-P_SLOW_RATE = 0.005
-
-# Mapping from abstract learning delta -> integer pulse count increment
-# n_step = ceil(abs(delta_w) * PULSE_SCALE)
-PULSE_SCALE = 4.0
-
-# Optional clipping for a single update event
-MAX_PULSE_STEP = 5
-
-# =========================
-# Read noise / variation
-# Start with all-zero for ideal behavior.
-# Turn these on later only after the full system works.
-# =========================
-ENABLE_D2D = False
-ENABLE_C2C = False
-READ_NOISE_STD = 0.2e-4   # absolute std [S]
-CV_D2D = 0.05           # 0.05 means 5%
-CV_C2C = 0.05           
-
-# Pair normalization / soft reset
-ENABLE_PAIR_RESET = True
-PAIR_RESET_THRESHOLD = 0.9     # Gmax > 85%
-PAIR_RESET_STEP = 30            # full range의 10%만큼 낮춤
-
-# =========================
-# Neuron (placeholder)
-# =========================
-
-
-# =========================
-# Learning (placeholder)
-# =========================
-
-# =========================
-# Simulation (placeholder)
-# =========================
+# verify-after-write 최대 반복 횟수
+PROGRAM_MAX_TRIALS = 200
