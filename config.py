@@ -24,6 +24,11 @@ G_DEP_BETA = 1.2
 POT_SCALE = 1.0
 DEP_SCALE = 1.0
 
+# ----------D2D variation on initial state----------
+ENABLE_D2D_INIT_VARIATION = True
+CV_D2D_INIT = 0.05
+INIT_VARIATION_MODE = "lognormal"   # or "normal"
+
 # -------------------------------
 # D2D / C2C variation on step size
 # -------------------------------
@@ -32,7 +37,6 @@ CV_D2D_STEP = 0.05
 
 ENABLE_C2C_STEP_NOISE = True
 CV_C2C_STEP = 0.02
-
 # -------------------------------
 # Retention
 # -------------------------------
@@ -52,14 +56,30 @@ SEED = 42
 # -------------------------------------------------
 
 # 이 값을 넘으면 recenter 시작
-RECENTER_TRIGGER_FRACTION = 0.90
+RECENTER_TRIGGER_FRACTION = 0.85
 
 # recenter 후 높은 쪽 conductance를 대략 어디까지 내릴지
 # 예: 0.65 * G_MAX 정도
-RECENTER_TARGET_FRACTION = 0.65
+RECENTER_TARGET_FRACTION = 0.4
 
 # target 도달 판정 허용오차
 PROGRAM_TOLERANCE = 1e-6
 
 # verify-after-write 최대 반복 횟수
-PROGRAM_MAX_TRIALS = 200
+PROGRAM_MAX_TRIALS = 30
+
+# -------------------------------crossbar--------------------------------------
+READ_VOLTAGE = 0.1
+PROGRAM_VOLTAGE = 1.0
+
+READ_IR_DROP_ALPHA = 0.05
+PROG_IR_DROP_ALPHA = 0.05
+
+ENABLE_READ_NOISE = True
+READ_NOISE_REL_SIGMA = 0.02
+
+ENABLE_READ_DISTURB = True
+READ_DISTURB_STEP = 0.002
+
+ENABLE_SNEAK_PATH = True
+SNEAK_RATIO = 0.001

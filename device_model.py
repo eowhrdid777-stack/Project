@@ -1,3 +1,5 @@
+# 단일 memristor 소자의 내부 conductance 상태 변화 모델링
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,45 +11,28 @@ import config as cfg
 
 PulsePolarity = Literal["pot", "dep"]
 
-
+# conductance 변화 개수 저장
 @dataclass
 class DeviceState:
-    """Internal state of a single memristor-like device.
-
-    This is NOT a read circuit result.
-    It is only the internal conductance state used by higher-level modules.
-    """
     g: float
     pulse_count_pot: int = 0
     pulse_count_dep: int = 0
 
-
+# single memristor device model
 class MemristorDevice:
-    """Single-device conductance modulation model.
-
-    Responsibilities:
-        - hold internal conductance state
-        - update state by pulse application
-        - model nonlinearity / asymmetry / retention / clipping
-
-    Not responsible for:
-        - crossbar read
-        - verify-after-write
-        - target conductance programming
-        - pair balancing logic
-    """
-
     def __init__(self, seed: Optional[int] = cfg.SEED) -> None:
         self.rng = np.random.default_rng(seed)
 
+        # config 값 load
         self.g_min: float = float(cfg.G_MIN)
         self.g_max: float = float(cfg.G_MAX)
         self.g_init: float = float(cfg.G_INIT)
 
-        # Pulse response parameters
+        # Pulse step parameters (pulse 당 기본 conductance 변화량)
         self.g_pot_step: float = float(cfg.G_POT_STEP)
         self.g_dep_step: float = float(cfg.G_DEP_STEP)
 
+        # soft-bound exponential switching parameters
         self.g_pot_beta: float = float(cfg.G_POT_BETA)
         self.g_dep_beta: float = float(cfg.G_DEP_BETA)
 
@@ -62,6 +47,12 @@ class MemristorDevice:
         else:
             self.step_var_factor_pot = 1.0
             self.step_var_factor_dep = 1.0
+
+        # Optional device-to-device variation on initial conductance
+        if bool(getattr(cfg, "ENABLE_D2D_INIT_VARIATION", False)) and float(getattr(cfg, "CV_D2D_INIT", 0.0)) > 0.0:
+            self.init_var_factor = float(self._lognormal_factor(float(getattr(cfg, "CV_D2D_INIT", 0.0))))
+        else:
+            self.init_var_factor = 1.0
 
         self.state = DeviceState(g=self._clip_value(self.g_init))
 
@@ -89,11 +80,7 @@ class MemristorDevice:
     # Pulse response model
     # ------------------------------------------------------------------
     def _pot_delta(self, g: float) -> float:
-        """Conductance increase for one potentiation pulse.
-
-        soft-bound form:
-            delta ~ (1 - x)^beta
-        """
+        # soft-bound form: delta * (1 - x)^beta
         x = self._norm(g)
         delta = (
             self.g_pot_step
@@ -104,11 +91,7 @@ class MemristorDevice:
         return max(0.0, float(delta))
 
     def _dep_delta(self, g: float) -> float:
-        """Conductance decrease for one depression pulse.
-
-        soft-bound form:
-            delta ~ x^beta
-        """
+        # soft-bound form: delta * x^beta
         x = self._norm(g)
         delta = (
             self.g_dep_step
@@ -166,11 +149,7 @@ class MemristorDevice:
     # Retention / relaxation
     # ------------------------------------------------------------------
     def relax(self, dt: float = 1.0) -> None:
-        """Apply retention drift toward the retention convergence point.
-
-        Simple first-order model:
-            g <- g + gamma * dt * (g_rcp - g)
-        """
+        # Simple first-order model: g <- g + gamma * dt * (g_rcp - g)
         if not bool(cfg.ENABLE_RETENTION):
             return
 
@@ -187,19 +166,10 @@ class MemristorDevice:
     # Reset / initialization
     # ------------------------------------------------------------------
     def reset(self, mode: str = "init") -> None:
-        """Reset internal state only.
-
-        mode:
-            init   -> cfg.G_INIT
-            min    -> G_MIN
-            max    -> G_MAX
-            mid    -> midpoint
-            random -> uniform random in [G_MIN, G_MAX]
-        """
         mode = str(mode).lower()
 
         if mode == "init":
-            self.state.g = self._clip_value(self.g_init)
+            self.state.g = self._clip_value(self.g_init * self.init_var_factor)
         elif mode == "min":
             self.state.g = self.g_min
         elif mode == "max":

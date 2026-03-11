@@ -1,3 +1,4 @@
+# 단일 memristor 소자의 내부 conductance 상태 변화 제어
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,36 +8,25 @@ import numpy as np
 import config as cfg
 
 
-Side = Literal["plus", "minus"]
-PulsePolarity = Literal["pot", "dep"]
+Side = Literal["plus", "minus"] # device 종류 구별
+PulsePolarity = Literal["pot", "dep"] # pulse 종류 구별
 
 
 class PairAccessProtocol(Protocol):
-    """Abstract access interface.
+    # device_model.py에서 conductance 상태를 읽기 위한 class로, 실제 구현은 crossbar.py에서 진행
 
-    This module does NOT assume direct device-level read by itself.
-    Instead, it asks an external access layer to:
-        - read a selected differential pair
-        - apply a pulse to one side of that pair
-
-    Later, crossbar.py can implement this same interface.
-    """
-
-    def read_pair(self, pair_id: Hashable) -> Tuple[float, float]:
-        """Return current (g_plus, g_minus) of the selected pair."""
-        ...
+    def read_pair(self, pair_id: Hashable) -> Tuple[float, float]: ...
 
     def apply_pulse(
         self,
         pair_id: Hashable,
         side: Side,
         polarity: PulsePolarity,
-        n_pulses: int = 1,
+        n_pulses: int = 1
     ) -> None:
-        """Apply pulse(s) to one side of the selected pair."""
         ...
 
-
+# 결과를 담는 dataclass 정의
 @dataclass
 class ProgrammingResult:
     success: bool
@@ -47,7 +37,7 @@ class ProgrammingResult:
     g_minus_target: float
     message: str
 
-
+# recenter를 실제로 수행하기 전에 계획을 담는 dataclass 정의
 @dataclass
 class RecenterPlan:
     should_recenter: bool
@@ -60,23 +50,8 @@ class RecenterPlan:
     feasible_full_shift: bool
     message: str
 
-
+# recenter target 계산과 pulse-read-repeat 수행
 class ConductanceModulationController:
-    """Programming / verify-after-write controller for a differential pair.
-
-    Responsibilities:
-        - compute recenter targets
-        - check feasibility
-        - perform pulse-read-repeat loop
-        - keep effective weight approximately preserved while moving both
-          conductances away from saturation
-
-    Not responsible for:
-        - actual crossbar read circuitry
-        - device physics itself
-        - array-level VMM
-    """
-
     def __init__(self, access: PairAccessProtocol) -> None:
         self.access = access
 
@@ -102,21 +77,28 @@ class ConductanceModulationController:
         trigger = self.recenter_trigger_fraction * self.g_max
         return max(g_plus, g_minus) >= trigger
 
+    def _choose_n_pulses(self, error: float, tolerance: float) -> int:
+        ae = abs(error)
+
+        if ae > 40e-6:
+            return 50
+        elif ae > 20e-6:
+            return 40
+        elif ae > 10e-6:
+            return 30
+        elif ae > 4e-6:
+            return 15
+        elif ae > 2e-6:
+            return 5
+        elif ae > tolerance:
+            return 2
+        else:
+            return 0
     # ------------------------------------------------------------------
     # Recenter planning
     # ------------------------------------------------------------------
     def make_recenter_plan(self, pair_id: Hashable) -> RecenterPlan:
-        """Plan a weight-preserving downward shift of both conductances.
-
-        Idea:
-            If one side approaches saturation, try moving BOTH sides downward
-            by the same conductance amount. This preserves weight:
-
-                W = G+ - G-
-
-            If full desired shift is not feasible because the lower side would
-            hit G_MIN first, reduce the shift to the maximum feasible amount.
-        """
+        # 실제로 pulse를 넣지는 않고 현재 상태를 읽어서 recenter가 필요한지 판단하고, 필요하다면 목표 지점 계산
         g_plus, g_minus = self.access.read_pair(pair_id)
         w_before = self._weight(g_plus, g_minus)
 
@@ -175,20 +157,13 @@ class ConductanceModulationController:
     # Generic target programming
     # ------------------------------------------------------------------
     def program_pair_to_targets(
-        self,
-        pair_id: Hashable,
-        g_plus_target: float,
-        g_minus_target: float,
-        max_trials: Optional[int] = None,
-        tolerance: Optional[float] = None,
-    ) -> ProgrammingResult:
-        """Pulse-read-repeat programming to reach pair targets.
-
-        This function supports both upward and downward adjustment.
-        For each side:
-            if current < target - tol: apply pot pulse
-            if current > target + tol: apply dep pulse
-        """
+    self,
+    pair_id,
+    g_plus_target,
+    g_minus_target,
+    max_trials=None,
+    tolerance=None,
+    ):
         g_plus_target = self._clip(float(g_plus_target))
         g_minus_target = self._clip(float(g_minus_target))
 
@@ -198,8 +173,11 @@ class ConductanceModulationController:
         for trial in range(1, max_trials + 1):
             g_plus, g_minus = self.access.read_pair(pair_id)
 
-            done_plus = abs(g_plus - g_plus_target) <= tolerance
-            done_minus = abs(g_minus - g_minus_target) <= tolerance
+            err_plus = g_plus_target - g_plus
+            err_minus = g_minus_target - g_minus
+
+            done_plus = abs(err_plus) <= tolerance
+            done_minus = abs(err_minus) <= tolerance
 
             if done_plus and done_minus:
                 return ProgrammingResult(
@@ -213,16 +191,20 @@ class ConductanceModulationController:
                 )
 
             # plus side
-            if g_plus < g_plus_target - tolerance:
-                self.access.apply_pulse(pair_id, side="plus", polarity="pot", n_pulses=1)
-            elif g_plus > g_plus_target + tolerance:
-                self.access.apply_pulse(pair_id, side="plus", polarity="dep", n_pulses=1)
+            if not done_plus:
+                n_plus = self._choose_n_pulses(err_plus, tolerance)
+                if err_plus > 0:
+                    self.access.apply_pulse(pair_id, side="plus", polarity="pot", n_pulses=n_plus)
+                elif err_plus < 0:
+                    self.access.apply_pulse(pair_id, side="plus", polarity="dep", n_pulses=n_plus)
 
             # minus side
-            if g_minus < g_minus_target - tolerance:
-                self.access.apply_pulse(pair_id, side="minus", polarity="pot", n_pulses=1)
-            elif g_minus > g_minus_target + tolerance:
-                self.access.apply_pulse(pair_id, side="minus", polarity="dep", n_pulses=1)
+            if not done_minus:
+                n_minus = self._choose_n_pulses(err_minus, tolerance)
+                if err_minus > 0:
+                    self.access.apply_pulse(pair_id, side="minus", polarity="pot", n_pulses=n_minus)
+                elif err_minus < 0:
+                    self.access.apply_pulse(pair_id, side="minus", polarity="dep", n_pulses=n_minus)
 
         g_plus_final, g_minus_final = self.access.read_pair(pair_id)
         return ProgrammingResult(
