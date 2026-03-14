@@ -349,23 +349,23 @@ from conductance_modulation import ConductanceModulationController
 
 
 def print_pair_status(cb: DifferentialCrossbar, ctrl: ConductanceModulationController, pair_id):
-    gpt, gmt = cb.read_pair_true(pair_id)
+    gpt, gmt = cb.read_pair_ideal(pair_id)
     gpm, gmm = cb.read_pair(pair_id, noisy=True, disturb=False)
 
     print(f"pair_id = {pair_id}")
-    print(f"  true     : G+ = {gpt:.6e}, G- = {gmt:.6e}, W = {gpt-gmt:.6e}")
+    print(f"  ideal     : G+ = {gpt:.6e}, G- = {gmt:.6e}, W = {gpt-gmt:.6e}")
     print(f"  measured : G+ = {gpm:.6e}, G- = {gmm:.6e}, W = {gpm-gmm:.6e}")
     print(f"  ctrl status = {ctrl.get_pair_status(pair_id)}")
 
 
 def record_history(cb, pair_id, step_idx, hist):
-    gpt, gmt = cb.read_pair_true(pair_id)
+    gpt, gmt = cb.read_pair_ideal(pair_id)
     gpm, gmm = cb.read_pair(pair_id, noisy=True, disturb=False)
 
     hist["step"].append(step_idx)
-    hist["g_plus_true"].append(gpt)
-    hist["g_minus_true"].append(gmt)
-    hist["w_true"].append(gpt - gmt)
+    hist["g_plus_ideal"].append(gpt)
+    hist["g_minus_ideal"].append(gmt)
+    hist["w_ideal"].append(gpt - gmt)
 
     hist["g_plus_meas"].append(gpm)
     hist["g_minus_meas"].append(gmm)
@@ -387,9 +387,9 @@ def main():
 
     hist = {
         "step": [],
-        "g_plus_true": [],
-        "g_minus_true": [],
-        "w_true": [],
+        "g_plus_ideal": [],
+        "g_minus_ideal": [],
+        "w_ideal": [],
         "g_plus_meas": [],
         "g_minus_meas": [],
         "w_meas": [],
@@ -472,8 +472,8 @@ def main():
     # 5) 그래프 1: conductance evolution
     # -------------------------------------------------
     plt.figure(figsize=(10, 4.8))
-    plt.plot(hist["step"], hist["g_plus_true"], label="G+ true")
-    plt.plot(hist["step"], hist["g_minus_true"], label="G- true")
+    plt.plot(hist["step"], hist["g_plus_ideal"], label="G+ ideal")
+    plt.plot(hist["step"], hist["g_minus_ideal"], label="G- ideal")
 
     plt.axvline(recenter_trigger_step, linestyle="--", label="recenter trigger")
     plt.axvline(recenter_after_step, linestyle=":", label="after recenter")
@@ -490,7 +490,7 @@ def main():
     # 6) 그래프 2: differential weight evolution
     # -------------------------------------------------
     plt.figure(figsize=(10, 4.8))
-    plt.plot(hist["step"], hist["w_true"], label="Weight true")
+    plt.plot(hist["step"], hist["w_ideal"], label="Weight ideal")
     plt.plot(hist["step"], hist["w_meas"], label="Weight measured")
 
     plt.axvline(recenter_trigger_step, linestyle="--", label="recenter trigger")

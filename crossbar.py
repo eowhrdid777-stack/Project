@@ -13,29 +13,7 @@ PulsePolarity = Literal["pot", "dep"]
 
 
 class DifferentialCrossbar:
-    """
-    Differential memristor crossbar with physical '+ - + -' column layout.
-
-    Logical synapse:
-        W[i, j] = G_plus[i, j] - G_minus[i, j]
-
-    Physical layout:
-        plus  column of logical j -> physical col = 2*j
-        minus column of logical j -> physical col = 2*j + 1
-
-    Abstraction level:
-        - device state is stored as internal conductance in MemristorDevice
-        - measured read is current-based:
-              I = G * V_eff
-              G_est = I / V_read
-        - simple array-level non-idealities are approximated:
-              IR drop proxy
-              sneak current proxy
-              read noise
-              read disturb
-        - exact nodal analysis / full resistive network solving is NOT included
-    """
-
+    # W[i, j] = G_plus[i, j] - G_minus[i, j]
     def __init__(
         self,
         n_rows: int,
@@ -117,10 +95,7 @@ class DifferentialCrossbar:
     # Position-dependent proxy factors
     # ------------------------------------------------------------------
     def _read_position_factor(self, i: int, phys_col: int) -> float:
-        """
-        Proxy for read IR drop.
-        Farther cells see a weaker effective read voltage.
-        """
+        # factor = 1 − alpha*(row_position + col_position)/2 > 먼 cell일수록 sensing이 약해져 conductance underestimate
         r = i / max(self.n_rows - 1, 1)
         c = phys_col / max(self.n_phys_cols - 1, 1)
 
@@ -128,9 +103,7 @@ class DifferentialCrossbar:
         return max(0.5, float(factor))
 
     def _program_position_factor(self, i: int, phys_col: int) -> float:
-        """
-        Proxy for programming IR drop / write inefficiency.
-        """
+        # factor = 1 − alpha*(row_position + col_position)/2 > 먼 cell일수록 programming이 약해져 conductance change underestimate
         r = i / max(self.n_rows - 1, 1)
         c = phys_col / max(self.n_phys_cols - 1, 1)
 
@@ -140,10 +113,8 @@ class DifferentialCrossbar:
     # ------------------------------------------------------------------
     # Ideal internal state read
     # ------------------------------------------------------------------
-    def read_pair_true(self, pair_id: Hashable) -> Tuple[float, float]:
-        """
-        Return true internal conductances (not sensed values).
-        """
+    def read_pair_ideal(self, pair_id: Hashable) -> Tuple[float, float]:
+        # Return ideal internal conductances (not sensed values).
         i, j = self._parse_pair_id(pair_id)
         jp = self._plus_col(j)
         jm = self._minus_col(j)
@@ -158,39 +129,32 @@ class DifferentialCrossbar:
         phys_col: int,
         noisy: bool = True,
     ) -> float:
-        """
-        Read one cell current using:
-            I = G_true * V_eff
-        with optional read noise and sneak current proxy.
-        """
+        # I = G_true * V_eff with noisy read and optional sneak path proxy.
         dev = self.devices[i, phys_col]
-        g_true = float(dev.g)
+        g_ideal = float(dev.g)
 
         # Effective read voltage after simple IR-drop proxy
         v_eff = self.read_voltage * self._read_position_factor(i, phys_col)
 
         # Ideal selected-cell current
-        i_cell = g_true * v_eff
+        i_cell = g_ideal * v_eff
 
         # Sneak current proxy: add a fraction of current from "background"
         if bool(getattr(cfg, "ENABLE_SNEAK_PATH", False)):
             sneak_ratio = float(getattr(cfg, "SNEAK_RATIO", 0.02))
             # simple proxy: leakage proportional to unused conductance headroom
-            g_leak = max(0.0, self.g_max - g_true)
+            g_leak = max(0.0, self.g_max - g_ideal)
             i_cell += sneak_ratio * g_leak * v_eff
 
         # Read noise on current measurement
         if noisy and bool(getattr(cfg, "ENABLE_READ_NOISE", False)):
             sigma_rel = float(getattr(cfg, "READ_NOISE_REL_SIGMA", 0.02))
-            i_cell *= 1.0 + self.rng.normal(0.0, sigma_rel)
+            i_cell *= 1.0 + self.rng.normal(0.0, sigma_rel) # i_cell *= (1 + normal noise)
 
         return float(max(i_cell, 0.0))
 
     def _apply_read_disturb(self, i: int, phys_col: int) -> None:
-        """
-        Simple read disturb proxy: repeated reads drift conductance toward G_MIN.
-        This is only a compact behavioral approximation.
-        """
+        # Simple read disturb proxy: repeated reads drift conductance toward G_MIN.
         if not bool(getattr(cfg, "ENABLE_READ_DISTURB", False)):
             return
 
@@ -199,7 +163,7 @@ class DifferentialCrossbar:
             return
 
         dev = self.devices[i, phys_col]
-        dev.state.g += disturb_step * (self.g_min - dev.g)
+        dev.state.g += disturb_step * (self.g_min - dev.g) # g ← g + step*(g_min − g)
         dev.state.g = float(np.clip(dev.state.g, self.g_min, self.g_max))
 
     # ------------------------------------------------------------------
@@ -211,14 +175,7 @@ class DifferentialCrossbar:
         noisy: bool = True,
         disturb: bool = True,
     ) -> Tuple[float, float]:
-        """
-        Measured pair read.
-
-        Flow:
-            true G -> read current I = G * V_eff -> estimate G_est = I / V_read
-
-        Returned values are sensed conductance estimates, not true internal states.
-        """
+        # ideal G -> read current I = G * V_eff -> estimate G_est = I / V_read
         i, j = self._parse_pair_id(pair_id)
         jp = self._plus_col(j)
         jm = self._minus_col(j)
@@ -230,7 +187,7 @@ class DifferentialCrossbar:
         g_plus_est = i_plus / max(self.read_voltage, 1e-18)
         g_minus_est = i_minus / max(self.read_voltage, 1e-18)
 
-        # Optional disturb modifies true internal state after the read
+        # Optional disturb modifies ideal internal state after the read
         if disturb:
             self._apply_read_disturb(i, jp)
             self._apply_read_disturb(i, jm)
@@ -247,12 +204,7 @@ class DifferentialCrossbar:
         polarity: PulsePolarity,
         n_pulses: int = 1,
     ) -> None:
-        """
-        Apply pulse(s) to one selected device.
-
-        Array-level write non-ideality is approximated by converting requested
-        pulse count to an effective pulse count via position-dependent factor.
-        """
+        # Apply pulse(s) to one selected device.
         if n_pulses <= 0:
             return
 
@@ -261,7 +213,7 @@ class DifferentialCrossbar:
         dev = self.devices[i, phys_col]
 
         prog_factor = self._program_position_factor(i, phys_col)
-        n_eff = max(1, int(round(n_pulses * prog_factor)))
+        n_eff = max(1, int(round(n_pulses * prog_factor))) # n_eff = n_pulses * position_factor
 
         dev.apply_pulse(polarity=polarity, n_pulses=n_eff)
 
@@ -269,10 +221,7 @@ class DifferentialCrossbar:
     # Array inspection helpers
     # ------------------------------------------------------------------
     def get_conductance_matrices(self) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Return true internal conductance matrices (G_plus, G_minus).
-        Shape: (n_rows, n_cols)
-        """
+        # Return ideal internal conductance matrices (G_plus, G_minus).
         g_plus = np.zeros((self.n_rows, self.n_cols), dtype=np.float64)
         g_minus = np.zeros((self.n_rows, self.n_cols), dtype=np.float64)
 
@@ -289,8 +238,8 @@ class DifferentialCrossbar:
         g_plus, g_minus = self.get_conductance_matrices()
         return g_plus - g_minus
 
-    def get_pair_weight_true(self, pair_id: Hashable) -> float:
-        g_plus, g_minus = self.read_pair_true(pair_id)
+    def get_pair_weight_ideal(self, pair_id: Hashable) -> float:
+        g_plus, g_minus = self.read_pair_ideal(pair_id)
         return float(g_plus - g_minus)
 
     def get_pair_weight_measured(
@@ -314,9 +263,9 @@ class DifferentialCrossbar:
             "pair_id": (i, j),
             "phys_plus_col": jp,
             "phys_minus_col": jm,
-            "g_plus_true": plus_snap.g,
-            "g_minus_true": minus_snap.g,
-            "weight_true": plus_snap.g - minus_snap.g,
+            "g_plus_ideal": plus_snap.g,
+            "g_minus_ideal": minus_snap.g,
+            "weight_ideal": plus_snap.g - minus_snap.g,
             "plus_pulse_count_pot": plus_snap.pulse_count_pot,
             "plus_pulse_count_dep": plus_snap.pulse_count_dep,
             "minus_pulse_count_pot": minus_snap.pulse_count_pot,
@@ -333,16 +282,6 @@ class DifferentialCrossbar:
         noisy: bool = True,
         disturb: bool = False,
     ) -> np.ndarray:
-        """
-        Vector-matrix multiplication.
-
-        measured=False:
-            uses true internal conductances
-
-        measured=True:
-            uses current-based sensed conductance estimate per cell
-            (therefore includes read non-idealities)
-        """
         x = np.asarray(x, dtype=np.float64)
 
         if x.shape != (self.n_rows,):
@@ -350,13 +289,16 @@ class DifferentialCrossbar:
 
         y = np.zeros(self.n_cols, dtype=np.float64)
 
+        # for j:
+        #    for i:
+        #        acc += (G+ − G−)*x[i]
         for j in range(self.n_cols):
             acc = 0.0
             for i in range(self.n_rows):
                 if measured:
                     g_p, g_m = self.read_pair((i, j), noisy=noisy, disturb=disturb)
                 else:
-                    g_p, g_m = self.read_pair_true((i, j))
+                    g_p, g_m = self.read_pair_ideal((i, j))
 
                 acc += (g_p - g_m) * x[i]
 
@@ -421,7 +363,7 @@ if __name__ == "__main__":
         cb.apply_pulse(pair_id, side="plus", polarity="pot", n_pulses=1)
 
     print("\nTrue pair read:")
-    print(cb.read_pair_true(pair_id))
+    print(cb.read_pair_ideal(pair_id))
 
     print("\nMeasured pair read:")
     print(cb.read_pair(pair_id, noisy=True, disturb=False))
