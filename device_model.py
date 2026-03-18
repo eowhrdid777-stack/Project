@@ -1,5 +1,3 @@
-# 단일 memristor 소자의 내부 conductance 상태 변화 모델링
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,249 +9,443 @@ import config as cfg
 
 PulsePolarity = Literal["pot", "dep"]
 
-# conductance 변화 개수 저장
+
 @dataclass
 class DeviceState:
     g: float
-    pulse_count_pot: int = 0
-    pulse_count_dep: int = 0
+    level_idx: int = 0  # 0 = min state, n_levels-1 = max state
 
-# single memristor device model
+
 class MemristorDevice:
-    def __init__(self, seed: Optional[int] = cfg.SEED) -> None:
-        self.rng = np.random.default_rng(seed)
+    """
+    FeTFT paper-based conductance model.
 
-        # config 값 load
-        self.g_min: float = float(cfg.G_MIN)
-        self.g_max: float = float(cfg.G_MAX)
-        self.g_init: float = float(cfg.G_INIT)
+    Key points
+    ----------
+    1) Potentiation / depression follow paper equations.
+    2) D2D is modeled as device-wise conductance-window offset.
+    3) C2C is modeled as cycle-wise conductance-window offset.
+    4) Within one cycle, curve is fixed. (No pulse-to-pulse random jitter)
+    5) Existing config names are kept for compatibility:
+       - ENABLE_D2D_INIT_VARIATION / CV_D2D_INIT
+       - ENABLE_D2D_STEP_VARIATION / CV_D2D_STEP   (ignored by design)
+       - ENABLE_C2C_STEP_NOISE / CV_C2C_STEP       (used as cycle-level variation)
+    """
 
-        # Pulse step parameters (pulse 당 기본 conductance 변화량)
-        self.g_pot_step: float = float(cfg.G_POT_STEP)
-        self.g_dep_step: float = float(cfg.G_DEP_STEP)
+    def __init__(
+        self,
+        seed: Optional[int] = None,
+        device_id: Optional[int] = None,
+        cycle_id: int = 0,
+    ) -> None:
+        if seed is None:
+            seed = int(getattr(cfg, "SEED", 0))
 
-        # soft-bound exponential switching parameters
-        self.g_pot_beta: float = float(cfg.G_POT_BETA)
-        self.g_dep_beta: float = float(cfg.G_DEP_BETA)
+        self.seed = int(seed)
+        self.device_id = 0 if device_id is None else int(device_id)
+        self.cycle_id = int(cycle_id)
 
-        # Optional asymmetry scaling
-        self.pot_scale: float = float(cfg.POT_SCALE)
-        self.dep_scale: float = float(cfg.DEP_SCALE)
+        # reproducible RNG per (device, cycle)
+        base_seed = self.seed + 10007 * self.device_id + 1000003 * self.cycle_id
+        self.rng = np.random.default_rng(base_seed)
 
-        # Optional device-to-device variation on step size
-        if bool(cfg.ENABLE_D2D_STEP_VARIATION) and float(cfg.CV_D2D_STEP) > 0.0:
-            self.step_var_factor_pot = float(self._lognormal_factor(float(cfg.CV_D2D_STEP)))
-            self.step_var_factor_dep = float(self._lognormal_factor(float(cfg.CV_D2D_STEP)))
+        # ------------------------------------------------------------
+        # base params from config
+        # ------------------------------------------------------------
+        self.g_min = float(cfg.G_MIN)
+        self.g_max = float(cfg.G_MAX)
+        self.g_init = float(cfg.G_INIT)
+        self.n_levels = int(cfg.P_MAX)
+
+        self.a_pot = float(cfg.A_POT)
+        self.a_dep = float(cfg.A_DEP)
+
+        # compatibility with your current config names
+        self.enable_d2d = bool(getattr(cfg, "ENABLE_D2D_VARIATION", True))
+        self.cv_d2d = float(getattr(cfg, "CV_D2D", 0.0))
+
+        # current config name says step noise, but here we reinterpret it
+        # as cycle-level variation to match paper intent better
+        self.enable_c2c = bool(getattr(cfg, "ENABLE_C2C_VARIATION", True))
+        self.cv_c2c = float(getattr(cfg, "CV_C2C", 0.0))
+
+        self.enable_retention = bool(getattr(cfg, "ENABLE_RETENTION", False))
+        self.retention_gamma = float(getattr(cfg, "RETENTION_GAMMA", 0.0))
+        self.g_rcp = float(getattr(cfg, "G_RCP", self.g_init))
+
+        # ------------------------------------------------------------
+        # D2D: device-specific offset
+        # ------------------------------------------------------------
+        if self.enable_d2d and self.cv_d2d > 0.0:
+            span = self.g_max - self.g_min
+            sigma_d2d = self.cv_d2d * span
+            self.g_min_dev = float(self.rng.normal(self.g_min, sigma_d2d))
         else:
-            self.step_var_factor_pot = 1.0
-            self.step_var_factor_dep = 1.0
+            self.g_min_dev = float(self.g_min)
 
-        # Optional device-to-device variation on initial conductance
-        if bool(getattr(cfg, "ENABLE_D2D_INIT_VARIATION", False)) and float(getattr(cfg, "CV_D2D_INIT", 0.0)) > 0.0:
-            self.init_var_factor = float(self._lognormal_factor(float(getattr(cfg, "CV_D2D_INIT", 0.0))))
+        self.g_min_dev = max(self.g_min_dev, 1e-9)
+        self.g_offset_dev = self.g_min_dev - self.g_min
+        self.g_max_dev = self.g_max + self.g_offset_dev
+
+        # ------------------------------------------------------------
+        # C2C: cycle-specific offset
+        # ------------------------------------------------------------
+        if self.enable_c2c and self.cv_c2c > 0.0:
+            sigma_c2c = self.cv_c2c * (self.g_max - self.g_min)
+            self.g_offset_cycle = float(self.rng.normal(0.0, sigma_c2c))
         else:
-            self.init_var_factor = 1.0
+            self.g_offset_cycle = 0.0
 
-        self.state = DeviceState(g=self._clip_value(self.g_init))
+        self.g_min_eff = self.g_min_dev + self.g_offset_cycle
+        self.g_max_eff = self.g_max_dev + self.g_offset_cycle
 
-    # ------------------------------------------------------------------
-    # Basic helpers
-    # ------------------------------------------------------------------
+        if self.g_min_eff < 1e-9:
+            shift = 1e-9 - self.g_min_eff
+            self.g_min_eff += shift
+            self.g_max_eff += shift
+
+        if self.g_max_eff <= self.g_min_eff:
+            self.g_max_eff = self.g_min_eff + (self.g_max - self.g_min)
+
+        # ------------------------------------------------------------
+        # build conductance curves
+        # ------------------------------------------------------------
+        self.pot_curve = self._build_pot_curve()
+        self.dep_curve = self._build_dep_curve()
+
+        # state
+        self.state = DeviceState(g=float(self.g_init), level_idx=0)
+        self.reset("init")
+
+    # ------------------------------------------------------------
+    # paper equations
+    # ------------------------------------------------------------
+    def _build_pot_curve(self) -> np.ndarray:
+        P = np.arange(self.n_levels, dtype=float)
+        Pmax = float(self.n_levels - 1)
+        x = P / Pmax
+
+        A = float(self.a_pot)
+        span = self.g_max_eff - self.g_min_eff
+        norm = 1.0 - np.exp(-1.0 / A)
+
+        curve = self.g_min_eff + span * (1.0 - np.exp(-x / A)) / norm
+        curve = np.asarray(curve, dtype=float)
+
+        curve[0] = self.g_min_eff
+        curve[-1] = self.g_max_eff
+        return curve
+
+    def _build_dep_curve(self) -> np.ndarray:
+        q = np.arange(self.n_levels, dtype=float)
+        Pmax = float(self.n_levels - 1)
+        x = q / Pmax
+
+        A = float(self.a_dep)
+        span = self.g_max_eff - self.g_min_eff
+        norm = 1.0 - np.exp(-1.0 / A)
+
+        curve = self.g_min_eff + span * (1.0 - np.exp(-(1.0 - x) / A)) / norm
+        curve = np.asarray(curve, dtype=float)
+
+        curve[0] = self.g_max_eff
+        curve[-1] = self.g_min_eff
+        return curve
+    # ------------------------------------------------------------
+    # helpers
+    # ------------------------------------------------------------
     def _clip_value(self, g: float) -> float:
-        return float(np.clip(g, self.g_min, self.g_max))
+        return float(np.clip(g, self.g_min_eff, self.g_max_eff))
 
-    def _clip_state(self) -> None:
-        self.state.g = self._clip_value(self.state.g)
+    def _nearest_level_idx(self, g: float) -> int:
+        return int(np.argmin(np.abs(self.pot_curve - g)))
 
-    def _norm(self, g: float) -> float:
-        """Normalize conductance to [0, 1]."""
-        denom = max(self.g_max - self.g_min, 1e-18)
-        x = (g - self.g_min) / denom
-        return float(np.clip(x, 0.0, 1.0))
+    def get_bounds(self) -> tuple[float, float]:
+        return float(self.g_min_eff), float(self.g_max_eff)
 
-    def _lognormal_factor(self, cv: float) -> float:
-        sigma = np.sqrt(np.log(cv * cv + 1.0))
-        mu = -0.5 * sigma * sigma
-        return float(np.exp(mu + sigma * self.rng.standard_normal()))
-
-    # ------------------------------------------------------------------
-    # Pulse response model
-    # ------------------------------------------------------------------
-    def _pot_delta(self, g: float) -> float:
-        # soft-bound form: delta * (1 - x)^beta
-        x = self._norm(g)
-        delta = (
-            self.g_pot_step
-            * self.pot_scale
-            * self.step_var_factor_pot
-            * (1.0 - x) ** self.g_pot_beta
-        )
-        return max(0.0, float(delta))
-
-    def _dep_delta(self, g: float) -> float:
-        # soft-bound form: delta * x^beta
-        x = self._norm(g)
-        delta = (
-            self.g_dep_step
-            * self.dep_scale
-            * self.step_var_factor_dep
-            * x ** self.g_dep_beta
-        )
-        return max(0.0, float(delta))
-
-    # ------------------------------------------------------------------
-    # Public update API
-    # ------------------------------------------------------------------
+    # ------------------------------------------------------------
+    # pulse application
+    # ------------------------------------------------------------
     def apply_pot_pulse(self, n_pulses: int = 1) -> None:
-        """Apply potentiation pulses to the device."""
         n_pulses = int(n_pulses)
         if n_pulses <= 0:
             return
 
         for _ in range(n_pulses):
-            delta = self._pot_delta(self.state.g)
+            if self.state.level_idx >= self.n_levels - 1:
+                self.state.level_idx = self.n_levels - 1
+                self.state.g = float(self.pot_curve[-1])
+                continue
 
-            if bool(cfg.ENABLE_C2C_STEP_NOISE) and float(cfg.CV_C2C_STEP) > 0.0:
-                delta *= self._lognormal_factor(float(cfg.CV_C2C_STEP))
-
-            self.state.g += delta
-            self._clip_state()
-            self.state.pulse_count_pot += 1
+            self.state.level_idx += 1
+            self.state.g = float(self.pot_curve[self.state.level_idx])
 
     def apply_dep_pulse(self, n_pulses: int = 1) -> None:
-        """Apply depression pulses to the device."""
         n_pulses = int(n_pulses)
         if n_pulses <= 0:
             return
 
         for _ in range(n_pulses):
-            delta = self._dep_delta(self.state.g)
+            if self.state.level_idx <= 0:
+                self.state.level_idx = 0
+                self.state.g = float(self.g_min_eff)
+                continue
 
-            if bool(cfg.ENABLE_C2C_STEP_NOISE) and float(cfg.CV_C2C_STEP) > 0.0:
-                delta *= self._lognormal_factor(float(cfg.CV_C2C_STEP))
+            self.state.level_idx -= 1
 
-            self.state.g -= delta
-            self._clip_state()
-            self.state.pulse_count_dep += 1
+            # map level_idx -> depression pulse count from max
+            # level_idx = n-1  => q = 0 (Gmax)
+            # level_idx = n-2  => q = 1
+            q = (self.n_levels - 1) - self.state.level_idx
+            self.state.g = float(self.dep_curve[q])
 
     def apply_pulse(self, polarity: PulsePolarity, n_pulses: int = 1) -> None:
-        """Generic pulse application API."""
         if polarity == "pot":
-            self.apply_pot_pulse(n_pulses=n_pulses)
+            self.apply_pot_pulse(n_pulses)
         elif polarity == "dep":
-            self.apply_dep_pulse(n_pulses=n_pulses)
+            self.apply_dep_pulse(n_pulses)
         else:
             raise ValueError(f"Unknown polarity: {polarity}")
 
-    # ------------------------------------------------------------------
-    # Retention / relaxation
-    # ------------------------------------------------------------------
+    # ------------------------------------------------------------
+    # retention
+    # ------------------------------------------------------------
     def relax(self, dt: float = 1.0) -> None:
-        # Simple first-order model: g <- g + gamma * dt * (g_rcp - g)
-        if not bool(cfg.ENABLE_RETENTION):
+        if not self.enable_retention or self.retention_gamma <= 0.0:
             return
 
-        gamma = float(cfg.RETENTION_GAMMA)
-        g_rcp = float(cfg.G_RCP)
+        self.state.g += self.retention_gamma * float(dt) * (self.g_rcp - self.state.g)
+        self.state.g = self._clip_value(self.state.g)
+        self.state.level_idx = self._nearest_level_idx(self.state.g)
 
-        if gamma <= 0.0:
-            return
-
-        self.state.g += gamma * float(dt) * (g_rcp - self.state.g)
-        self._clip_state()
-
-    # ------------------------------------------------------------------
-    # Reset / initialization
-    # ------------------------------------------------------------------
+    # ------------------------------------------------------------
+    # reset / direct set / state
+    # ------------------------------------------------------------
     def reset(self, mode: str = "init") -> None:
         mode = str(mode).lower()
 
-        if mode == "init":
-            self.state.g = self._clip_value(self.g_init * self.init_var_factor)
-        elif mode == "min":
-            self.state.g = self.g_min
+        if mode in ("init", "min"):
+            self.state.level_idx = 0
+            self.state.g = float(self.pot_curve[0])
+
         elif mode == "max":
-            self.state.g = self.g_max
+            self.state.level_idx = self.n_levels - 1
+            self.state.g = float(self.dep_curve[0])
+
         elif mode == "mid":
-            self.state.g = 0.5 * (self.g_min + self.g_max)
-        elif mode == "random":
-            self.state.g = float(self.rng.uniform(self.g_min, self.g_max))
+            self.state.level_idx = (self.n_levels - 1) // 2
+            self.state.g = float(self.pot_curve[self.state.level_idx])
+
         else:
             raise ValueError(f"Unknown reset mode: {mode}")
 
-        self.state.pulse_count_pot = 0
-        self.state.pulse_count_dep = 0
-        self._clip_state()
-
-    # ------------------------------------------------------------------
-    # Convenience / inspection (state only, not read circuitry)
-    # ------------------------------------------------------------------
     @property
     def g(self) -> float:
-        """Raw internal conductance state.
-
-        This is exposed for higher-level modules (crossbar / controller),
-        not as a physical read operation.
-        """
         return float(self.state.g)
 
     def set_g(self, g: float) -> None:
-        """Force internal state (use carefully, mostly for initialization)."""
         self.state.g = self._clip_value(float(g))
+        self.state.level_idx = self._nearest_level_idx(self.state.g)
 
     def snapshot(self) -> DeviceState:
-        """Return a copy of current internal state."""
         return DeviceState(
             g=float(self.state.g),
-            pulse_count_pot=int(self.state.pulse_count_pot),
-            pulse_count_dep=int(self.state.pulse_count_dep),
+            level_idx=int(self.state.level_idx),
         )
 
-
-# ======================================================================
-# TEST / DEBUG ONLY
-# Delete or comment out this whole section later if not needed.
-# ======================================================================
+# -------------------------------------------------------
+# --------------------- Test code -----------------------
+# -------------------------------------------------------
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
+    import numpy as np
 
-    dev = MemristorDevice(seed=cfg.SEED)
-    dev.reset("init")
+    def _save_cfg():
+        keys = [
+            "ENABLE_D2D_VARIATION",
+            "CV_D2D",
+            "ENABLE_C2C_VARIATION",
+            "CV_C2C",
+        ]
+        saved = {}
+        for k in keys:
+            saved[k] = getattr(cfg, k)
+        return saved
 
-    n_total = 200
-    g_hist = []
-    pulse_axis = []
+    def _restore_cfg(saved):
+        for k, v in saved.items():
+            setattr(cfg, k, v)
 
-    # Example 1: potentiation only
-    for t in range(n_total):
-        dev.apply_pot_pulse(1)
-        g_hist.append(dev.g)
-        pulse_axis.append(t + 1)
+    def _set_mode(mode: str):
+        mode = mode.lower()
 
-    plt.figure(figsize=(7, 4))
-    plt.plot(pulse_axis, g_hist, linewidth=2)
-    plt.title("Potentiation pulse response")
-    plt.xlabel("Pulse count")
-    plt.ylabel("Internal conductance g")
-    plt.grid(True, alpha=0.3)
-    plt.show()
+        if mode == "none":
+            cfg.ENABLE_D2D_VARIATION = False
+            cfg.ENABLE_C2C_VARIATION = False
 
-    # Example 2: depression after potentiation
-    dev.reset("max")
-    g_hist2 = []
-    pulse_axis2 = []
+        elif mode == "d2d_only":
+            cfg.ENABLE_D2D_VARIATION = True
+            cfg.ENABLE_C2C_VARIATION = False
 
-    for t in range(n_total):
-        dev.apply_dep_pulse(1)
-        g_hist2.append(dev.g)
-        pulse_axis2.append(t + 1)
+        elif mode == "c2c_only":
+            cfg.ENABLE_D2D_VARIATION = False
+            cfg.ENABLE_C2C_VARIATION = True
 
-    plt.figure(figsize=(7, 4))
-    plt.plot(pulse_axis2, g_hist2, linewidth=2)
-    plt.title("Depression pulse response")
-    plt.xlabel("Pulse count")
-    plt.ylabel("Internal conductance g")
-    plt.grid(True, alpha=0.3)
-    plt.show()
+        elif mode == "both":
+            cfg.ENABLE_D2D_VARIATION = True
+            cfg.ENABLE_C2C_VARIATION = True
 
-    print("Final snapshot:", dev.snapshot())
+        else:
+            raise ValueError(f"Unknown mode: {mode}")
+
+    def _collect_pot_histories(n_devices: int, n_cycles: int):
+        n_pulses = cfg.P_MAX - 1
+        all_pot = np.zeros((n_devices, n_cycles, n_pulses + 1))
+
+        for dev_id in range(n_devices):
+            for cyc in range(n_cycles):
+                dev = MemristorDevice(
+                    seed=cfg.SEED,
+                    device_id=dev_id,
+                    cycle_id=cyc,
+                )
+                dev.reset("min")
+
+                g_hist = [dev.g]
+                for _ in range(n_pulses):
+                    dev.apply_pot_pulse(1)
+                    g_hist.append(dev.g)
+
+                all_pot[dev_id, cyc, :] = np.array(g_hist)
+
+        return all_pot
+
+    def _collect_dep_histories(n_devices: int, n_cycles: int):
+        n_pulses = cfg.P_MAX - 1
+        all_dep = np.zeros((n_devices, n_cycles, n_pulses + 1))
+
+        for dev_id in range(n_devices):
+            for cyc in range(n_cycles):
+                dev = MemristorDevice(
+                    seed=cfg.SEED,
+                    device_id=dev_id,
+                    cycle_id=cyc,
+                )
+                dev.reset("max")
+
+                g_hist = [dev.g]
+                for _ in range(n_pulses):
+                    dev.apply_dep_pulse(1)
+                    g_hist.append(dev.g)
+
+                all_dep[dev_id, cyc, :] = np.array(g_hist)
+
+        return all_dep
+
+    def _plot_distribution(data, title):
+        """
+        data shape: (n_runs, n_points)
+        """
+        x = np.arange(1, data.shape[1] + 1)
+        mean = data.mean(axis=0)
+        std = data.std(axis=0)
+        vmin = data.min(axis=0)
+        vmax = data.max(axis=0)
+
+        plt.figure(figsize=(8, 5))
+        plt.plot(x, mean, label="mean", linewidth=2)
+        plt.plot(x, vmin, "--", label="min", linewidth=1.2)
+        plt.plot(x, vmax, "--", label="max", linewidth=1.2)
+        plt.fill_between(x, mean - std, mean + std, alpha=0.25, label="±1σ")
+        plt.title(title)
+        plt.xlabel("Pulse number")
+        plt.ylabel("Conductance")
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.show()
+
+    def _plot_sample_runs(data, title, n_show=20):
+        """
+        data shape: (n_runs, n_points)
+        """
+        x = np.arange(1, data.shape[1] + 1)
+
+        plt.figure(figsize=(8, 5))
+        for i in range(min(n_show, data.shape[0])):
+            plt.plot(x, data[i], alpha=0.3)
+        plt.title(title)
+        plt.xlabel("Pulse number")
+        plt.ylabel("Conductance")
+        plt.grid(True, alpha=0.3)
+        plt.show()
+
+    def _print_summary(data, name):
+        mean = data.mean(axis=0)
+        std = data.std(axis=0)
+        print(f"\n[{name}]")
+        print("start mean/std =", mean[0], std[0])
+        print("mid   mean/std =", mean[len(mean)//2], std[len(std)//2])
+        print("end   mean/std =", mean[-1], std[-1])
+
+    saved_cfg = _save_cfg()
+
+    try:
+        # =====================================================
+        # 1) D2D only
+        #    40 devices, cycle fixed
+        # =====================================================
+        _set_mode("d2d_only")
+
+        pot_d2d = _collect_pot_histories(n_devices=40, n_cycles=1)[:, 0, :]
+        dep_d2d = _collect_dep_histories(n_devices=40, n_cycles=1)[:, 0, :]
+
+        _plot_sample_runs(pot_d2d, "Potentiation - D2D only (40 devices)", n_show=40)
+        _plot_distribution(pot_d2d, "Potentiation - D2D only distribution")
+
+        _plot_sample_runs(dep_d2d, "Depression - D2D only (40 devices)", n_show=40)
+        _plot_distribution(dep_d2d, "Depression - D2D only distribution")
+
+        _print_summary(pot_d2d, "Potentiation D2D only")
+        _print_summary(dep_d2d, "Depression D2D only")
+
+        # =====================================================
+        # 2) C2C only
+        #    1 device, 100 cycles
+        # =====================================================
+        _set_mode("c2c_only")
+
+        pot_c2c = _collect_pot_histories(n_devices=1, n_cycles=100)[0, :, :]
+        dep_c2c = _collect_dep_histories(n_devices=1, n_cycles=100)[0, :, :]
+
+        _plot_sample_runs(pot_c2c, "Potentiation - C2C only (100 cycles)", n_show=100)
+        _plot_distribution(pot_c2c, "Potentiation - C2C only distribution")
+
+        _plot_sample_runs(dep_c2c, "Depression - C2C only (100 cycles)", n_show=100)
+        _plot_distribution(dep_c2c, "Depression - C2C only distribution")
+
+        _print_summary(pot_c2c, "Potentiation C2C only")
+        _print_summary(dep_c2c, "Depression C2C only")
+
+        # =====================================================
+        # 3) Both
+        #    40 devices x 100 cycles
+        # =====================================================
+        _set_mode("both")
+
+        all_pot = _collect_pot_histories(n_devices=40, n_cycles=100)
+        all_dep = _collect_dep_histories(n_devices=40, n_cycles=100)
+
+        pot_both = all_pot.reshape(-1, all_pot.shape[-1])
+        dep_both = all_dep.reshape(-1, all_dep.shape[-1])
+
+        _plot_sample_runs(pot_both, "Potentiation - D2D + C2C (sample runs)", n_show=100)
+        _plot_distribution(pot_both, "Potentiation - D2D + C2C distribution")
+
+        _plot_sample_runs(dep_both, "Depression - D2D + C2C (sample runs)", n_show=100)
+        _plot_distribution(dep_both, "Depression - D2D + C2C distribution")
+
+        _print_summary(pot_both, "Potentiation D2D + C2C")
+        _print_summary(dep_both, "Depression D2D + C2C")
+
+    finally:
+        _restore_cfg(saved_cfg)

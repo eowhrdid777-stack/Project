@@ -1,72 +1,51 @@
 #----------------------device_model---------------------
+import numpy as np  
+# -------------------------------
+# FeTFT paper-based conductance model
+# -------------------------------
+G_MIN = 12e-6
+G_MAX = 172.8e-6          # ratio 14.4 exactly
+G_INIT = 0.5 * (G_MIN + G_MAX)        # 기본 erased state 기준
 
-# -------------------------------
-# Device conductance range
-# -------------------------------
-G_MIN = 1e-6
-G_MAX = 100e-6
-G_INIT = 30e-6
+P_MAX = 64              # paper: 64 conductance states
 
-# -------------------------------
-# Pulse response
-# -------------------------------
-# 1 pulse당 기본 변화량
-G_POT_STEP = 1.2e-6
-G_DEP_STEP = 1.2e-6
+A_POT = -0.8028
+A_DEP = -0.6979
 
-# 1.0이면 거의 linear
-# 1.2 ~ 1.5면 약한 soft-bound
-# 2.0 이상이면 강한 비선형
-G_POT_BETA = 1.2
-G_DEP_BETA = 1.2
+CONDUCTANCE_WINDOW = G_MAX / G_MIN    # G_MAX / G_MIN
 
-# pot/dep asymmetry용 추가 스케일
-POT_SCALE = 1.0
-DEP_SCALE = 1.0
+ENABLE_D2D_VARIATION = True
+CV_D2D = 0.0393    # paper D2D variation 3.93%
 
-# ----------D2D variation on initial state----------
-ENABLE_D2D_INIT_VARIATION = True
-CV_D2D_INIT = 0.05
-INIT_VARIATION_MODE = "lognormal"   # or "normal"
+ENABLE_C2C_VARIATION = True
+CV_C2C = 0.0236   # paper C2C variation 2.36%
 
-# -------------------------------
-# D2D / C2C variation on step size
-# -------------------------------
-ENABLE_D2D_STEP_VARIATION = True
-CV_D2D_STEP = 0.05
-
-ENABLE_C2C_STEP_NOISE = True
-CV_C2C_STEP = 0.02
-# -------------------------------
-# Retention
-# -------------------------------
-ENABLE_RETENTION = True
+ENABLE_RETENTION = False
 RETENTION_GAMMA = 0.0
-G_RCP = G_INIT
 
-# -------------------------------
-# Random seed
-# -------------------------------
-SEED = 42
+G_RCP = G_INIT 
+
+# paper pulse scheme
+POT_START_V = 2.7
+POT_STOP_V = 4.3
+DEP_START_V = -2.0
+DEP_STOP_V = -3.6
+PULSE_V_STEP = 0.025
+PULSE_WIDTH_S = 10e-3
+READ_GATE_V = -1.0
+READ_DRAIN_V = 1.0
+
 
 # ------------------------conductance_modulation--------------------------------
 
-# -------------------------------------------------
-# Conductance modulation / programming controller
-# -------------------------------------------------
+SEED = 42
 
-# 이 값을 넘으면 recenter 시작
-RECENTER_TRIGGER_FRACTION = 0.85
+RECENTER_TRIGGER_FRACTION = 0.90
+RECENTER_TARGET_FRACTION = 0.60
+PROGRAM_TOLERANCE = 0.5e-6
 
-# recenter 후 높은 쪽 conductance를 대략 어디까지 내릴지
-# 예: 0.65 * G_MAX 정도
-RECENTER_TARGET_FRACTION = 0.4
-
-# target 도달 판정 허용오차
-PROGRAM_TOLERANCE = 1e-6
-
-# verify-after-write 최대 반복 횟수
-PROGRAM_MAX_TRIALS = 30
+# linear-like pulse estimation용 평균 step
+LINEAR_MEAN_STEP = (G_MAX - G_MIN) / (P_MAX - 1)
 
 # -------------------------------crossbar--------------------------------------
 READ_VOLTAGE = 0.1
