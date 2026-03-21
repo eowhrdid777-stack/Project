@@ -1,286 +1,272 @@
-# encoding
-
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Literal, Optional, Sequence, Union
 
 import numpy as np
+
 import config as cfg
 
 
 ArrayLike1D = Union[Sequence[float], np.ndarray]
 ObsType = Union[Dict[str, float], ArrayLike1D]
+EncodingMode = Literal["rate", "population_rate", "population_latency"]
 
 
 @dataclass
 class EncoderOutput:
+    """Container for encoded spike information.
 
-    values: np.ndarray
-    bipolar_values: np.ndarray
-    level_spikes: np.ndarray
-    latency_spikes: np.ndarray
-    analog_current: np.ndarray
+    Attributes
+    ----------
+    spikes:
+        Binary spike vector for the current step. For latency mode this is the
+        event mask at the queried simulation step.
+    firing_rates:
+        Per-input normalized firing rate in [0, 1]. For latency mode this is
+        the receptive-field activation strength.
+    spike_times:
+        Scheduled spike time of each input channel. ``np.inf`` means no spike
+        within the current encoding window.
+    analog_values:
+        Normalized analog value associated with each input channel.
+    feature_names:
+        Human-readable channel names.
+    mode:
+        Encoding mode used to produce the output.
+    """
+
+    spikes: np.ndarray
+    firing_rates: np.ndarray
+    spike_times: np.ndarray
+    analog_values: np.ndarray
+    feature_names: List[str]
+    mode: str
 
 
-class SpikeEncoder:
+class SensorSpikeEncoder:
+    """Flexible sensor-to-spike encoder for the user's SNN pipeline.
+
+    This file is intentionally self-contained so it works with the uploaded
+    project structure without requiring edits to ``config.py``. Configuration
+    values are pulled from ``config`` when available and otherwise safe defaults
+    are used.
+
+    Supported modes
+    ----------------
+    - ``rate``:
+        One spike channel per sensor dimension. The sensor value controls the
+        firing probability at each simulation step.
+    - ``population_rate``:
+        Each sensor dimension is expanded into overlapping Gaussian receptive
+        fields. Field activation controls spike probability.
+    - ``population_latency``:
+        Each sensor dimension is expanded into overlapping receptive fields and
+        each active field emits at most one spike in a latency window. Stronger
+        activation means earlier spike timing.
+    """
 
     def __init__(
         self,
-        n_inputs: int,
-        sensor_names: Optional[List[str]] = None,
-        sensor_min: Optional[ArrayLike1D] = None,
-        sensor_max: Optional[ArrayLike1D] = None,
-        dt: float = 1.0,
-        rate_max_hz: float = 100.0,
-        default_steps: int = 20,
-        analog_scale: float = 1.0,
-        seed: Optional[int] = getattr(cfg, "SEED", 42),
+        obs_dim: Optional[int] = None,
+        feature_names: Optional[Sequence[str]] = None,
+        mode: EncodingMode = "population_latency",
+        seed: Optional[int] = None,
+        value_ranges: Optional[Dict[str, tuple[float, float]]] = None,
+        neurons_per_feature: Optional[int] = None,
+        latency_steps: Optional[int] = None,
+        max_rate_hz: Optional[float] = None,
+        dt: Optional[float] = None,
+        activation_threshold: Optional[float] = None,
+        sigma_scale: Optional[float] = None,
     ) -> None:
-        self.n_inputs = int(n_inputs)
-        if self.n_inputs <= 0:
-            raise ValueError("n_inputs must be positive.")
+        self.mode = str(mode)
+        self.rng = np.random.default_rng(getattr(cfg, "SEED", 42) if seed is None else seed)
 
-        self.sensor_names = (
-            sensor_names[:] if sensor_names is not None
-            else [f"sensor_{i}" for i in range(self.n_inputs)]
+        self.dt = float(getattr(cfg, "ENCODER_DT", 1.0 if dt is None else dt)) if dt is None else float(dt)
+        self.max_rate_hz = float(getattr(cfg, "ENCODER_MAX_RATE_HZ", 200.0 if max_rate_hz is None else max_rate_hz)) if max_rate_hz is None else float(max_rate_hz)
+        self.neurons_per_feature = int(getattr(cfg, "ENCODER_NEURONS_PER_FEATURE", 5 if neurons_per_feature is None else neurons_per_feature)) if neurons_per_feature is None else int(neurons_per_feature)
+        self.latency_steps = int(getattr(cfg, "ENCODER_LATENCY_STEPS", 8 if latency_steps is None else latency_steps)) if latency_steps is None else int(latency_steps)
+        self.activation_threshold = float(getattr(cfg, "ENCODER_ACTIVATION_THRESHOLD", 0.05 if activation_threshold is None else activation_threshold)) if activation_threshold is None else float(activation_threshold)
+        self.sigma_scale = float(getattr(cfg, "ENCODER_SIGMA_SCALE", 0.55 if sigma_scale is None else sigma_scale)) if sigma_scale is None else float(sigma_scale)
+
+        if feature_names is not None:
+            self.feature_names = [str(x) for x in feature_names]
+            self.obs_dim = len(self.feature_names)
+        elif obs_dim is not None:
+            self.obs_dim = int(obs_dim)
+            self.feature_names = [f"x{i}" for i in range(self.obs_dim)]
+        else:
+            raise ValueError("Either obs_dim or feature_names must be provided.")
+
+        self.value_ranges = self._build_value_ranges(value_ranges)
+        self._rf_centers, self._rf_sigma = self._build_receptive_fields()
+        self.output_dim = self._infer_output_dim()
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+    def encode(self, obs: ObsType, sim_step: int = 0) -> EncoderOutput:
+        """Encode an observation for a given simulation step.
+
+        Parameters
+        ----------
+        obs:
+            Observation vector or feature dictionary.
+        sim_step:
+            Current simulation step within the encoding window. For latency mode,
+            this determines which scheduled spikes are emitted now.
+        """
+        values = self._coerce_obs(obs)
+        normalized = self._normalize(values)
+
+        if self.mode == "rate":
+            return self._encode_rate(normalized)
+        if self.mode == "population_rate":
+            return self._encode_population_rate(normalized)
+        if self.mode == "population_latency":
+            return self._encode_population_latency(normalized, sim_step=sim_step)
+        raise ValueError(f"Unsupported encoding mode: {self.mode}")
+
+    def encode_window(self, obs: ObsType) -> List[EncoderOutput]:
+        """Encode a whole latency window.
+
+        For ``population_latency``, this returns one ``EncoderOutput`` per step
+        across ``latency_steps``. For other modes, a single-step list is
+        returned.
+        """
+        if self.mode != "population_latency":
+            return [self.encode(obs, sim_step=0)]
+        return [self.encode(obs, sim_step=t) for t in range(self.latency_steps)]
+
+    # ------------------------------------------------------------------
+    # Observation handling
+    # ------------------------------------------------------------------
+    def _build_value_ranges(
+        self,
+        value_ranges: Optional[Dict[str, tuple[float, float]]],
+    ) -> Dict[str, tuple[float, float]]:
+        if value_ranges is None:
+            default = getattr(cfg, "ENCODER_VALUE_RANGES", None)
+            if isinstance(default, dict) and default:
+                value_ranges = {
+                    str(k): (float(v[0]), float(v[1]))
+                    for k, v in default.items()
+                }
+            else:
+                value_ranges = {name: (0.0, 1.0) for name in self.feature_names}
+
+        out: Dict[str, tuple[float, float]] = {}
+        for name in self.feature_names:
+            lo, hi = value_ranges.get(name, (0.0, 1.0))
+            lo = float(lo)
+            hi = float(hi)
+            if hi <= lo:
+                hi = lo + 1.0
+            out[name] = (lo, hi)
+        return out
+
+    def _coerce_obs(self, obs: ObsType) -> np.ndarray:
+        if isinstance(obs, dict):
+            vals = [float(obs[name]) for name in self.feature_names]
+            return np.asarray(vals, dtype=float)
+
+        arr = np.asarray(obs, dtype=float).reshape(-1)
+        if arr.size != self.obs_dim:
+            raise ValueError(f"Expected observation of length {self.obs_dim}, got {arr.size}")
+        return arr
+
+    def _normalize(self, values: np.ndarray) -> np.ndarray:
+        out = np.zeros(self.obs_dim, dtype=float)
+        for i, name in enumerate(self.feature_names):
+            lo, hi = self.value_ranges[name]
+            out[i] = np.clip((float(values[i]) - lo) / max(hi - lo, 1e-12), 0.0, 1.0)
+        return out
+
+    # ------------------------------------------------------------------
+    # Receptive fields
+    # ------------------------------------------------------------------
+    def _build_receptive_fields(self) -> tuple[np.ndarray, float]:
+        if self.neurons_per_feature <= 1:
+            centers = np.array([0.5], dtype=float)
+            sigma = 0.5
+            return centers, sigma
+
+        centers = np.linspace(0.0, 1.0, self.neurons_per_feature, dtype=float)
+        spacing = float(centers[1] - centers[0])
+        sigma = max(1e-6, self.sigma_scale * spacing)
+        return centers, sigma
+
+    def _population_activation(self, normalized: np.ndarray) -> np.ndarray:
+        acts = []
+        for x in normalized:
+            a = np.exp(-0.5 * ((x - self._rf_centers) / self._rf_sigma) ** 2)
+            a /= max(np.max(a), 1e-12)
+            acts.append(a)
+        return np.concatenate(acts, axis=0).astype(float)
+
+    def _population_feature_names(self) -> List[str]:
+        names: List[str] = []
+        for feat in self.feature_names:
+            for k in range(self.neurons_per_feature):
+                names.append(f"{feat}_rf{k}")
+        return names
+
+    def _infer_output_dim(self) -> int:
+        if self.mode == "rate":
+            return int(self.obs_dim)
+        return int(self.obs_dim * self.neurons_per_feature)
+
+    # ------------------------------------------------------------------
+    # Mode-specific implementations
+    # ------------------------------------------------------------------
+    def _encode_rate(self, normalized: np.ndarray) -> EncoderOutput:
+        firing_rates = normalized.copy()
+        p_fire = np.clip(self.max_rate_hz * self.dt * firing_rates, 0.0, 1.0)
+        spikes = (self.rng.random(self.obs_dim) < p_fire).astype(np.int8)
+        spike_times = np.where(spikes > 0, 0.0, np.inf)
+        return EncoderOutput(
+            spikes=spikes,
+            firing_rates=firing_rates,
+            spike_times=spike_times,
+            analog_values=normalized,
+            feature_names=list(self.feature_names),
+            mode=self.mode,
         )
 
-        if len(self.sensor_names) != self.n_inputs:
-            raise ValueError(
-                f"len(sensor_names) must equal n_inputs ({self.n_inputs}), "
-                f"got {len(self.sensor_names)}"
-            )
+    def _encode_population_rate(self, normalized: np.ndarray) -> EncoderOutput:
+        activations = self._population_activation(normalized)
+        p_fire = np.clip(self.max_rate_hz * self.dt * activations, 0.0, 1.0)
+        spikes = (self.rng.random(activations.size) < p_fire).astype(np.int8)
+        spike_times = np.where(spikes > 0, 0.0, np.inf)
+        analog_values = np.repeat(normalized, self.neurons_per_feature)
+        return EncoderOutput(
+            spikes=spikes,
+            firing_rates=activations,
+            spike_times=spike_times,
+            analog_values=analog_values,
+            feature_names=self._population_feature_names(),
+            mode=self.mode,
+        )
 
-        if sensor_min is None:
-            self.sensor_min = np.zeros(self.n_inputs, dtype=np.float64)
-        else:
-            self.sensor_min = self._as_vector(sensor_min, name="sensor_min")
+    def _encode_population_latency(self, normalized: np.ndarray, sim_step: int) -> EncoderOutput:
+        activations = self._population_activation(normalized)
+        analog_values = np.repeat(normalized, self.neurons_per_feature)
 
-        if sensor_max is None:
-            self.sensor_max = np.ones(self.n_inputs, dtype=np.float64)
-        else:
-            self.sensor_max = self._as_vector(sensor_max, name="sensor_max")
+        spike_times = np.full(activations.size, np.inf, dtype=float)
+        active = activations >= self.activation_threshold
+        if np.any(active):
+            times = (self.latency_steps - 1) * (1.0 - activations[active])
+            spike_times[active] = np.round(times).astype(int)
 
-        if np.any(self.sensor_max <= self.sensor_min):
-            raise ValueError("Each sensor_max must be greater than sensor_min.")
-
-        self.dt = float(dt)
-        self.rate_max_hz = float(rate_max_hz)
-        self.default_steps = int(default_steps)
-        self.analog_scale = float(analog_scale)
-
-        if self.default_steps <= 0:
-            raise ValueError("default_steps must be positive.")
-        if self.dt <= 0:
-            raise ValueError("dt must be positive.")
-        if self.rate_max_hz < 0:
-            raise ValueError("rate_max_hz must be non-negative.")
-
-        self.rng = np.random.default_rng(seed)
-
-    # 입력을 넘파이 벡터로 통일
-    def _as_vector(self, x: ArrayLike1D, name: str = "input") -> np.ndarray:
-        arr = np.asarray(x, dtype=np.float64).reshape(-1)
-        if arr.shape[0] != self.n_inputs:
-            raise ValueError(
-                f"{name} must have length {self.n_inputs}, got shape {arr.shape}"
-            )
-        return arr
-    
-    # dictionary 혹은 array로 들어온 입력을 최종 숫자 벡터로 생성
-    def _obs_to_vector(self, obs: ObsType) -> np.ndarray: 
-        
-        if isinstance(obs, dict):
-            vec = np.zeros(self.n_inputs, dtype=np.float64) #길이 n_input짜리 0 벡터 생성
-            for i, name in enumerate(self.sensor_names):    #센서 이름을 순서대로 하나씩 꺼내면서 번호도 같이 가져옴
-                if name not in obs:
-                    raise KeyError(
-                        f"Observation dict is missing sensor key '{name}'. "
-                        f"Expected keys: {self.sensor_names}"
-                    )
-                vec[i] = float(obs[name]) 
-            return vec
-
-        return self._as_vector(obs, name="obs") #딕셔너리가 아니면 그냥 array/list라고 보고 _as_vector로 변환
-
-    #센서 값 0~1로 nomalize
-    def normalize(self, obs: ObsType) -> np.ndarray:
-        raw = self._obs_to_vector(obs) #입력을 숫자 벡터로 변환
-        denom = np.maximum(self.sensor_max - self.sensor_min, 1e-12)
-        norm = (raw - self.sensor_min) / denom #정규화 식
-        return np.clip(norm, 0.0, 1.0) #정규화 값이 범위 벗어나면 clip
-    
-    #원래 scale로 값 복원
-    def denormalize(self, x_norm: ArrayLike1D) -> np.ndarray: 
-        x_norm = self._as_vector(x_norm, name="x_norm")
-        return self.sensor_min + x_norm * (self.sensor_max - self.sensor_min)
-
-    #범위를 [0,1]->[-1,1]
-    def to_bipolar(self, x_norm: ArrayLike1D) -> np.ndarray:
-        x_norm = self._as_vector(x_norm, name="x_norm")
-        return 2.0 * x_norm - 1.0
-
-    #crossbar에 넣을 입력 생성
-    def to_analog_current(self, x_norm: ArrayLike1D, bipolar: bool = False) -> np.ndarray:
-        x_norm = self._as_vector(x_norm, name="x_norm")
-        if bipolar:
-            return self.to_bipolar(x_norm) * self.analog_scale #입력 강도 조절하기
-        return x_norm * self.analog_scale
-
-    # ------------------------------------------------------------------
-    # Spike encoders
-    # ------------------------------------------------------------------
-    
-     #값 크기를 spike 개수로 표현하는 encode 방법
-    def level_encode(
-    self,
-    obs: ObsType,
-    n_steps: Optional[int] = None,
-) -> np.ndarray:
-        x_norm = self.normalize(obs)
-        n_steps = self.default_steps if n_steps is None else int(n_steps)
-
-        if n_steps <= 0:
-            raise ValueError("n_steps must be positive.")
-        
-        spikes = np.zeros((n_steps, self.n_inputs), dtype=np.float64)
-        
-        for i, x in enumerate(x_norm):
-            n_active = int(round(x * n_steps))
-            n_active = int(np.clip(n_active, 0, n_steps))
-            spikes[:n_active, i] = 1.0
-        
-        return spikes
-
-
-    #값을 spike 발생 시간으로 표현하는 encode 방법(값이 크면 빨리 spike)
-    def latency_encode( 
-        self,
-        obs: ObsType,
-        n_steps: Optional[int] = None,
-        allow_zero_spike: bool = True,
-    ) -> np.ndarray:
-        x_norm = self.normalize(obs)
-        n_steps = self.default_steps if n_steps is None else int(n_steps)
-
-        if n_steps <= 0:
-            raise ValueError("n_steps must be positive.")
-
-        spikes = np.zeros((n_steps, self.n_inputs), dtype=np.float64)
-
-        for i, x in enumerate(x_norm):
-            if allow_zero_spike and x <= 0.0:
-                continue
-
-            # x=1 -> step 0, x small -> later step
-            t_idx = int(round((1.0 - x) * max(n_steps - 1, 0)))
-            t_idx = int(np.clip(t_idx, 0, n_steps - 1))
-            spikes[t_idx, i] = 1.0
-
-        return spikes
-
-    #threshold값 넘으면 spike하는 encode 방법
-    def threshold_encode( 
-        self,
-        obs: ObsType,
-        threshold: float = 0.5,
-        bipolar: bool = False,
-    ) -> np.ndarray:
-        x_norm = self.normalize(obs)
-        binary = (x_norm >= float(threshold)).astype(np.float64)
-
-        if bipolar:
-            return 2.0 * binary - 1.0
-        return binary
-    
-    #encoder 종류 select
-    def select_spike_encoding(
-    self,
-    obs: ObsType,
-    mode: str = "latency",
-    n_steps: Optional[int] = None,
-    threshold: float = 0.5,
-) -> np.ndarray:
-        mode = mode.lower()
-
-        if mode == "level":
-            return self.level_encode(obs, n_steps=n_steps)
-
-        if mode == "latency":
-            return self.latency_encode(obs, n_steps=n_steps)
-
-        if mode == "threshold":
-            x = self.threshold_encode(obs, threshold=threshold, bipolar=False)
-            # threshold는 시간축이 없는 1D 벡터라서, VMM 시간 루프와 맞추려면 (1, n_inputs)로 변환
-            return x.reshape(1, -1)
-        
-        raise ValueError(f"Unknown encoding mode: {mode}")
-
-    # ------------------------------------------------------------------
-    # High-level bundle API
-    # ------------------------------------------------------------------
-    def encode(
-        self,
-        obs: ObsType,
-        n_steps: Optional[int] = None,
-        bipolar_analog: bool = False,
-    ) -> EncoderOutput:
-        x_norm = self.normalize(obs)
-        n_steps = self.default_steps if n_steps is None else int(n_steps)
+        spikes = np.zeros(activations.size, dtype=np.int8)
+        spikes[np.isfinite(spike_times) & (spike_times == int(sim_step))] = 1
 
         return EncoderOutput(
-            values=x_norm,
-            bipolar_values=self.to_bipolar(x_norm),
-            level_spikes=self.level_encode(obs, n_steps=n_steps),
-            latency_spikes=self.latency_encode(obs, n_steps=n_steps),
-            analog_current=self.to_analog_current(x_norm, bipolar=bipolar_analog),
+            spikes=spikes,
+            firing_rates=activations,
+            spike_times=spike_times,
+            analog_values=analog_values,
+            feature_names=self._population_feature_names(),
+            mode=self.mode,
         )
-
-    # ------------------------------------------------------------------
-    # Rescue-robot friendly helper
-    # ------------------------------------------------------------------
-    @classmethod
-    def build_rescue_encoder(
-        cls,
-        n_inputs: int = 4,
-        seed: Optional[int] = getattr(cfg, "SEED", 42),
-    ) -> "SpikeEncoder":
-
-        names = ["front_dist", "left_dist", "right_dist", "survivor_signal"][:n_inputs]
-        while len(names) < n_inputs:
-            names.append(f"sensor_{len(names)}")
-
-        return cls(
-            n_inputs=n_inputs,
-            sensor_names=names,
-            sensor_min=np.zeros(n_inputs),
-            sensor_max=np.ones(n_inputs),
-            dt=0.01,              # 10 ms per step
-            rate_max_hz=100.0,    # max firing rate
-            default_steps=20,
-            analog_scale=1.0,
-            seed=seed,
-        )
-
-
-# ----------------------------------------------------------------------
-# TEST / DEBUG
-# ----------------------------------------------------------------------
-if __name__ == "__main__":
-    enc = SpikeEncoder.build_rescue_encoder(n_inputs=4, seed=getattr(cfg, "SEED", 42))
-
-    obs = {
-        "front_dist": 0.8,
-        "left_dist": 0.2,
-        "right_dist": 0.6,
-        "survivor_signal": 0.9,
-    }
-
-    out = enc.encode(obs, n_steps=12, bipolar_analog=False)
-
-    print("normalized      :", out.values)
-    print("bipolar         :", out.bipolar_values)
-    print("analog_current  :", out.analog_current)
-    print("level spikes\n", out.level_spikes)
-    print("latency spikes\n", out.latency_spikes)
