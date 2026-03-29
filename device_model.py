@@ -7,25 +7,18 @@ import numpy as np
 
 import config as cfg
 
+# type aliases
 PulsePolarity = Literal["pot", "dep"]
 ResetMode = Literal["init", "min", "max", "mid"]
 
 
 @dataclass
 class DeviceState:
-    g: float
-    level_idx: int
+    g: float # 현재 conductance 값 [S]
+    level_idx: int # 현재 conductance level index (0 to P_MAX-1)
 
 
 class MemristorDevice:
-    """Pulse-driven FeTFT conductance model.
-
-    The device is modeled as a finite-state analog synapse with 64 conductance
-    levels, D2D/C2C variation, optional retention, and bidirectional pulse
-    programming. This is intentionally pulse-based: state changes only through
-    pot/dep pulses, direct set_g(), or optional retention/read-disturb.
-    """
-
     def __init__(
         self,
         seed: Optional[int] = None,
