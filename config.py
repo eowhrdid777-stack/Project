@@ -14,8 +14,8 @@ Paper-based anchors from the uploaded supplement:
 SEED = 42
 
 # Device window
-G_MIN = 12.0e-6
-G_MAX = 172.8e-6
+G_MIN = 1.25e-8
+G_MAX = 1.80e-7
 P_MAX = 64
 G_INIT_MODE = "mid"
 
