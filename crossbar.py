@@ -7,16 +7,11 @@ import numpy as np
 import config as cfg
 from device_model import MemristorDevice
 
-Side = Literal["plus", "minus"]
-PulsePolarity = Literal["pot", "dep"]
+Side = Literal["plus", "minus"] # 소자 쌍의 어느 쪽에 펄스를 적용할지 나타내는 타입
+PulsePolarity = Literal["pot", "dep"] # 펄스의 극성(증가 또는 감소)을 나타내는 타입
 
 
 class DifferentialCrossbar:
-    """Differential crossbar array with measured readout.
-
-    Each logical synapse is represented by a pair of physical cells:
-        W[i, j] = G_plus[i, j] - G_minus[i, j]
-    """
 
     def __init__(
         self,
@@ -24,32 +19,42 @@ class DifferentialCrossbar:
         n_cols: int,
         seed: Optional[int] = None,
     ) -> None:
+        # array dimensions. n_cols는 논리적 컬럼 수. 실제 물리적 컬럼 수는 2배 (plus, minus)
         self.n_rows = int(n_rows)
         self.n_logical_cols = int(n_cols)
         self.n_phys_cols = 2 * self.n_logical_cols
-        self.rng = np.random.default_rng(seed)
+        
+        self.read_avg_samples = int(cfg.READ_AVG_SAMPLES)
+        
+        # read noise, device variation 등에 사용할 난수 생성기
+        self.rng = np.random.default_rng(seed) 
 
         self.read_voltage = float(cfg.READ_VOLTAGE)
         self.program_voltage = float(cfg.PROGRAM_VOLTAGE)
-        self.read_avg_samples = int(cfg.READ_AVG_SAMPLES)
 
+        # crossbar에서 위치에 따라 발생하는 IR drop 효과를 시뮬레이션하기 위한 감쇠 계수
         self.read_ir_drop_alpha = float(cfg.READ_IR_DROP_ALPHA)
         self.prog_ir_drop_alpha = float(cfg.PROG_IR_DROP_ALPHA)
 
         self.enable_read_noise = bool(cfg.ENABLE_READ_NOISE)
+        # noise sigma를 읽기 전류의 상대값으로 표현(읽기 전류의 크기에 비례)
         self.read_noise_rel_sigma = float(cfg.READ_NOISE_REL_SIGMA)
 
         self.enable_read_disturb = bool(cfg.ENABLE_READ_DISTURB)
+        # 단계당 read disturb로 인한 conductance 변화량
         self.read_disturb_step = float(cfg.READ_DISTURB_STEP)
 
         self.enable_sneak_path = bool(cfg.ENABLE_SNEAK_PATH)
+        # 원하지 않는 경로로 전류가 흐르는 sneak path 효과 시뮬레이션을 위한 누설 비율
         self.sneak_ratio = float(cfg.SNEAK_RATIO)
 
         self.g_min = float(cfg.G_MIN)
         self.g_max = float(cfg.G_MAX)
 
+        # device 객체로 crossbar 초기화. 각 셀은 독립적인 랜덤 시드를 가져 variation을 가짐
         self.devices = np.empty((self.n_rows, self.n_phys_cols), dtype=object)
         base_seed = None if seed is None else int(seed)
+        # devices[i, 2j] 는 (i, j) 쌍의 plus 셀, devices[i, 2j+1]는 minus 셀로 할당
         for i in range(self.n_rows):
             for pcol in range(self.n_phys_cols):
                 dev_seed = None if base_seed is None else base_seed + 1009 * i + 37 * pcol
@@ -59,9 +64,10 @@ class DifferentialCrossbar:
     # Pair/column helpers
     # ------------------------------------------------------------------
     def _parse_pair_id(self, pair_id: Hashable) -> Tuple[int, int]:
+        # tuple인지 확인하고 (row, logical_col) 형태인지 검증. 범위 체크도 수행.
         if not isinstance(pair_id, tuple) or len(pair_id) != 2:
             raise ValueError("pair_id must be a tuple (row, logical_col)")
-        i, j = int(pair_id[0]), int(pair_id[1])
+        i, j = int(pair_id[0]), int(pair_id[1]) # int indexes for safety
         if not (0 <= i < self.n_rows and 0 <= j < self.n_logical_cols):
             raise IndexError(f"pair_id out of range: {(i, j)}")
         return i, j
@@ -113,12 +119,12 @@ class DifferentialCrossbar:
     # ------------------------------------------------------------------
     def _read_single_cell_current(self, i: int, phys_col: int) -> float:
         dev = self.devices[i, phys_col]
-        g_true = float(dev.g)
+        g_true = float(dev.g) # 실제 conductance 값. 이를 그대로 참조해서 읽지는 못함.
         v_eff = self.read_voltage * self._read_position_factor(i, phys_col)
         i_cell = g_true * v_eff
 
         if self.enable_sneak_path:
-            leak = max(0.0, self.g_max - g_true)
+            leak = max(0.0, dev.g_max_eff - g_true)
             i_cell += self.sneak_ratio * leak * v_eff
 
         if self.enable_read_noise and self.read_noise_rel_sigma > 0.0:
@@ -141,8 +147,6 @@ class DifferentialCrossbar:
         i_plus = self._read_single_cell_current(i, jp)
         i_minus = self._read_single_cell_current(i, jm)
 
-        # Convert with the nominal read voltage. Position losses stay embedded in
-        # the estimate to mimic real measured underestimation.
         g_plus_est = i_plus / max(self.read_voltage, 1e-18)
         g_minus_est = i_minus / max(self.read_voltage, 1e-18)
 
@@ -181,7 +185,7 @@ class DifferentialCrossbar:
         if n_eff <= 0:
             n_eff = 1
 
-        dev.apply_pulse(polarity=polarity, n_pulses=n_eff)
+        dev.apply_pulse(polarity=polarity, n_pulses=n_eff) # device_model의 apply_pulse
         return int(n_eff)
 
     # ------------------------------------------------------------------

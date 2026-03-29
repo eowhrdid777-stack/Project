@@ -19,6 +19,7 @@ class DeviceState:
 
 
 class MemristorDevice:
+    
     def __init__(
         self,
         seed: Optional[int] = None,
