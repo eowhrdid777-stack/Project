@@ -1346,3 +1346,194 @@
 #     vmm_test()
 #     pulse_sweep_test()
 #     summary_test()
+
+from __future__ import annotations
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+from stm_device_model import STMDeviceModel
+from stm_crossbar import STMCrossbar
+
+
+def _uS(x: np.ndarray) -> np.ndarray:
+    return np.asarray(x, dtype=float) * 1e6
+
+
+def _ms(x: np.ndarray) -> np.ndarray:
+    return np.asarray(x, dtype=float) * 1e3
+
+
+def plot_device_accumulation_and_gap_decay(seed: int = 0) -> None:
+    dev = STMDeviceModel(seed=seed)
+    dev.reset("rest")
+
+    hist = dev.simulate_pulse_train(
+        n_pulses=18,
+        amplitude_v=0.62,
+        pulse_width_s=1.0e-3,
+        interval_s=1.2e-3,
+        tail_relax_s=12e-3,
+    )
+
+    t = _ms(hist["time_s"])
+    fig, axes = plt.subplots(3, 1, figsize=(8, 9), sharex=True)
+
+    axes[0].plot(t, _uS(hist["conductance_s"]), linewidth=1.5)
+    axes[0].set_ylabel("Conductance (uS)")
+    axes[0].set_title("STM device: accumulation with exponential gap/tail decay")
+    axes[0].grid(True, alpha=0.3)
+
+    axes[1].plot(t, hist["z"], linewidth=1.3, label="z")
+    axes[1].plot(t, hist["x"], linewidth=1.3, label="x")
+    axes[1].plot(t, hist["r"], linewidth=1.3, label="r")
+    axes[1].set_ylabel("State")
+    axes[1].legend()
+    axes[1].grid(True, alpha=0.3)
+
+    axes[2].plot(t, 1e6 * hist["current_a"], linewidth=1.5)
+    axes[2].set_ylabel("Read current (uA)")
+    axes[2].set_xlabel("Time (ms)")
+    axes[2].grid(True, alpha=0.3)
+    plt.tight_layout()
+
+
+def plot_device_near_saturation_then_relax(seed: int = 1) -> None:
+    dev = STMDeviceModel(seed=seed)
+    dev.reset("rest")
+
+    hist = dev.simulate_pulse_train(
+        n_pulses=90,
+        amplitude_v=0.78,
+        pulse_width_s=1.2e-3,
+        interval_s=0.25e-3,
+        tail_relax_s=80e-3,
+    )
+
+    t = _ms(hist["time_s"])
+    # split at start of tail relaxation by detecting last pulse/gap activity before long relax
+    split_idx = int(np.argmax(np.diff(hist["time_s"]) > 5 * dev.dt_internal)) + 1
+    if split_idx <= 1:
+        split_idx = len(t) - 1
+
+    fig, axes = plt.subplots(2, 1, figsize=(8, 7), sharex=True)
+    axes[0].plot(t[:split_idx], _uS(hist["conductance_s"][:split_idx]), linewidth=1.6, label="pulse train")
+    axes[0].plot(t[split_idx-1:], _uS(hist["conductance_s"][split_idx-1:]), linewidth=1.8, label="relax only")
+    axes[0].axvline(t[split_idx-1], linestyle="--", alpha=0.8)
+    axes[0].set_ylabel("Conductance (uS)")
+    axes[0].set_title("STM device: smooth saturation and exponential relaxation")
+    axes[0].legend()
+    axes[0].grid(True, alpha=0.3)
+
+    axes[1].plot(t[:split_idx], hist["x"][:split_idx], linewidth=1.4, label="x during pulse train")
+    axes[1].plot(t[:split_idx], hist["r"][:split_idx], linewidth=1.4, label="r during pulse train")
+    axes[1].plot(t[split_idx-1:], hist["x"][split_idx-1:], linewidth=1.6, label="x during relax only")
+    axes[1].plot(t[split_idx-1:], hist["r"][split_idx-1:], linewidth=1.6, label="r during relax only")
+    axes[1].axvline(t[split_idx-1], linestyle="--", alpha=0.8)
+    axes[1].set_ylabel("State")
+    axes[1].set_xlabel("Time (ms)")
+    axes[1].legend()
+    axes[1].grid(True, alpha=0.3)
+    plt.tight_layout()
+
+
+def plot_d2d_variation(num_devices: int = 10) -> None:
+    plt.figure(figsize=(8, 5))
+    for seed in range(num_devices):
+        dev = STMDeviceModel(seed=seed)
+        dev.reset("rest")
+        hist = dev.simulate_pulse_train(
+            n_pulses=16,
+            amplitude_v=0.62,
+            pulse_width_s=1.0e-3,
+            interval_s=0.9e-3,
+            tail_relax_s=0.0,
+        )
+        plt.plot(_ms(hist["time_s"]), _uS(hist["conductance_s"]), linewidth=1.0, alpha=0.9)
+    plt.title("D2D variation across STM devices")
+    plt.xlabel("Time (ms)")
+    plt.ylabel("Conductance (uS)")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+
+def plot_c2c_variation(seed: int = 7, n_runs: int = 8) -> None:
+    plt.figure(figsize=(8, 5))
+    for _ in range(n_runs):
+        dev = STMDeviceModel(seed=seed)
+        dev.reset("rest")
+        hist = dev.simulate_pulse_train(
+            n_pulses=16,
+            amplitude_v=0.62,
+            pulse_width_s=1.0e-3,
+            interval_s=0.9e-3,
+            tail_relax_s=0.0,
+        )
+        plt.plot(_ms(hist["time_s"]), _uS(hist["conductance_s"]), linewidth=1.0, alpha=0.8)
+    plt.title("C2C variation for repeated runs of one STM device")
+    plt.xlabel("Time (ms)")
+    plt.ylabel("Conductance (uS)")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+
+def plot_crossbar_selected_cell(seed: int = 2) -> None:
+    cb = STMCrossbar(4, 4, seed=seed)
+    cb.reset_all("rest")
+    hist = cb.run_pulse_train(
+        cell_id=(0, 0),
+        n_pulses=22,
+        amplitude_v=0.66,
+        pulse_width_s=1.0e-3,
+        period_s=1.9e-3,
+        tail_relax_s=15e-3,
+        relax_unselected=False,
+    )
+
+    t = _ms(hist["time_s"])
+    fig, axes = plt.subplots(3, 1, figsize=(8, 9), sharex=True)
+    axes[0].plot(t, _uS(hist["conductance_s"]), linewidth=1.5)
+    axes[0].set_ylabel("Measured G (uS)")
+    axes[0].set_title("STMCrossbar selected-cell response")
+    axes[0].grid(True, alpha=0.3)
+
+    axes[1].plot(t, hist["z"], linewidth=1.3, label="z")
+    axes[1].plot(t, hist["x"], linewidth=1.3, label="x")
+    axes[1].plot(t, hist["r"], linewidth=1.3, label="r")
+    axes[1].set_ylabel("State")
+    axes[1].legend()
+    axes[1].grid(True, alpha=0.3)
+
+    axes[2].plot(t, 1e6 * hist["current_a"], linewidth=1.5)
+    axes[2].set_ylabel("Measured I (uA)")
+    axes[2].set_xlabel("Time (ms)")
+    axes[2].grid(True, alpha=0.3)
+    plt.tight_layout()
+
+
+def print_quick_summary() -> None:
+    dev = STMDeviceModel(seed=123)
+    dev.reset("rest")
+    hist = dev.simulate_pulse_train(
+        n_pulses=20,
+        amplitude_v=0.62,
+        pulse_width_s=1.0e-3,
+        interval_s=1.0e-3,
+        tail_relax_s=20e-3,
+    )
+    g = hist["conductance_s"]
+    print("[Quick summary]")
+    print(f"Initial G : {g[0]:.6e} S")
+    print(f"Peak G    : {np.max(g):.6e} S")
+    print(f"Final G   : {g[-1]:.6e} S")
+    print(f"Peak/Init : {np.max(g)/max(g[0], 1e-30):.3f}x")
+
+
+if __name__ == "__main__":
+    print_quick_summary()
+    plot_device_accumulation_and_gap_decay()
+    plot_device_near_saturation_then_relax()
+    plot_d2d_variation()
+    plot_c2c_variation()
+    plot_crossbar_selected_cell()
+    plt.show()
