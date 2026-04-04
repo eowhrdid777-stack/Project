@@ -1170,3 +1170,179 @@
 #         banner("TEST FAILED")
 #         traceback.print_exc()
 #         raise
+
+
+# from __future__ import annotations
+
+# import numpy as np
+
+# import config as cfg
+# from crossbar import DifferentialCrossbar
+
+
+# def print_pair_status(xbar: DifferentialCrossbar, pair_id: tuple[int, int], tag: str = "") -> None:
+#     gp_ideal, gm_ideal = xbar.read_pair_ideal(pair_id)
+#     gp_meas, gm_meas = xbar.read_pair(pair_id)
+#     w_ideal = gp_ideal - gm_ideal
+#     w_meas = gp_meas - gm_meas
+
+#     print(f"\n[{tag}] pair={pair_id}")
+#     print(f"  ideal  : g+={gp_ideal:.6e}, g-={gm_ideal:.6e}, w={w_ideal:.6e}")
+#     print(f"  meas   : g+={gp_meas:.6e}, g-={gm_meas:.6e}, w={w_meas:.6e}")
+
+
+# def basic_pair_test() -> None:
+#     print("=" * 60)
+#     print("1) Basic pair test")
+#     print("=" * 60)
+
+#     xbar = DifferentialCrossbar(
+#         n_rows=cfg.TEST_ARRAY_ROWS,
+#         n_cols=cfg.TEST_ARRAY_COLS,
+#         seed=cfg.SEED,
+#     )
+
+#     pair_id = cfg.TEST_PAIR
+
+#     print_pair_status(xbar, pair_id, tag="initial")
+
+#     # plus 쪽 potentiation
+#     n_eff = xbar.apply_pulse(pair_id, side="plus", polarity="pot", n_pulses=5)
+#     print(f"\nApplied PLUS-POT pulses, effective pulses = {n_eff}")
+#     print_pair_status(xbar, pair_id, tag="after plus-pot")
+
+#     # minus 쪽 potentiation -> differential weight 감소 효과 가능
+#     n_eff = xbar.apply_pulse(pair_id, side="minus", polarity="pot", n_pulses=3)
+#     print(f"\nApplied MINUS-POT pulses, effective pulses = {n_eff}")
+#     print_pair_status(xbar, pair_id, tag="after minus-pot")
+
+#     # minus 쪽 depression
+#     n_eff = xbar.apply_pulse(pair_id, side="minus", polarity="dep", n_pulses=4)
+#     print(f"\nApplied MINUS-DEP pulses, effective pulses = {n_eff}")
+#     print_pair_status(xbar, pair_id, tag="after minus-dep")
+
+#     measured_weight = xbar.read_weight_measured(pair_id)
+#     print(f"\nMeasured differential weight = {measured_weight:.6e}")
+
+
+# def bounds_and_set_test() -> None:
+#     print("\n" + "=" * 60)
+#     print("2) Bounds / direct set test")
+#     print("=" * 60)
+
+#     xbar = DifferentialCrossbar(
+#         n_rows=cfg.TEST_ARRAY_ROWS,
+#         n_cols=cfg.TEST_ARRAY_COLS,
+#         seed=cfg.SEED,
+#     )
+
+#     pair_id = cfg.TEST_PAIR
+#     gp_min, gp_max, gm_min, gm_max = xbar.get_pair_bounds(pair_id)
+
+#     print(f"\nBounds for pair {pair_id}")
+#     print(f"  g+ min/max = {gp_min:.6e} / {gp_max:.6e}")
+#     print(f"  g- min/max = {gm_min:.6e} / {gm_max:.6e}")
+
+#     # 중간쯤 값으로 강제 설정
+#     gp_target = 0.75 * gp_max + 0.25 * gp_min
+#     gm_target = 0.25 * gm_max + 0.75 * gm_min
+
+#     xbar.set_pair_conductance(pair_id, gp_target, gm_target)
+#     print_pair_status(xbar, pair_id, tag="after direct set")
+
+
+# def vmm_test() -> None:
+#     print("\n" + "=" * 60)
+#     print("3) Ideal VMM test")
+#     print("=" * 60)
+
+#     xbar = DifferentialCrossbar(
+#         n_rows=cfg.TEST_ARRAY_ROWS,
+#         n_cols=cfg.TEST_ARRAY_COLS,
+#         seed=cfg.SEED,
+#     )
+
+#     # 몇 개 pair에 임의 weight를 만들어줌
+#     for i in range(cfg.TEST_ARRAY_ROWS):
+#         for j in range(cfg.TEST_ARRAY_COLS):
+#             gp_min, gp_max, gm_min, gm_max = xbar.get_pair_bounds((i, j))
+
+#             # j가 짝수면 양의 weight, 홀수면 음의 weight 느낌으로 설정
+#             if j % 2 == 0:
+#                 gp = 0.8 * gp_max + 0.2 * gp_min
+#                 gm = 0.3 * gm_max + 0.7 * gm_min
+#             else:
+#                 gp = 0.3 * gp_max + 0.7 * gp_min
+#                 gm = 0.8 * gm_max + 0.2 * gm_min
+
+#             xbar.set_pair_conductance((i, j), gp, gm)
+
+#     x = np.array([0.2, 0.5, -0.3, 1.0], dtype=float)
+#     y = xbar.vmm_ideal(x)
+
+#     print(f"\nInput x = {x}")
+#     print(f"Ideal VMM output y = {y}")
+
+
+# def pulse_sweep_test() -> None:
+#     print("\n" + "=" * 60)
+#     print("4) Pulse sweep test")
+#     print("=" * 60)
+
+#     xbar = DifferentialCrossbar(
+#         n_rows=cfg.TEST_ARRAY_ROWS,
+#         n_cols=cfg.TEST_ARRAY_COLS,
+#         seed=cfg.SEED,
+#     )
+
+#     pair_id = cfg.TEST_PAIR
+
+#     print_pair_status(xbar, pair_id, tag="start sweep")
+
+#     # plus-pot sweep
+#     print("\n[PLUS-POT sweep]")
+#     for step in range(8):
+#         xbar.apply_pulse(pair_id, side="plus", polarity="pot", n_pulses=1)
+#         gp, gm = xbar.read_pair(pair_id)
+#         print(f"  step {step+1:02d}: g+={gp:.6e}, g-={gm:.6e}, w={gp-gm:.6e}")
+
+#     # plus-dep sweep
+#     print("\n[PLUS-DEP sweep]")
+#     for step in range(8):
+#         xbar.apply_pulse(pair_id, side="plus", polarity="dep", n_pulses=1)
+#         gp, gm = xbar.read_pair(pair_id)
+#         print(f"  step {step+1:02d}: g+={gp:.6e}, g-={gm:.6e}, w={gp-gm:.6e}")
+
+
+# def summary_test() -> None:
+#     print("\n" + "=" * 60)
+#     print("5) Array summary test")
+#     print("=" * 60)
+
+#     xbar = DifferentialCrossbar(
+#         n_rows=cfg.TEST_ARRAY_ROWS,
+#         n_cols=cfg.TEST_ARRAY_COLS,
+#         seed=cfg.SEED,
+#     )
+
+#     # 몇 번 pulse 줘서 상태 바꿔보기
+#     xbar.apply_pulse((0, 0), side="plus", polarity="pot", n_pulses=4)
+#     xbar.apply_pulse((1, 1), side="minus", polarity="pot", n_pulses=6)
+#     xbar.apply_pulse((2, 2), side="plus", polarity="dep", n_pulses=2)
+
+#     info = xbar.summary()
+
+#     print("\nSummary:")
+#     for k, v in info.items():
+#         if isinstance(v, float):
+#             print(f"  {k}: {v:.6e}")
+#         else:
+#             print(f"  {k}: {v}")
+
+
+# if __name__ == "__main__":
+#     basic_pair_test()
+#     bounds_and_set_test()
+#     vmm_test()
+#     pulse_sweep_test()
+#     summary_test()

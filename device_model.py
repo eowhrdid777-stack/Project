@@ -64,6 +64,10 @@ class MemristorDevice:
         # 소자의 실제 상태를 저장
         self.state = DeviceState(g=float(self._level_to_g(0, direction="pot")), level_idx=0)
         
+        # gate pulse sweep state for FeTFT-like programming
+        self.pot_pulse_cursor = 0
+        self.dep_pulse_cursor = 0
+        
         # 초기화 시 reset 모드에 따라 상태를 설정
         self.reset(self.g_init_mode)
 
@@ -129,6 +133,37 @@ class MemristorDevice:
         self.state.level_idx = int(new_idx)
         self.state.g = float(self.dep_curve[self.state.level_idx])
 
+    def next_pulse_voltage(self, polarity: PulsePolarity) -> float:
+        # incremeltal pulse scheme에 따라 다음 pulse의 gate voltage를 반환하는 함수
+        polarity = str(polarity).lower()
+
+        if polarity == "pot":
+            v = float(cfg.POT_START_V + self.pot_pulse_cursor * cfg.PULSE_V_STEP)
+            v = min(v, float(cfg.POT_STOP_V))
+            self.pot_pulse_cursor += 1
+            return float(v)
+
+        elif polarity == "dep":
+            v = float(cfg.DEP_START_V - self.dep_pulse_cursor * cfg.PULSE_V_STEP)
+            v = max(v, float(cfg.DEP_STOP_V))
+            self.dep_pulse_cursor += 1
+            return float(v)
+
+        else:
+            raise ValueError(f"Unknown polarity: {polarity}")
+
+    def apply_gate_pulse(
+        self,
+        gate_v: float,
+        drain_v: float = 1.0,
+        width_s: float = 10e-3,
+        polarity: PulsePolarity | None = None,
+    ) -> None:
+        if polarity is None:
+            polarity = "pot" if gate_v >= 0 else "dep"
+            
+        self.apply_pulse(polarity=polarity, n_pulses=1)
+        
     def apply_pulse(self, polarity: PulsePolarity, n_pulses: int = 1) -> None:
         if polarity == "pot":
             self.apply_pot_pulse(n_pulses)
@@ -163,11 +198,18 @@ class MemristorDevice:
 
         self.state.level_idx = int(idx)
         self.state.g = float(0.5 * (self.pot_curve[idx] + self.dep_curve[idx]))
+        
+        self.pot_pulse_cursor = 0
+        self.dep_pulse_cursor = 0
 
     @property
     def g(self) -> float:
         return float(self.state.g)
 
+    def read_conductance(self, gate_v: float, drain_v: float) -> float:
+        # 현재 단순 모델에서는 gate_v는 고정 read operating point 의미만 가진다.
+        return float(self.state.g)
+    
     def set_g(self, g: float) -> None:
         g = self._clip_g(float(g))
         idx = self._nearest_level_idx(g)

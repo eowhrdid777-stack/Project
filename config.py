@@ -1,16 +1,5 @@
 from __future__ import annotations
 
-"""Unified configuration for FeTFT differential-pair experiments.
-
-Paper-based anchors from the uploaded supplement:
-- 64 conductance states
-- Gmax/Gmin = 14.4
-- D2D variation = 3.93%
-- C2C variation = 2.36%
-- Read condition uses VG = -1 V, VD = 1 V
-- Pot/depression pulse amplitudes sweep from 2.7->4.3 V and -2.0->-3.6 V
-"""
-
 SEED = 42
 
 # Device window
@@ -43,11 +32,7 @@ DEP_START_V = -2.0
 DEP_STOP_V = -3.6
 PULSE_V_STEP = 0.025
 PULSE_WIDTH_S = 10e-3
-
-# Array nonidealities
-READ_VOLTAGE = 0.1
 READ_AVG_SAMPLES = 1
-PROGRAM_VOLTAGE = 1.0
 
 READ_IR_DROP_ALPHA = 0.04
 PROG_IR_DROP_ALPHA = 0.04

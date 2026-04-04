@@ -29,8 +29,15 @@ class DifferentialCrossbar:
         # read noise, device variation 등에 사용할 난수 생성기
         self.rng = np.random.default_rng(seed) 
 
-        self.read_voltage = float(cfg.READ_VOLTAGE)
-        self.program_voltage = float(cfg.PROGRAM_VOLTAGE)
+        self.read_gate_v = float(cfg.READ_GATE_V)
+        self.read_drain_v = float(cfg.READ_DRAIN_V)
+
+        self.pot_start_v = float(cfg.POT_START_V)
+        self.pot_stop_v = float(cfg.POT_STOP_V)
+        self.dep_start_v = float(cfg.DEP_START_V)
+        self.dep_stop_v = float(cfg.DEP_STOP_V)
+        self.pulse_v_step = float(cfg.PULSE_V_STEP)
+        self.pulse_width_s = float(cfg.PULSE_WIDTH_S)
 
         # crossbar에서 위치에 따라 발생하는 IR drop 효과를 시뮬레이션하기 위한 감쇠 계수
         self.read_ir_drop_alpha = float(cfg.READ_IR_DROP_ALPHA)
@@ -119,12 +126,16 @@ class DifferentialCrossbar:
     # ------------------------------------------------------------------
     def _read_single_cell_current(self, i: int, phys_col: int) -> float:
         dev = self.devices[i, phys_col]
-        g_true = float(dev.g) # 실제 conductance 값. 이를 그대로 참조해서 읽지는 못함.
-        v_eff = self.read_voltage * self._read_position_factor(i, phys_col)
-        i_cell = g_true * v_eff
+        g_ch = float(dev.read_conductance(
+            gate_v=self.read_gate_v,
+            drain_v=self.read_drain_v
+        )) # 실제 conductance 값. 이를 그대로 참조해서 읽지는 못함.
+        
+        v_eff = self.read_drain_v * self._read_position_factor(i, phys_col)
+        i_cell = g_ch * v_eff
 
         if self.enable_sneak_path:
-            leak = max(0.0, dev.g_max_eff - g_true)
+            leak = max(0.0, dev.g_max_eff - g_ch)
             i_cell += self.sneak_ratio * leak * v_eff
 
         if self.enable_read_noise and self.read_noise_rel_sigma > 0.0:
@@ -146,9 +157,11 @@ class DifferentialCrossbar:
 
         i_plus = self._read_single_cell_current(i, jp)
         i_minus = self._read_single_cell_current(i, jm)
+        
+        read_v = max(self.read_drain_v, 1e-18)
 
-        g_plus_est = i_plus / max(self.read_voltage, 1e-18)
-        g_minus_est = i_minus / max(self.read_voltage, 1e-18)
+        g_plus_est = i_plus / max(read_v, 1e-18)
+        g_minus_est = i_minus / max(read_v, 1e-18)
 
         self._apply_read_disturb(i, jp)
         self._apply_read_disturb(i, jm)
@@ -181,11 +194,17 @@ class DifferentialCrossbar:
         dev = self.devices[i, phys_col]
 
         factor = self._program_position_factor(i, phys_col)
-        n_eff = max(0, int(round(n_pulses * factor)))
-        if n_eff <= 0:
-            n_eff = 1
-
-        dev.apply_pulse(polarity=polarity, n_pulses=n_eff) # device_model의 apply_pulse
+        n_eff = max(1, int(round(n_pulses * factor)))
+        
+        for _ in range(n_eff):
+            pulse_v = dev.next_pulse_voltage(polarity=polarity)
+            dev.apply_gate_pulse(
+                gate_v=pulse_v,
+                drain_v=self.read_drain_v,
+                width_s=self.pulse_width_s,
+                polarity=polarity,
+            )
+            
         return int(n_eff)
 
     # ------------------------------------------------------------------
