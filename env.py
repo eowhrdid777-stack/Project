@@ -18,41 +18,6 @@ class EnvStepResult:
 
 
 class AbstractRescueGridEnv:
-    """
-    Abstract grid environment for the current recurrent memristive SNN project.
-
-    This is intentionally *not* tied to final hardware choices yet.
-    It gives you a lightweight environment to validate the loop:
-
-        observation -> network action -> env transition -> reward -> learning
-
-    Core ideas
-    ----------
-    - Grid world with obstacles, one robot, one victim.
-    - Observation is returned as a dictionary so it plugs naturally into the
-      current ``SensorSpikeEncoder`` design.
-    - Observation fields are abstract / sensor-like:
-        * front_clearance
-        * left_clearance
-        * right_clearance
-        * victim_signal
-    - Later you can replace each field with a more realistic sensor model
-      without changing the outer RL / SNN loop too much.
-
-    Action convention
-    -----------------
-    0: move forward
-    1: turn left
-    2: turn right
-    3: stay
-
-    Heading convention
-    ------------------
-    0: up
-    1: right
-    2: down
-    3: left
-    """
 
     ACTION_NAMES = {
         0: "forward", 
@@ -351,15 +316,6 @@ class AbstractRescueGridEnv:
         return float(np.clip(d / max(max_possible, 1), 0.0, 1.0))  # 0~1 정규화
 
     def _victim_signal_strength(self) -> float:
-        """
-        Abstract victim signal in [0, 1].
-
-        You can later reinterpret this as:
-        - thermal intensity
-        - CO2 concentration
-        - sound level
-        - combined confidence score
-        """
         d = self._distance(self.agent_pos, self.victim_pos)  # 피해자까지 거리
         sigma = max(self.victim_signal_sigma, 1e-6)  # sigma 최소 보정
         strength = np.exp(-(d ** 2) / (2.0 * sigma ** 2))  # 가우시안 신호 계산
