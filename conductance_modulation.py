@@ -12,6 +12,7 @@ from crossbar import DifferentialCrossbar
 # type aliases
 Direction = Literal[+1, -1]
 
+
 # 결과 기록용 데이터 저장 class
 @dataclass
 class ProgrammingResult:
@@ -38,18 +39,18 @@ class ConductanceModulationController:
         self.max_verify_steps = int(cfg.MAX_VERIFY_STEPS)
         self.pulses_per_verify_step = int(cfg.PULSES_PER_VERIFY_STEP)
 
-        # common-mode, refesh parameters / CM = 0.5*(g_plus+g_minus) 
-        self.cm_target = float(cfg.COMMON_MODE_TARGET) 
+        # common-mode, refresh parameters / CM = 0.5*(g_plus+g_minus)
+        self.cm_target = float(cfg.COMMON_MODE_TARGET)
         self.cm_band_fraction = float(cfg.COMMON_MODE_BAND_FRACTION)
-        self.headroom_trigger_fraction = float(cfg.HEADROOM_TRIGGER_FRACTION) # conductance가 최대/최소에서 일정 fraction 이하로 남으면 refresh 고려
-        self.refresh_check_period = int(cfg.REFRESH_CHECK_PERIOD) # 몇 step마다 refresh 고려할지
-        self.refresh_min_interval = int(cfg.REFRESH_MIN_INTERVAL) # refresh 사이 최소 step 간격
-        self.last_refresh_step = -10**9 # 마지막 refresh이후 경과 step 수 계산용 초기값
+        self.headroom_trigger_fraction = float(cfg.HEADROOM_TRIGGER_FRACTION)
+        self.refresh_check_period = int(cfg.REFRESH_CHECK_PERIOD)
+        self.refresh_min_interval = int(cfg.REFRESH_MIN_INTERVAL)
+        self.last_refresh_step = -10**9
 
     # ------------------------------------------------------------------
     # Helper calculations
     # ------------------------------------------------------------------
-    @staticmethod # self 없이도 호출 가능한 함수를 의미
+    @staticmethod
     def _weight(g_plus: float, g_minus: float) -> float:
         return float(g_plus - g_minus)
 
@@ -75,11 +76,11 @@ class ConductanceModulationController:
 
     def _cm_band(self, pair_id: Hashable) -> tuple[float, float]:
         gp_min, gp_max, gm_min, gm_max = self._pair_bounds(pair_id)
-        global_min = 0.5 * (gp_min + gm_min) # common mode의 한계값 (둘 다 최소일 때)
-        global_max = 0.5 * (gp_max + gm_max) # common mode의 한계값 (둘 다 최대일 때)
-        full_span = global_max - global_min # common mode가 가질 수 있는 최대 범위
-        half_band = 0.5 * self.cm_band_fraction * full_span 
-        return self.cm_target - half_band, self.cm_target + half_band # common mode가 target에서 벗어나도 허용할 범위 반환
+        global_min = 0.5 * (gp_min + gm_min)
+        global_max = 0.5 * (gp_max + gm_max)
+        full_span = global_max - global_min
+        half_band = 0.5 * self.cm_band_fraction * full_span
+        return self.cm_target - half_band, self.cm_target + half_band
 
     def _should_refresh(
         self,
@@ -98,10 +99,11 @@ class ConductanceModulationController:
             or h["gm_up"] <= self.headroom_trigger_fraction * gm_span
             or h["gm_down"] <= self.headroom_trigger_fraction * gm_span
         )
+
         periodic = (step_idx % max(1, self.refresh_check_period) == 0)
         spaced = (step_idx - self.last_refresh_step) >= self.refresh_min_interval
-        # refresh 간격은 충분히 벌어졌고 headroom이 위험하거나 또는 주기적 체크 시점이면 refresh 고려
-        return bool(spaced and (low_headroom or periodic)) 
+
+        return bool(spaced and (low_headroom or periodic))
 
     # ------------------------------------------------------------------
     # One-step online update policy
@@ -120,18 +122,26 @@ class ConductanceModulationController:
         g_minus: float,
     ) -> tuple[str, str]:
         h = self._headrooms(pair_id, g_plus, g_minus)
-        cm = self._common_mode(g_plus, g_minus)
         band_lo, band_hi = self._cm_band(pair_id)
         target_bias = max(self.cm_target - band_lo, band_hi - self.cm_target)
 
         candidates: list[tuple[float, str, str]] = []
 
-        def add_if_feasible(side: str, polarity: str, gp_delta_sign: int, gm_delta_sign: int, headroom_key: str) -> None:
-            # headroom이 충분히 남아있는 액션만 후보로 고려.
+        def add_if_feasible(
+            side: str,
+            polarity: str,
+            gp_delta_sign: int,
+            gm_delta_sign: int,
+            headroom_key: str,
+        ) -> None:
             if h[headroom_key] <= 0.0:
                 return
-            # 액션 이후 예상되는 common mode 계산. 정밀 계산이 아닌 대략적인 추정 값.
-            step_mag = 0.5 * min(h[headroom_key], max(1e-9, 0.04 * (cfg.G_MAX - cfg.G_MIN)))
+
+            step_mag = 0.5 * min(
+                h[headroom_key],
+                max(1e-9, 0.04 * (cfg.G_MAX - cfg.G_MIN)),
+            )
+
             gp_after = g_plus + gp_delta_sign * step_mag
             gm_after = g_minus + gm_delta_sign * step_mag
             cm_after = self._common_mode(gp_after, gm_after)
@@ -158,7 +168,6 @@ class ConductanceModulationController:
                     return "minus", "pot"
             raise RuntimeError("No feasible one-sided programming action for this pair state.")
 
-        # 후보를 오름차순으로 정렬한 뒤 가장 낮은 점수인 액션 선택
         candidates.sort(key=lambda x: x[0])
         _, side, polarity = candidates[0]
         return side, polarity
@@ -173,14 +182,23 @@ class ConductanceModulationController:
         target: float,
     ) -> int:
         pulses = 0
+
         for _ in range(self.max_verify_steps):
             gp, gm = self.access.read_pair(pair_id)
             g_now = gp if side == "plus" else gm
             err = target - g_now
+
             if abs(err) <= self.program_tolerance:
                 break
+
             polarity = "pot" if err > 0.0 else "dep"
-            pulses += self.access.apply_pulse(pair_id, side=side, polarity=polarity, n_pulses=self.pulses_per_verify_step)
+            pulses += self.access.apply_pulse(
+                pair_id,
+                side=side,
+                polarity=polarity,
+                n_pulses=self.pulses_per_verify_step,
+            )
+
         return int(pulses)
 
     def refresh_remap(self, pair_id: Hashable, step_idx: int) -> ProgrammingResult:
@@ -188,26 +206,28 @@ class ConductanceModulationController:
         w_before = self._weight(gp_before, gm_before)
 
         gp_min, gp_max, gm_min, gm_max = self._pair_bounds(pair_id)
-        cm_target = float(np.clip(self.cm_target, 0.5 * (gp_min + gm_min), 0.5 * (gp_max + gm_max)))
-        # 목표값 g=common mode + 0.5*weight 형태로 계산.
-        gp_tgt = float(np.clip(cm_target + 0.5 * w_before, gp_min, gp_max))
-        gm_tgt = float(np.clip(cm_target - 0.5 * w_before, gm_min, gm_max))
 
-        # w_before가 너무 크거나 작아서 common mode 범위를 벗어나는 경우, common mode 범위 내에서 달성 가능한 최대한의 weight로 remap 목표 설정
+        cm_target = float(
+            np.clip(
+                self.cm_target,
+                0.5 * (gp_min + gm_min),
+                0.5 * (gp_max + gm_max),
+            )
+        )
+
         feasible_span_pos = gp_max - gm_min
         feasible_span_neg = gp_min - gm_max
-        w_tgt = float(np.clip(w_before, feasible_span_neg, feasible_span_pos)) 
+        w_tgt = float(np.clip(w_before, feasible_span_neg, feasible_span_pos))
+
         gp_tgt = float(np.clip(cm_target + 0.5 * w_tgt, gp_min, gp_max))
         gm_tgt = float(np.clip(cm_target - 0.5 * w_tgt, gm_min, gm_max))
 
-        # refresh/remap을 통해 양쪽 모두 목표값으로 프로그래밍
         n_plus = self._program_side_to_target(pair_id, "plus", gp_tgt)
         n_minus = self._program_side_to_target(pair_id, "minus", gm_tgt)
 
-        # 프로그래밍 이후 실제로 목표값에 도달했는지 read
         gp_after, gm_after = self.access.read_pair(pair_id)
         self.last_refresh_step = int(step_idx)
-        
+
         return ProgrammingResult(
             success=True,
             n_pulses_plus=n_plus,
@@ -223,24 +243,45 @@ class ConductanceModulationController:
         )
 
     # ------------------------------------------------------------------
-    # Public API(Application Programming Interface)
+    # Public API
     # ------------------------------------------------------------------
-    def update_weight(self, pair_id: Hashable, direction: int, step_idx: int) -> ProgrammingResult:
+    def update_weight(
+        self,
+        pair_id: Hashable,
+        direction: int,
+        step_idx: int,
+        n_pulses: int = 1,
+    ) -> ProgrammingResult:
         if direction not in (+1, -1):
             raise ValueError(f"direction must be +1 or -1, got {direction}")
+
+        n_req = max(1, int(n_pulses))
 
         # 업데이트 시도 전 현재 상태 읽기
         gp_before, gm_before = self.access.read_pair(pair_id)
         w_before = self._weight(gp_before, gm_before)
 
-        # 업데이트 시점에 refresh가 필요한지 판단. 필요하면 refresh부터 수행.
+        # 업데이트 시점에 refresh가 필요한지 판단
         if self._should_refresh(pair_id, step_idx, gp_before, gm_before):
             return self.refresh_remap(pair_id, step_idx)
 
-        # One-sided 액션 선택 및 적용 (refresh가 아닌 경우에는 한쪽만 펄스 적용)
-        side, polarity = self.choose_one_sided_action(pair_id, direction, gp_before, gm_before)
-        n_eff = self.access.apply_pulse(pair_id, side=side, polarity=polarity, n_pulses=1)
+        # One-sided 액션 선택 및 적용
+        side, polarity = self.choose_one_sided_action(
+            pair_id,
+            direction,
+            gp_before,
+            gm_before,
+        )
+
+        n_eff = self.access.apply_pulse(
+            pair_id,
+            side=side,
+            polarity=polarity,
+            n_pulses=n_req,
+        )
+
         gp_after, gm_after = self.access.read_pair(pair_id)
+
         return ProgrammingResult(
             success=True,
             n_pulses_plus=n_eff if side == "plus" else 0,
@@ -252,12 +293,16 @@ class ConductanceModulationController:
             common_mode_after=self._common_mode(gp_after, gm_after),
             did_refresh=False,
             chosen_action=f"{side}-{polarity}",
-            message="One-sided balanced differential update.",
+            message=(
+                "One-sided balanced differential update. "
+                f"requested_pulses={n_req}, effective_pulses={n_eff}"
+            ),
         )
 
     def get_pair_status(self, pair_id: Hashable) -> dict:
         gp, gm = self.access.read_pair(pair_id)
         h = self._headrooms(pair_id, gp, gm)
+
         return {
             "g_plus_measured": float(gp),
             "g_minus_measured": float(gm),
@@ -265,4 +310,3 @@ class ConductanceModulationController:
             "common_mode_measured": self._common_mode(gp, gm),
             "headrooms": h,
         }
-
