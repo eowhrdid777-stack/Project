@@ -165,10 +165,14 @@ def build_env(seed: Optional[int] = None) -> AbstractRescueGridEnv:
         max_steps=getattr(cfg, "ENV_MAX_STEPS", 10),
         obstacle_density=getattr(cfg, "ENV_OBSTACLE_DENSITY", 0.12),
         seed=getattr(cfg, "SEED", 42) if seed is None else seed,
+        n_victims=getattr(cfg, "ENV_N_VICTIMS", 3),
     )
 
 
-def build_network(encoder: SensorSpikeEncoder, seed: Optional[int] = None) -> MemristiveSNNNetwork:
+def build_network(
+    encoder: SensorSpikeEncoder,
+    seed: Optional[int] = None,
+) -> MemristiveSNNNetwork:
     return MemristiveSNNNetwork(
         encoder=encoder,
         n_actions=4,
@@ -185,8 +189,18 @@ def build_learner() -> RewardModulatedSTDPLearner:
             a_plus=getattr(cfg, "RSTDP_A_PLUS", 1.0),
             a_minus=getattr(cfg, "RSTDP_A_MINUS", 0.8),
             eligibility_threshold=getattr(cfg, "RSTDP_ELIGIBILITY_THRESHOLD", 1e-6),
-            use_surrogate_post_on_fallback=getattr(cfg, "RSTDP_USE_SURROGATE_POST_ON_FALLBACK", False),
+            use_surrogate_post_on_fallback=getattr(
+                cfg,
+                "RSTDP_USE_SURROGATE_POST_ON_FALLBACK",
+                False,
+            ),
             enable_hidden_rstdp=getattr(cfg, "RSTDP_ENABLE_HIDDEN", False),
+
+            # delta_w = reward * eligibility -> pulse count mapping
+            delta_w_scale=getattr(cfg, "RSTDP_DELTA_W_SCALE", 1.0),
+            pulse_base=getattr(cfg, "RSTDP_PULSE_BASE", 1),
+            pulse_max=getattr(cfg, "RSTDP_PULSE_MAX", 4),
+            delta_w_per_pulse=getattr(cfg, "RSTDP_DELTA_W_PER_PULSE", 0.05),
         )
     )
 
@@ -249,8 +263,12 @@ def run_episode(
                     "used_fallback": decision.used_fallback,
                     "selected_step": decision.selected_step,
                     "action": decision.action,
-                    "hidden_spikes": [rec.hidden_result.spikes for rec in decision.step_records],
-                    "output_spikes": [rec.output_result.spikes for rec in decision.step_records],
+                    "hidden_spikes": [
+                        rec.hidden_result.spikes for rec in decision.step_records
+                    ],
+                    "output_spikes": [
+                        rec.output_result.spikes for rec in decision.step_records
+                    ],
                 },
                 learning_event=None if learning_events is None else learning_events["output"],
             )
@@ -259,7 +277,10 @@ def run_episode(
 
         if verbose:
             print(f"[step {step_idx}] action={decision.action} reward={step.reward}")
-            print(f"selected_step={decision.selected_step} used_fallback={decision.used_fallback} target={target}")
+            print(
+                f"selected_step={decision.selected_step} "
+                f"used_fallback={decision.used_fallback} target={target}"
+            )
             if learning_events is not None:
                 print("learning output:", learning_events["output"])
                 print("learning hidden:", learning_events["hidden"])
@@ -270,7 +291,9 @@ def run_episode(
         done = bool(step.done)
         step_idx += 1
 
-    success = bool(env.agent_pos == env.victim_pos)
+    # 다중 생존자 기준:
+    # 모든 생존자를 구조해서 남은 victim_positions가 0개이면 성공
+    success = bool(len(env.victim_positions) == 0)
 
     if verbose:
         print(f"episode reward: {total_reward}")
@@ -389,6 +412,7 @@ def run_experiment(verbose: bool = True):
         "train": train_summary,
         "eval": eval_summary,
     }
+
 
 if __name__ == "__main__":
     run_experiment(verbose=True)
