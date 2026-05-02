@@ -1,12 +1,12 @@
-from __future__ import annotations  
+from __future__ import annotations
 
-from dataclasses import dataclass  
-from typing import Dict, List, Optional, Sequence, Tuple  
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Sequence, Tuple
 
-import numpy as np  
+import numpy as np
 
-from conductance_modulation import ProgrammingResult  
-from network import MemristiveSNNNetwork  
+from conductance_modulation import ProgrammingResult
+from network import MemristiveSNNNetwork
 
 
 @dataclass
@@ -22,8 +22,10 @@ class RSTDPConfig:
     If delta_t < 0:
         delta_w ~ -A_minus * exp(+delta_t / tau_minus)
 
-    Final physical programming direction is determined by:
-        sign(reward * eligibility)
+    Modified physical programming flow:
+        delta_w = reward * eligibility
+        direction = sign(delta_w)
+        n_pulses = f(|delta_w|)
     """
     tau_plus: float = 2.0  # pre가 먼저일 때 시간 상수
     tau_minus: float = 2.0  # post가 먼저일 때 시간 상수
@@ -37,6 +39,14 @@ class RSTDPConfig:
 
     # Hidden-layer R-STDP is optional because it is harder to stabilize.
     enable_hidden_rstdp: bool = False  # hidden layer 학습 여부
+
+    # ------------------------------------------------------------------
+    # delta_w -> pulse mapping
+    # ------------------------------------------------------------------
+    delta_w_scale: float = 1.0  # reward*eligibility 추가 스케일
+    pulse_base: int = 1  # 업데이트가 있으면 최소 몇 펄스 줄지
+    pulse_max: int = 4  # 최대 펄스 수
+    delta_w_per_pulse: float = 0.05  # delta_w 얼마당 펄스 1개로 볼지
 
 
 @dataclass
@@ -63,8 +73,10 @@ class RewardModulatedSTDPLearner:
     Important:
     - Spike timing -> eligibility
     - Reward -> global gate
+    - delta_w = reward * eligibility
     - Final update is NOT an ideal floating-point write
     - Actual programming goes through ConductanceModulationController.update_weight()
+      with direction + pulse count.
     """
 
     def __init__(self, config: Optional[RSTDPConfig] = None) -> None:
@@ -142,11 +154,10 @@ class RewardModulatedSTDPLearner:
                 reward=float(reward),  # 현재 보상
                 winner=winner,  # winner 기록
                 target=target,  # target 기록
-                message="No postsynaptic output spike available; skipped output R-STDP.",   
+                message="No postsynaptic output spike available; skipped output R-STDP.",
             )
 
-        reward_sign = self._reward_sign(reward)  # 보상 부호 계산
-        if reward_sign == 0:  # 보상이 0이면
+        if reward == 0.0:  # 보상이 0이면
             return RSTDPUpdateEvent(
                 layer_name="output",  # output layer
                 updated_pairs=[],  # 업데이트 없음
@@ -160,7 +171,7 @@ class RewardModulatedSTDPLearner:
                 reward=float(reward),  # 현재 보상
                 winner=winner,  # winner 기록
                 target=target,  # target 기록
-                message="Reward is zero; no gated output R-STDP update applied.",   
+                message="Reward is zero; no gated output R-STDP update applied.",
             )
 
         updated_pairs: List[Tuple[int, int]] = []  # 업데이트된 pair들
@@ -175,20 +186,24 @@ class RewardModulatedSTDPLearner:
         for row in range(n_pre):  # 모든 pre 뉴런 순회
             pre_times = np.flatnonzero(pre_spikes[:, row] > 0).astype(int).tolist()  # 해당 pre spike 시각들
             if not pre_times:  # spike 없으면 건너뜀
-                continue   
+                continue
 
             best_dt, elig = self._pair_eligibility(pre_times, post_times)  # eligibility 계산
             if abs(elig) < self.cfg.eligibility_threshold:  # 너무 작으면 건너뜀
-                continue   
+                continue
 
-            direction = self._eligibility_to_direction(elig=elig, reward=reward)  # 물리적 방향 계산
-            if direction == 0:  # 방향 없으면 건너뜀
-                continue   
+            delta_w = self._delta_w(elig=elig, reward=reward)  # 실제 목표 weight 변화량
+            direction = self._delta_w_to_direction(delta_w)  # 물리적 방향 계산
+            n_pulses = self._delta_w_to_pulse_count(delta_w)  # delta_w에 맞는 펄스 수 계산
+
+            if direction == 0 or n_pulses == 0:  # 방향 없거나 펄스 0이면 건너뜀
+                continue
 
             result: ProgrammingResult = net.output_layer.controller.update_weight(
-                (int(row), int(post_col)),  # 시냅스 위치
-                int(direction),  # 방향
-                int(net.global_step),  # 현재 global step
+                pair_id=(int(row), int(post_col)),  # 시냅스 위치
+                direction=int(direction),  # 방향
+                step_idx=int(net.global_step),  # 현재 global step
+                n_pulses=int(n_pulses),  # 계산된 펄스 수
             )
 
             updated_pairs.append((int(row), int(post_col)))  # pair 기록
@@ -214,7 +229,7 @@ class RewardModulatedSTDPLearner:
             reward=float(reward),  # 보상 기록
             winner=winner,  # winner 기록
             target=target,  # target 기록
-            message="Output R-STDP pulse update executed." if updated_pairs else "No output pair crossed eligibility threshold.",   
+            message="Output R-STDP pulse update executed." if updated_pairs else "No output pair crossed eligibility threshold.",
         )
 
     # ------------------------------------------------------------------
@@ -244,7 +259,7 @@ class RewardModulatedSTDPLearner:
                 reward=float(reward),  # 보상 기록
                 winner=-1,  # winner 없음
                 target=None,  # target 없음
-                message="Selected step out of range; skipped hidden R-STDP.",  
+                message="Selected step out of range; skipped hidden R-STDP.",
             )
 
         hidden_winner = int(step_records[selected_step].hidden_result.winner)  # hidden winner
@@ -262,7 +277,7 @@ class RewardModulatedSTDPLearner:
                 reward=float(reward),  # 보상 기록
                 winner=-1,  # winner 없음
                 target=None,  # target 없음
-                message="No hidden winner at selected step; skipped hidden R-STDP.",   
+                message="No hidden winner at selected step; skipped hidden R-STDP.",
             )
 
         pre_spikes = np.array(
@@ -290,11 +305,10 @@ class RewardModulatedSTDPLearner:
                 reward=float(reward),  # 보상 기록
                 winner=hidden_winner,  # winner 기록
                 target=None,  # target 없음
-                message="No hidden postsynaptic spike available; skipped hidden R-STDP.",  
+                message="No hidden postsynaptic spike available; skipped hidden R-STDP.",
             )
 
-        reward_sign = self._reward_sign(reward)  # 보상 부호
-        if reward_sign == 0:  # 보상이 0이면
+        if reward == 0.0:  # 보상이 0이면
             return RSTDPUpdateEvent(
                 layer_name="hidden",  # hidden layer
                 updated_pairs=[],  # 업데이트 없음
@@ -308,7 +322,7 @@ class RewardModulatedSTDPLearner:
                 reward=float(reward),  # 보상 기록
                 winner=hidden_winner,  # winner 기록
                 target=None,  # target 없음
-                message="Reward is zero; no gated hidden R-STDP update applied.",  
+                message="Reward is zero; no gated hidden R-STDP update applied.",
             )
 
         updated_pairs: List[Tuple[int, int]] = []  # 업데이트 pair들
@@ -324,20 +338,24 @@ class RewardModulatedSTDPLearner:
         for row in range(n_pre):  # 모든 pre 입력 순회
             pre_times = np.flatnonzero(pre_spikes[:, row] > 0).astype(int).tolist()  # pre spike 시각들
             if not pre_times:  # spike 없으면 건너뜀
-                continue   
+                continue
 
             best_dt, elig = self._pair_eligibility(pre_times, post_times)  # eligibility 계산
             if abs(elig) < self.cfg.eligibility_threshold:  # 너무 작으면 건너뜀
-                continue   
+                continue
 
-            direction = self._eligibility_to_direction(elig=elig, reward=reward)  # 방향 계산
-            if direction == 0:  # 방향 없으면 건너뜀
-                continue   
+            delta_w = self._delta_w(elig=elig, reward=reward)  # 실제 목표 weight 변화량
+            direction = self._delta_w_to_direction(delta_w)  # 방향 계산
+            n_pulses = self._delta_w_to_pulse_count(delta_w)  # 펄스 수 계산
+
+            if direction == 0 or n_pulses == 0:  # 방향 없거나 펄스 0이면 건너뜀
+                continue
 
             result: ProgrammingResult = net.hidden_layer.controller.update_weight(
-                (int(row), int(hidden_winner)),  # hidden 시냅스 위치
-                int(direction),  # 방향
-                int(net.global_step),  # 현재 global step
+                pair_id=(int(row), int(hidden_winner)),  # hidden 시냅스 위치
+                direction=int(direction),  # 방향
+                step_idx=int(net.global_step),  # 현재 global step
+                n_pulses=int(n_pulses),  # 계산된 펄스 수
             )
 
             updated_pairs.append((int(row), int(hidden_winner)))  # pair 기록
@@ -363,7 +381,7 @@ class RewardModulatedSTDPLearner:
             reward=float(reward),  # 보상 기록
             winner=hidden_winner,  # winner 기록
             target=None,  # target 없음
-            message="Hidden R-STDP pulse update executed." if updated_pairs else "No hidden pair crossed eligibility threshold.",   
+            message="Hidden R-STDP pulse update executed." if updated_pairs else "No hidden pair crossed eligibility threshold.",
         )
 
     # ------------------------------------------------------------------
@@ -398,29 +416,30 @@ class RewardModulatedSTDPLearner:
             return float(-self.cfg.a_minus * np.exp(-(-dt) / max(self.cfg.tau_minus, 1e-12)))  # 약화
         return 0.0  # 동시에 발생하면 0
 
+    # ------------------------------------------------------------------
+    # Delta-w mapping
+    # ------------------------------------------------------------------
+    def _delta_w(self, elig: float, reward: float) -> float:
+        return float(self.cfg.delta_w_scale * float(reward) * float(elig))
+
     @staticmethod
-    def _reward_sign(reward: float) -> int:
-        if reward > 0.0:  # 양의 보상
-            return 1  # +1
-        if reward < 0.0:  # 음의 보상
-            return -1  # -1
-        return 0  # 0 보상
+    def _delta_w_to_direction(delta_w: float) -> int:
+        if delta_w > 0.0:
+            return +1
+        if delta_w < 0.0:
+            return -1
+        return 0
 
-    def _eligibility_to_direction(self, elig: float, reward: float) -> int:
-        """
-        Convert sign(reward * eligibility) to physical programming direction.
+    def _delta_w_to_pulse_count(self, delta_w: float) -> int:
+        mag = abs(float(delta_w))
+        if mag < self.cfg.eligibility_threshold:
+            return 0
 
-        +1: strengthen effective synaptic influence
-        -1: weaken effective synaptic influence
-         0: no update
-        """
-        value = float(elig) * float(reward)  # reward와 eligibility 곱
-        if value > 0.0:  # 양수면
-            return +1  # 강화 방향
-        if value < 0.0:  # 음수면
-            return -1  # 약화 방향
-        return 0  # 업데이트 없음
+        pulses = int(np.ceil(mag / max(self.cfg.delta_w_per_pulse, 1e-12)))
+        pulses = max(int(self.cfg.pulse_base), pulses)
+        pulses = min(int(self.cfg.pulse_max), pulses)
+        return int(pulses)
 
 
 if __name__ == "__main__":
-    print("learning.py ready: explicit delta_t -> eligibility -> pulse direction path enabled.")  # 준비 메시지
+    print("learning.py ready: delta_w = reward * eligibility -> direction + pulse-count path enabled.")
