@@ -100,7 +100,10 @@ class ConductanceModulationController:
             or h["gm_down"] <= self.headroom_trigger_fraction * gm_span
         )
 
-        periodic = (step_idx % max(1, self.refresh_check_period) == 0)
+        periodic = (
+            step_idx > 0
+            and step_idx % max(1, self.refresh_check_period) == 0
+        )
         spaced = (step_idx - self.last_refresh_step) >= self.refresh_min_interval
 
         return bool(spaced and (low_headroom or periodic))
