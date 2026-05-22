@@ -1,399 +1,424 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Literal, Optional, Sequence, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 import numpy as np
 
 import config as cfg
 
-
-# 1차원 입력은 list/tuple/numpy array 모두 허용
 ArrayLike1D = Union[Sequence[float], np.ndarray]
-
-# observation은 dict 형태도 되고, 그냥 1차원 배열 형태도 가능
 ObsType = Union[Dict[str, float], ArrayLike1D]
-
-# 지원하는 인코딩 방식 3가지
-# - rate: feature 1개당 뉴런 1개, 값이 클수록 spike 확률 증가
-# - population_rate: feature 1개를 여러 receptive field 뉴런으로 펼친 뒤 확률 발화
-# - population_latency: feature 1개를 여러 receptive field 뉴런으로 펼친 뒤 강할수록 더 빨리 spike
-EncodingMode = Literal["rate", "population_rate", "population_latency"]
 
 
 @dataclass
 class EncoderOutput:
-    """
-    인코더가 최종적으로 반환하는 결과 묶음.
-    이후 neuron/network 쪽에서 이 출력을 받아 사용한다.
-    """
 
-    # 현재 sim_step에서 실제로 발생한 spike 벡터 (0 또는 1)
+    # 현재 timestep에서 실제로 발생한 입력 spike 벡터, shape = (output_dim,)
     spikes: np.ndarray
 
-    # 각 입력 채널의 활성도
-    # rate mode에서는 firing rate 의미에 가깝고,
-    # latency mode에서는 receptive field activation strength 의미
+    # population receptive field activation.
+    # latency encoding에서는 firing rate라기보다 각 입력 채널의 반응 세기이다.
     firing_rates: np.ndarray
 
-    # 각 채널이 spike를 내도록 예약된 시간
-    # np.inf 이면 이번 latency window 안에서는 spike 없음
+    # 각 채널이 spike를 내도록 예약된 timestep.
+    # np.inf이면 해당 latency window 안에서는 spike가 발생하지 않는다.
     spike_times: np.ndarray
 
-    # 정규화된 입력값
-    # population mode에서는 feature 값이 뉴런 수만큼 반복됨
+    # 정규화된 원래 feature 값.
+    # population encoding에서는 feature 값을 neurons_per_feature만큼 반복한다.
     analog_values: np.ndarray
 
-    # 사람이 보기 쉬운 채널 이름
+    # 각 population channel 이름.
+    # 예: front_clearance_rf0, front_clearance_rf1, ...
     feature_names: List[str]
 
-    # 현재 사용한 encoding mode
-    mode: str
+    # 현재 인코딩 모드. 현재 파일에서는 항상 "population_latency"이다.
+    mode: str = "population_latency"
 
 
 class SensorSpikeEncoder:
     """
-    센서/환경 observation을 spike 형태로 바꾸는 인코더.
+    Population latency encoder.
 
-    전체 흐름:
-    observation -> 배열화 -> 정규화 -> receptive field 전개(필요시) -> mode별 spike 생성
+    처리 흐름:
+        observation
+        -> feature_names 순서대로 배열화
+        -> feature별 value_ranges 기준 0~1 정규화
+        -> Gaussian receptive field population activation 계산
+        -> activation이 큰 채널일수록 빠른 timestep에 spike 예약
+        -> encode_window()가 latency_steps 길이의 spike window 반환
 
-    이 파일은 가능한 한 self-contained 하게 짜여 있어서,
-    config에 값이 있으면 가져오고, 없으면 안전한 기본값을 사용한다.
+    현재 simulation 코드와의 연결:
+        network.py는 encoder.output_dim을 보고 crossbar row 수를 정한다.
+        따라서 neurons_per_feature 또는 feature_names를 바꾸면
+        network/crossbar를 새로 생성해야 한다.
+
+    실제 로봇 사용 시 주의:
+        이 파일은 실제 센서를 읽지 않는다.
+        실제 로봇에서는 real_robot_env.py 또는 robot_interface.py에서
+        Arduino로부터 raw sensor를 읽은 뒤 아래처럼 observation을 구성한다.
+
+        예시:
+            obs = {
+                "front_clearance": normalized_or_scaled_distance,
+                "left_clearance": ...,
+                "right_clearance": ...,
+                "victim_signal": ...,
+            }
+
+        만약 실제 로봇에서 raw 값(DIST_MM, R, G, B, C)을 그대로 넣고 싶다면,
+        main.py의 build_encoder()에서 feature_names와 value_ranges를
+        실제 센서 이름/범위에 맞게 바꾸면 된다.
     """
+
+    SUPPORTED_MODE = "population_latency"
 
     def __init__(
         self,
         obs_dim: Optional[int] = None,
         feature_names: Optional[Sequence[str]] = None,
-        mode: EncodingMode = "population_latency",
+        mode: str = "population_latency",
         seed: Optional[int] = None,
         value_ranges: Optional[Dict[str, tuple[float, float]]] = None,
         neurons_per_feature: Optional[int] = None,
         latency_steps: Optional[int] = None,
-        max_rate_hz: Optional[float] = None,
-        dt: Optional[float] = None,
         activation_threshold: Optional[float] = None,
         sigma_scale: Optional[float] = None,
+        ensure_one_spike_per_feature: Optional[bool] = None,
+        use_rank_order_tie_break: Optional[bool] = None,
     ) -> None:
-        # 현재 어떤 mode를 쓸지 저장
+        # ------------------------------------------------------------
+        # Mode validation
+        # ------------------------------------------------------------
         self.mode = str(mode)
+        if self.mode != self.SUPPORTED_MODE:
+            raise ValueError(
+                "This encoding.py supports only 'population_latency'. "
+                f"Got mode={self.mode!r}."
+            )
 
-        # rate 계열 모드에서는 확률적으로 spike를 만들기 때문에 난수 생성기가 필요함
-        self.rng = np.random.default_rng(getattr(cfg, "SEED", 42) if seed is None else seed)
+        # seed는 현재 deterministic latency encoding에서는 거의 쓰지 않지만,
+        # 추후 tie-break나 noise 실험에 대비해 보존한다.
+        self.seed = int(getattr(cfg, "SEED", 42) if seed is None else seed)
+        self.rng = np.random.default_rng(self.seed)
 
-        # dt: 시뮬레이션 시간 간격
-        # max_rate_hz: rate mode에서 최대 발화율
-        # neurons_per_feature: feature 하나를 몇 개의 receptive field 뉴런으로 펼칠지
-        # latency_steps: latency mode에서 time window 길이
-        # activation_threshold: 너무 약한 활성은 spike 안 내도록 자르는 기준
-        # sigma_scale: receptive field 폭 조절
-        self.dt = float(getattr(cfg, "ENCODER_DT", 1.0 if dt is None else dt)) if dt is None else float(dt)
-        self.max_rate_hz = float(getattr(cfg, "ENCODER_MAX_RATE_HZ", 200.0 if max_rate_hz is None else max_rate_hz)) if max_rate_hz is None else float(max_rate_hz)
-        self.neurons_per_feature = int(getattr(cfg, "ENCODER_NEURONS_PER_FEATURE", 5 if neurons_per_feature is None else neurons_per_feature)) if neurons_per_feature is None else int(neurons_per_feature)
-        self.latency_steps = int(getattr(cfg, "ENCODER_LATENCY_STEPS", 8 if latency_steps is None else latency_steps)) if latency_steps is None else int(latency_steps)
-        self.activation_threshold = float(getattr(cfg, "ENCODER_ACTIVATION_THRESHOLD", 0.05 if activation_threshold is None else activation_threshold)) if activation_threshold is None else float(activation_threshold)
-        self.sigma_scale = float(getattr(cfg, "ENCODER_SIGMA_SCALE", 0.55 if sigma_scale is None else sigma_scale)) if sigma_scale is None else float(sigma_scale)
-
-        # 입력 feature 이름이 주어지면 그걸 사용
-        # 예: ["front_clearance", "left_clearance", ...]
+        # ------------------------------------------------------------
+        # Feature definition
+        # ------------------------------------------------------------
         if feature_names is not None:
-            self.feature_names = [str(x) for x in feature_names]
+            self.feature_names = [str(name) for name in feature_names]
             self.obs_dim = len(self.feature_names)
-
-        # 이름은 없고 차원만 주어지면 x0, x1, x2 ... 형식으로 자동 생성
         elif obs_dim is not None:
             self.obs_dim = int(obs_dim)
+            if self.obs_dim <= 0:
+                raise ValueError("obs_dim must be >= 1.")
             self.feature_names = [f"x{i}" for i in range(self.obs_dim)]
-
-        # 이름도 차원도 없으면 인코더가 어떤 입력을 처리해야 하는지 모르므로 에러
         else:
-            raise ValueError("Either obs_dim or feature_names must be provided.")
+            raise ValueError("Either feature_names or obs_dim must be provided.")
 
-        # 각 feature의 최소/최대 범위 설정
+        if self.obs_dim <= 0:
+            raise ValueError("At least one input feature is required.")
+
+        # ------------------------------------------------------------
+        # Encoder constants
+        # ------------------------------------------------------------
+        self.neurons_per_feature = int(
+            getattr(cfg, "ENCODER_NEURONS_PER_FEATURE", 7)
+            if neurons_per_feature is None
+            else neurons_per_feature
+        )
+        self.latency_steps = int(
+            getattr(cfg, "ENCODER_LATENCY_STEPS", 8)
+            if latency_steps is None
+            else latency_steps
+        )
+        self.activation_threshold = float(
+            getattr(cfg, "ENCODER_ACTIVATION_THRESHOLD", 0.08)
+            if activation_threshold is None
+            else activation_threshold
+        )
+        self.sigma_scale = float(
+            getattr(cfg, "ENCODER_SIGMA_SCALE", 0.65)
+            if sigma_scale is None
+            else sigma_scale
+        )
+        self.ensure_one_spike_per_feature = bool(
+            getattr(cfg, "ENCODER_ENSURE_ONE_SPIKE_PER_FEATURE", False)
+        )
+        self.use_rank_order_tie_break = bool(
+            getattr(cfg, "ENCODER_USE_RANK_ORDER_TIE_BREAK", False)
+        )
+
+        # # ensure_one_spike_per_feature=True이면,
+        # # 모든 receptive field activation이 threshold보다 낮더라도
+        # # feature별 가장 강한 RF 하나는 spike를 만들게 한다.
+        # # 이 옵션은 너무 sparse해서 hidden/output spike가 거의 안 나올 때 유용하다.
+        # self.ensure_one_spike_per_feature = bool(
+        #     getattr(cfg, "ENCODER_ENSURE_ONE_SPIKE_PER_FEATURE", False)
+        #     if ensure_one_spike_per_feature is None
+        #     else ensure_one_spike_per_feature
+        # )
+
+        # # 같은 timestep에 너무 많은 spike가 몰리는 것을 줄이고 싶을 때 쓴다.
+        # # True이면 같은 feature 내부 RF index에 따라 아주 작은 정렬용 offset을 둔 뒤
+        # # floor로 latency를 정한다. 기본은 False로 두어 해석을 단순하게 유지한다.
+        # self.use_rank_order_tie_break = bool(
+        #     getattr(cfg, "ENCODER_USE_RANK_ORDER_TIE_BREAK", False)
+        #     if use_rank_order_tie_break is None
+        #     else use_rank_order_tie_break
+        # )
+
+        self._validate_parameters()
+
+        # feature별 raw 값 범위.
+        # simulation 현재 main.py에서는 모두 (0, 1)로 들어온다.
+        # 실제 로봇 raw 센서값을 직접 넣을 경우 여기 범위를 반드시 바꿔야 한다.
         self.value_ranges = self._build_value_ranges(value_ranges)
 
-        # receptive field 중심과 폭 미리 생성
+        # RF 중심 및 폭.
         self._rf_centers, self._rf_sigma = self._build_receptive_fields()
 
-        # 최종 출력 채널 수 계산
-        # rate면 obs_dim 그대로, population 계열이면 obs_dim * neurons_per_feature
-        self.output_dim = self._infer_output_dim()
+        # network.py가 사용하는 최종 입력 차원.
+        self.output_dim = int(self.obs_dim * self.neurons_per_feature)
+
+        # channel 이름은 매번 만들지 않고 고정해 둔다.
+        self.output_feature_names = self._population_feature_names()
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
     def encode(self, obs: ObsType, sim_step: int = 0) -> EncoderOutput:
         """
-        observation 하나를 현재 sim_step 기준으로 spike로 변환.
+        observation 하나를 특정 timestep의 spike 벡터로 변환한다.
 
-        핵심 흐름:
-        obs -> 배열화 -> 정규화 -> mode별 인코딩
+        sim_step:
+            0 <= sim_step < latency_steps일 때 해당 timestep spike를 반환한다.
+            범위 밖이면 spike가 모두 0인 결과가 반환된다.
         """
-
-        # dict/list/array 형태 입력을 모두 numpy array로 통일
         values = self._coerce_obs(obs)
-
-        # 각 feature 값을 0~1 범위로 정규화
         normalized = self._normalize(values)
+        activations = self._population_activation(normalized)
+        analog_values = np.repeat(normalized, self.neurons_per_feature)
 
-        # 현재 mode에 따라 서로 다른 인코딩 함수를 호출
-        if self.mode == "rate":
-            return self._encode_rate(normalized)
-        if self.mode == "population_rate":
-            return self._encode_population_rate(normalized)
-        if self.mode == "population_latency":
-            return self._encode_population_latency(normalized, sim_step=sim_step)
+        spike_times = self._activation_to_spike_times(activations)
+        spikes = np.zeros(self.output_dim, dtype=np.int8)
 
-        raise ValueError(f"Unsupported encoding mode: {self.mode}")
+        t = int(sim_step)
+        if 0 <= t < self.latency_steps:
+            spikes[np.isfinite(spike_times) & (spike_times == t)] = 1
+
+        return EncoderOutput(
+            spikes=spikes,
+            firing_rates=activations.astype(float, copy=False),
+            spike_times=spike_times,
+            analog_values=analog_values.astype(float, copy=False),
+            feature_names=list(self.output_feature_names),
+            mode=self.mode,
+        )
 
     def encode_window(self, obs: ObsType) -> List[EncoderOutput]:
         """
-        observation 하나를 전체 시간 window에 대해 인코딩.
+        observation 하나를 latency_steps 길이의 spike window로 변환한다.
 
-        - population_latency:
-          latency_steps 길이만큼 step별 EncoderOutput을 생성
-        - 그 외 mode:
-          한 step 결과만 반환
+        network.py의 MemristiveSNNNetwork._prepare_window()가 이 함수를 호출한다.
+        반환 길이가 decision window 길이가 되므로, latency_steps는 너무 크게 잡지 않는다.
         """
-        if self.mode != "population_latency":
-            return [self.encode(obs, sim_step=0)]
-
-        # latency mode는 같은 observation을 여러 timestep에 걸친 spike 패턴으로 펼침
         return [self.encode(obs, sim_step=t) for t in range(self.latency_steps)]
 
+    def transform(self, obs: ObsType) -> np.ndarray:
+        """
+        디버깅용 helper.
+        전체 latency window를 np.ndarray로 반환한다.
+        shape = (latency_steps, output_dim)
+        """
+        return np.asarray([out.spikes for out in self.encode_window(obs)], dtype=np.int8)
+
+    def describe(self) -> Dict[str, object]:
+        """
+        현재 encoder 설정을 dict로 반환한다.
+        main.py에서 print하거나 실험 로그에 저장하기 좋다.
+        """
+        return {
+            "mode": self.mode,
+            "obs_dim": self.obs_dim,
+            "input_feature_names": list(self.feature_names),
+            "output_dim": self.output_dim,
+            "neurons_per_feature": self.neurons_per_feature,
+            "latency_steps": self.latency_steps,
+            "activation_threshold": self.activation_threshold,
+            "sigma_scale": self.sigma_scale,
+            "rf_centers": self._rf_centers.copy(),
+            "rf_sigma": self._rf_sigma,
+            "value_ranges": dict(self.value_ranges),
+            "ensure_one_spike_per_feature": self.ensure_one_spike_per_feature,
+        }
+
     # ------------------------------------------------------------------
-    # Observation handling
+    # Validation / construction
     # ------------------------------------------------------------------
+    def _validate_parameters(self) -> None:
+        if self.neurons_per_feature < 1:
+            raise ValueError("neurons_per_feature must be >= 1.")
+        if self.latency_steps < 1:
+            raise ValueError("latency_steps must be >= 1.")
+        if not (0.0 <= self.activation_threshold <= 1.0):
+            raise ValueError("activation_threshold must be in [0, 1].")
+        if self.sigma_scale <= 0.0:
+            raise ValueError("sigma_scale must be > 0.")
+
     def _build_value_ranges(
         self,
         value_ranges: Optional[Dict[str, tuple[float, float]]],
     ) -> Dict[str, tuple[float, float]]:
-        """
-        각 feature의 값 범위를 구성.
-        예: victim_signal은 (0,1), distance는 (0,200) 같은 식
-        """
         if value_ranges is None:
-            default = getattr(cfg, "ENCODER_VALUE_RANGES", None)
-
-            # config에 범위 정보가 있으면 그걸 사용
-            if isinstance(default, dict) and default:
+            cfg_ranges = getattr(cfg, "ENCODER_VALUE_RANGES", None)
+            if isinstance(cfg_ranges, dict) and len(cfg_ranges) > 0:
                 value_ranges = {
                     str(k): (float(v[0]), float(v[1]))
-                    for k, v in default.items()
+                    for k, v in cfg_ranges.items()
                 }
-
-            # 없으면 모든 feature를 기본적으로 (0,1) 범위로 간주
             else:
                 value_ranges = {name: (0.0, 1.0) for name in self.feature_names}
 
-        out: Dict[str, tuple[float, float]] = {}
+        ranges: Dict[str, tuple[float, float]] = {}
         for name in self.feature_names:
             lo, hi = value_ranges.get(name, (0.0, 1.0))
             lo = float(lo)
             hi = float(hi)
-
-            # 잘못된 범위(hi <= lo)가 들어오면 최소한 1.0 폭은 가지도록 보정
+            if not np.isfinite(lo) or not np.isfinite(hi):
+                raise ValueError(f"value range for {name!r} must be finite.")
             if hi <= lo:
-                hi = lo + 1.0
+                raise ValueError(
+                    f"value range for {name!r} must satisfy hi > lo. "
+                    f"Got ({lo}, {hi})."
+                )
+            ranges[name] = (lo, hi)
+        return ranges
 
-            out[name] = (lo, hi)
-        return out
-
-    def _coerce_obs(self, obs: ObsType) -> np.ndarray:
-        """
-        observation을 numpy 1차원 배열로 통일.
-        """
-        if isinstance(obs, dict):
-            # feature_names 순서대로 값을 꺼내므로,
-            # 입력 dict를 넣을 때 이름/순서가 중요함
-            vals = [float(obs[name]) for name in self.feature_names]
-            return np.asarray(vals, dtype=float)
-
-        arr = np.asarray(obs, dtype=float).reshape(-1)
-
-        # 입력 길이가 기대한 obs_dim과 다르면 에러
-        if arr.size != self.obs_dim:
-            raise ValueError(f"Expected observation of length {self.obs_dim}, got {arr.size}")
-
-        return arr
-
-    def _normalize(self, values: np.ndarray) -> np.ndarray:
-        """
-        입력값을 feature별 min-max 범위를 기준으로 0~1 정규화.
-        """
-        out = np.zeros(self.obs_dim, dtype=float)
-
-        for i, name in enumerate(self.feature_names):
-            lo, hi = self.value_ranges[name]
-
-            # (x - lo) / (hi - lo) 후 0~1로 clip
-            out[i] = np.clip((float(values[i]) - lo) / max(hi - lo, 1e-12), 0.0, 1.0)
-
-        return out
-
-    # ------------------------------------------------------------------
-    # Receptive fields
-    # ------------------------------------------------------------------
     def _build_receptive_fields(self) -> tuple[np.ndarray, float]:
-        """
-        population mode에서 사용할 receptive field 중심과 폭 생성.
-        """
-        # 뉴런 수가 1개면 중앙 0.5에 receptive field 하나만 둠
-        if self.neurons_per_feature <= 1:
+        if self.neurons_per_feature == 1:
             centers = np.array([0.5], dtype=float)
             sigma = 0.5
             return centers, sigma
 
-        # 0~1 구간에 receptive field 중심을 균등 배치
-        # 예: 5개면 [0.0, 0.25, 0.5, 0.75, 1.0]
         centers = np.linspace(0.0, 1.0, self.neurons_per_feature, dtype=float)
-
-        # 인접 중심 간 간격
         spacing = float(centers[1] - centers[0])
 
-        # receptive field 폭 sigma 계산
+        # sigma_scale이 너무 작으면 입력이 지나치게 sparse해져서
+        # output spike가 거의 안 나올 수 있다.
+        # 현재 기본값 0.65는 이웃 RF가 어느 정도 겹치도록 잡은 값이다.
         sigma = max(1e-6, self.sigma_scale * spacing)
         return centers, sigma
 
-    def _population_activation(self, normalized: np.ndarray) -> np.ndarray:
-        """
-        정규화된 feature 값을 receptive field activation으로 변환.
-
-        핵심 아이디어:
-        feature 값 하나를 뉴런 1개로 표현하지 않고,
-        여러 receptive field 뉴런의 activation 패턴으로 표현함.
-        """
-        acts = []
-
-        for x in normalized:
-            # Gaussian receptive field
-            # x가 어떤 center에 가까울수록 activation이 커짐
-            a = np.exp(-0.5 * ((x - self._rf_centers) / self._rf_sigma) ** 2)
-
-            # 각 feature 내부에서 최대 activation을 1로 정규화
-            a /= max(np.max(a), 1e-12)
-
-            acts.append(a)
-
-        # feature별 receptive field activation을 한 줄로 이어 붙임
-        return np.concatenate(acts, axis=0).astype(float)
-
     def _population_feature_names(self) -> List[str]:
-        """
-        population mode에서 채널 이름 생성.
-        예: front_clearance_rf0, front_clearance_rf1, ...
-        """
         names: List[str] = []
         for feat in self.feature_names:
             for k in range(self.neurons_per_feature):
                 names.append(f"{feat}_rf{k}")
         return names
 
-    def _infer_output_dim(self) -> int:
-        """
-        최종 출력 spike 채널 수 계산.
-        """
-        if self.mode == "rate":
-            return int(self.obs_dim)
+    # ------------------------------------------------------------------
+    # Observation handling
+    # ------------------------------------------------------------------
+    def _coerce_obs(self, obs: ObsType) -> np.ndarray:
+        if isinstance(obs, dict):
+            missing = [name for name in self.feature_names if name not in obs]
+            if missing:
+                raise KeyError(
+                    "Observation dict is missing required features: "
+                    + ", ".join(missing)
+                )
+            values = [float(obs[name]) for name in self.feature_names]
+            arr = np.asarray(values, dtype=float)
+        else:
+            arr = np.asarray(obs, dtype=float).reshape(-1)
+            if arr.size != self.obs_dim:
+                raise ValueError(
+                    f"Expected observation length {self.obs_dim}, got {arr.size}."
+                )
 
-        return int(self.obs_dim * self.neurons_per_feature)
+        if not np.all(np.isfinite(arr)):
+            raise ValueError("Observation contains NaN or inf.")
+        return arr
+
+    def _normalize(self, values: np.ndarray) -> np.ndarray:
+        normalized = np.zeros(self.obs_dim, dtype=float)
+        for i, name in enumerate(self.feature_names):
+            lo, hi = self.value_ranges[name]
+            normalized[i] = (float(values[i]) - lo) / (hi - lo)
+
+        # simulation/robot 센서가 범위를 살짝 벗어나는 것은 학습을 깨지 않도록 clip한다.
+        return np.clip(normalized, 0.0, 1.0)
 
     # ------------------------------------------------------------------
-    # Mode-specific implementations
+    # Population latency encoding
     # ------------------------------------------------------------------
-    def _encode_rate(self, normalized: np.ndarray) -> EncoderOutput:
+    def _population_activation(self, normalized: np.ndarray) -> np.ndarray:
         """
-        가장 단순한 mode.
-        feature 1개당 뉴런 1개, 값이 클수록 발화 확률 증가.
+        각 feature를 Gaussian receptive field population으로 펼친다.
+
+        output ordering:
+            [feature0_rf0, feature0_rf1, ...,
+             feature1_rf0, feature1_rf1, ...]
         """
-        # 정규화된 값 자체를 firing rate처럼 사용
-        firing_rates = normalized.copy()
+        blocks: List[np.ndarray] = []
 
-        # 현재 step에서 spike할 확률 계산
-        p_fire = np.clip(self.max_rate_hz * self.dt * firing_rates, 0.0, 1.0)
+        for x in normalized:
+            x = float(x)
+            activation = np.exp(
+                -0.5 * ((x - self._rf_centers) / self._rf_sigma) ** 2
+            )
 
-        # 베르누이 확률 발화: 랜덤값 < p_fire 이면 spike
-        spikes = (self.rng.random(self.obs_dim) < p_fire).astype(np.int8)
+            # feature별 최대값을 1로 맞춰 값 크기보다는 위치 정보를 안정적으로 표현한다.
+            max_a = float(np.max(activation))
+            if max_a > 0.0:
+                activation = activation / max_a
 
-        # rate mode에서는 현재 step에 쏘면 time=0, 아니면 무한대
-        spike_times = np.where(spikes > 0, 0.0, np.inf)
+            blocks.append(activation.astype(float, copy=False))
 
-        return EncoderOutput(
-            spikes=spikes,
-            firing_rates=firing_rates,
-            spike_times=spike_times,
-            analog_values=normalized,
-            feature_names=list(self.feature_names),
-            mode=self.mode,
-        )
+        return np.concatenate(blocks, axis=0)
 
-    def _encode_population_rate(self, normalized: np.ndarray) -> EncoderOutput:
+    def _activation_to_spike_times(self, activations: np.ndarray) -> np.ndarray:
         """
-        feature 하나를 여러 receptive field 뉴런으로 펼친 뒤,
-        각 activation 크기에 따라 확률적으로 spike 발생.
+        activation vector를 latency spike time vector로 바꾼다.
+
+        activation = 1.0 -> t = 0
+        activation이 작을수록 -> t가 뒤로 밀림
+        activation < threshold -> spike 없음(np.inf)
         """
-        # receptive field activation 계산
-        activations = self._population_activation(normalized)
+        spike_times = np.full(self.output_dim, np.inf, dtype=float)
 
-        # 각 receptive field 채널의 발화 확률
-        p_fire = np.clip(self.max_rate_hz * self.dt * activations, 0.0, 1.0)
+        for feat_idx in range(self.obs_dim):
+            start = feat_idx * self.neurons_per_feature
+            end = start + self.neurons_per_feature
+            block = activations[start:end]
 
-        # 확률적 발화
-        spikes = (self.rng.random(activations.size) < p_fire).astype(np.int8)
+            active_mask = block >= self.activation_threshold
 
-        # 현재 step에 쐈으면 0, 아니면 inf
-        spike_times = np.where(spikes > 0, 0.0, np.inf)
+            if self.ensure_one_spike_per_feature and not np.any(active_mask):
+                # threshold가 너무 높거나 RF 폭이 너무 좁아도
+                # feature 정보가 완전히 사라지지 않도록 가장 큰 RF 하나는 살린다.
+                active_mask[int(np.argmax(block))] = True
 
-        # 원래 feature 값을 receptive field 개수만큼 반복 저장
-        analog_values = np.repeat(normalized, self.neurons_per_feature)
+            if not np.any(active_mask):
+                continue
 
-        return EncoderOutput(
-            spikes=spikes,
-            firing_rates=activations,
-            spike_times=spike_times,
-            analog_values=analog_values,
-            feature_names=self._population_feature_names(),
-            mode=self.mode,
-        )
+            # 강한 activation일수록 빠른 spike.
+            # floor를 쓰면 강한 반응이 더 확실히 앞 timestep에 배치된다.
+            raw_times = (self.latency_steps - 1) * (1.0 - block[active_mask])
 
-    def _encode_population_latency(self, normalized: np.ndarray, sim_step: int) -> EncoderOutput:
-        """
-        현재 프로젝트의 주력 mode
+            if self.use_rank_order_tie_break and raw_times.size > 1:
+                # 같은 feature 내부에서 완전히 같은 시간이 나오는 경우를 줄이기 위한 선택 옵션.
+                # 아주 작은 offset만 주므로 latency 순서를 크게 바꾸지는 않는다.
+                local_indices = np.flatnonzero(active_mask).astype(float)
+                raw_times = raw_times + 1e-3 * local_indices
 
-        핵심:
-        - receptive field activation이 강할수록 더 이른 step에 spike
-        - 약하면 늦게 spike
-        - threshold보다 작으면 아예 spike 없음
-        """
-        activations = self._population_activation(normalized)
+            times = np.floor(raw_times + 1e-12).astype(int)
+            times = np.clip(times, 0, self.latency_steps - 1)
 
-        # 원래 feature 값을 receptive field 개수만큼 반복
-        analog_values = np.repeat(normalized, self.neurons_per_feature)
+            block_times = spike_times[start:end]
+            block_times[active_mask] = times.astype(float)
+            spike_times[start:end] = block_times
 
-        # 기본적으로는 모든 채널이 spike 없음(inf)으로 시작
-        spike_times = np.full(activations.size, np.inf, dtype=float)
-
-        # 충분히 강한 activation만 spike 후보로 인정
-        active = activations >= self.activation_threshold
-
-        if np.any(active):
-            # activation이 1에 가까울수록 time=0에 가까워짐
-            # 즉 강한 입력일수록 더 빨리 spike
-            times = (self.latency_steps - 1) * (1.0 - activations[active])
-
-            # 시간을 정수 step으로 반올림
-            spike_times[active] = np.round(times).astype(int)
-
-        # 현재 sim_step에 해당하는 채널만 실제 spike=1로 출력
-        spikes = np.zeros(activations.size, dtype=np.int8)
-        spikes[np.isfinite(spike_times) & (spike_times == int(sim_step))] = 1
-
-        return EncoderOutput(
-            spikes=spikes,
-            firing_rates=activations,
-            spike_times=spike_times,
-            analog_values=analog_values,
-            feature_names=self._population_feature_names(),
-            mode=self.mode,
-        )
+        return spike_times

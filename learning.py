@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -11,76 +11,82 @@ from network import MemristiveSNNNetwork
 
 @dataclass
 class RSTDPConfig:
+    """Reward-modulated STDP configuration.
+
+    Hardware interpretation
+    -----------------------
+    1. Spike timing creates an eligibility value.
+    2. Reward acts as a global modulation gate.
+    3. The requested signed update is converted to a pulse direction and a
+       small integer pulse count.
+    4. The actual conductance change is performed by the crossbar controller;
+       this file never applies an ideal floating-point weight update.
+
+    Three-crossbar network note
+    ---------------------------
+    The normal training target is W_out, i.e. hidden -> output. Hidden-layer
+    updates are optional. If enabled, input -> hidden and recurrent hidden ->
+    hidden updates are controlled separately because the recurrent path may be
+    an STM/volatile path rather than an LTM policy-storage path.
     """
-    Reward-modulated STDP parameters.
 
-    delta_t = t_post - t_pre
+    tau_plus: float = 2.0
+    tau_minus: float = 2.0
+    a_plus: float = 1.0
+    a_minus: float = 0.8
+    eligibility_threshold: float = 1e-6
 
-    If delta_t > 0:
-        delta_w ~ +A_plus * exp(-delta_t / tau_plus)
+    # Fallback is a readout decision, not a postsynaptic spike by default.
+    use_surrogate_post_on_fallback: bool = False
 
-    If delta_t < 0:
-        delta_w ~ -A_minus * exp(+delta_t / tau_minus)
+    # Main learning path is output R-STDP. Hidden R-STDP is optional.
+    enable_hidden_rstdp: bool = False
 
-    Modified physical programming flow:
-        delta_w = reward * eligibility
-        direction = sign(delta_w)
-        n_pulses = f(|delta_w|)
-    """
-    tau_plus: float = 2.0  # pre가 먼저일 때 시간 상수
-    tau_minus: float = 2.0  # post가 먼저일 때 시간 상수
-    a_plus: float = 1.0  # 강화 크기
-    a_minus: float = 0.8  # 약화 크기
-    eligibility_threshold: float = 1e-6  # 최소 eligibility 임계값
+    # In the three-crossbar network:
+    # - input->hidden is normally LTM/differential and may optionally learn.
+    # - hidden->hidden recurrent is normally STM and should remain OFF unless
+    #   the STM crossbar explicitly supports programmable pair updates.
+    hidden_update_input_path: bool = True
+    hidden_update_recurrent_path: bool = False
 
-    # Conservative default:
-    # if output decision came only from fallback, do not fabricate a fake post spike.
-    use_surrogate_post_on_fallback: bool = False  # fallback일 때 가짜 post spike 사용 여부
-
-    # Hidden-layer R-STDP is optional because it is harder to stabilize.
-    enable_hidden_rstdp: bool = False  # hidden layer 학습 여부
-
-    # ------------------------------------------------------------------
-    # delta_w -> pulse mapping
-    # ------------------------------------------------------------------
-    delta_w_scale: float = 1.0  # reward*eligibility 추가 스케일
-    pulse_base: int = 1  # 업데이트가 있으면 최소 몇 펄스 줄지
-    pulse_max: int = 4  # 최대 펄스 수
-    delta_w_per_pulse: float = 0.05  # delta_w 얼마당 펄스 1개로 볼지
+    # delta_w = reward * eligibility -> pulse count mapping
+    delta_w_scale: float = 1.0
+    pulse_base: int = 1
+    pulse_max: int = 4
+    delta_w_per_pulse: float = 0.05
+    delta_w_min_abs: float = 0.0
 
 
 @dataclass
 class RSTDPUpdateEvent:
-    layer_name: str  # 레이어 이름
-    updated_pairs: List[Tuple[int, int]]  # 업데이트된 시냅스 쌍
-    delta_t_records: List[float]  # delta_t 기록
-    eligibility_values: List[float]  # eligibility 값들
-    directions: List[int]  # 업데이트 방향
-    actions: List[str]  # 실제 액션 이름
-    n_pulses_plus: int  # plus 펄스 수
-    n_pulses_minus: int  # minus 펄스 수
-    n_refresh: int  # refresh 횟수
-    reward: float  # 보상
-    winner: int  # winner 뉴런
-    target: Optional[int]  # target 뉴런
-    message: str  # 설명 메시지
+    layer_name: str
+    updated_pairs: List[Tuple[int, int]]
+    delta_t_records: List[float]
+    eligibility_values: List[float]
+    directions: List[int]
+    actions: List[str]
+    n_pulses_plus: int
+    n_pulses_minus: int
+    n_refresh: int
+    reward: float
+    winner: int
+    target: Optional[int]
+    message: str
 
 
 class RewardModulatedSTDPLearner:
-    """
-    Hardware-aware R-STDP learner.
+    """Hardware-aware R-STDP learner.
 
-    Important:
-    - Spike timing -> eligibility
-    - Reward -> global gate
-    - delta_w = reward * eligibility
-    - Final update is NOT an ideal floating-point write
-    - Actual programming goes through ConductanceModulationController.update_weight()
-      with direction + pulse count.
+    Conservative defaults:
+    - no ideal weight writes;
+    - no fake postsynaptic spike unless explicitly enabled;
+    - no update when reward is zero;
+    - no recurrent STM-path learning unless explicitly enabled.
     """
 
     def __init__(self, config: Optional[RSTDPConfig] = None) -> None:
-        self.cfg = RSTDPConfig() if config is None else config  # 설정 저장
+        self.cfg = RSTDPConfig() if config is None else config
+        self._validate_config()
 
     # ------------------------------------------------------------------
     # Public API
@@ -91,21 +97,18 @@ class RewardModulatedSTDPLearner:
         reward: float,
         target: Optional[int] = None,
     ) -> Dict[str, Optional[RSTDPUpdateEvent]]:
-        if net.last_decision is None:  # 이전 decision 없으면
+        if net.last_decision is None:
             raise RuntimeError("No decision available. Call net.decide(obs) before learner.learn(...).")
 
-        output_event = self._learn_output(net=net, reward=reward, target=target)  # output layer 학습
-        hidden_event = None  # hidden 결과 기본값
-        if self.cfg.enable_hidden_rstdp:  # hidden 학습이 켜져 있으면
-            hidden_event = self._learn_hidden(net=net, reward=reward)  # hidden layer 학습
+        output_event = self._learn_output(net=net, reward=float(reward), target=target)
+        hidden_event = None
+        if bool(self.cfg.enable_hidden_rstdp):
+            hidden_event = self._learn_hidden(net=net, reward=float(reward))
 
-        return {
-            "output": output_event,  # output 결과 반환
-            "hidden": hidden_event,  # hidden 결과 반환
-        }
+        return {"output": output_event, "hidden": hidden_event}
 
     # ------------------------------------------------------------------
-    # Output-layer R-STDP
+    # Output-layer R-STDP: hidden -> output
     # ------------------------------------------------------------------
     def _learn_output(
         self,
@@ -113,312 +116,303 @@ class RewardModulatedSTDPLearner:
         reward: float,
         target: Optional[int],
     ) -> RSTDPUpdateEvent:
-        decision = net.last_decision  # 마지막 decision 가져오기
-        assert decision is not None  # None 아님 보장
+        decision = net.last_decision
+        assert decision is not None
 
-        step_records = decision.step_records  # step 기록들
-        n_pre = net.hidden_dim  # pre 뉴런 수
-        n_post = net.n_actions  # post 뉴런 수
+        step_records = decision.step_records
+        if not step_records:
+            return self._empty_event("output", reward, -1, target, "No step records; skipped output R-STDP.")
 
-        pre_spikes = np.array(
-            [np.asarray(rec.hidden_result.spikes, dtype=int) for rec in step_records],  # hidden spike 모음
+        n_pre = int(net.hidden_dim)
+        n_post = int(net.n_actions)
+
+        pre_spikes = self._stack_step_vectors(
+            [rec.hidden_result.spikes for rec in step_records],
+            expected_dim=n_pre,
+            name="output pre hidden spikes",
             dtype=int,
-        )  # [T, hidden_dim]
-
-        post_spikes = np.array(
-            [np.asarray(rec.output_result.spikes, dtype=int) for rec in step_records],  # output spike 모음
+        )
+        post_spikes = self._stack_step_vectors(
+            [rec.output_result.spikes for rec in step_records],
+            expected_dim=n_post,
+            name="output post spikes",
             dtype=int,
-        )  # [T, n_actions]
+        )
 
-        winner = int(decision.action)  # 선택된 action
-        post_col = winner if target is None else int(target)  # 학습할 post 컬럼
-        if not (0 <= post_col < n_post):  # 범위 검사
+        winner = int(decision.action)
+        post_col = winner if target is None else int(target)
+        if not (0 <= post_col < n_post):
             raise ValueError(f"Target/post column out of range: {post_col}")
 
-        post_times = np.flatnonzero(post_spikes[:, post_col] > 0).astype(int).tolist()  # post spike 시각들
+        post_times = np.flatnonzero(post_spikes[:, post_col] > 0).astype(int).tolist()
+        if (not post_times) and bool(decision.used_fallback) and bool(self.cfg.use_surrogate_post_on_fallback):
+            post_times = [int(decision.selected_step)]
 
-        if (not post_times) and bool(decision.used_fallback) and self.cfg.use_surrogate_post_on_fallback:  # fallback이고 surrogate 허용이면
-            post_times = [int(decision.selected_step)]  # 선택 step을 가짜 post spike로 사용
-
-        if not post_times:  # post spike가 없으면
-            return RSTDPUpdateEvent(
-                layer_name="output",  # output layer
-                updated_pairs=[],  # 업데이트 없음
-                delta_t_records=[],  # 기록 없음
-                eligibility_values=[],  # 기록 없음
-                directions=[],  # 방향 없음
-                actions=[],  # 액션 없음
-                n_pulses_plus=0,  # plus 펄스 없음
-                n_pulses_minus=0,  # minus 펄스 없음
-                n_refresh=0,  # refresh 없음
-                reward=float(reward),  # 현재 보상
-                winner=winner,  # winner 기록
-                target=target,  # target 기록
-                message="No postsynaptic output spike available; skipped output R-STDP.",
+        if not post_times:
+            return self._empty_event(
+                "output",
+                reward,
+                winner,
+                target,
+                "No real postsynaptic output spike available; skipped output R-STDP.",
+            )
+        if reward == 0.0:
+            return self._empty_event(
+                "output",
+                reward,
+                winner,
+                target,
+                "Reward is zero; no gated output R-STDP update applied.",
             )
 
-        if reward == 0.0:  # 보상이 0이면
-            return RSTDPUpdateEvent(
-                layer_name="output",  # output layer
-                updated_pairs=[],  # 업데이트 없음
-                delta_t_records=[],  # 기록 없음
-                eligibility_values=[],  # 기록 없음
-                directions=[],  # 방향 없음
-                actions=[],  # 액션 없음
-                n_pulses_plus=0,  # plus 펄스 없음
-                n_pulses_minus=0,  # minus 펄스 없음
-                n_refresh=0,  # refresh 없음
-                reward=float(reward),  # 현재 보상
-                winner=winner,  # winner 기록
-                target=target,  # target 기록
-                message="Reward is zero; no gated output R-STDP update applied.",
-            )
-
-        updated_pairs: List[Tuple[int, int]] = []  # 업데이트된 pair들
-        delta_t_records: List[float] = []  # delta_t 기록
-        eligibility_values: List[float] = []  # eligibility 기록
-        directions: List[int] = []  # 방향 기록
-        actions: List[str] = []  # 액션 기록
-        n_pulses_plus = 0  # plus 펄스 누적
-        n_pulses_minus = 0  # minus 펄스 누적
-        n_refresh = 0  # refresh 누적
-
-        for row in range(n_pre):  # 모든 pre 뉴런 순회
-            pre_times = np.flatnonzero(pre_spikes[:, row] > 0).astype(int).tolist()  # 해당 pre spike 시각들
-            if not pre_times:  # spike 없으면 건너뜀
-                continue
-
-            best_dt, elig = self._pair_eligibility(pre_times, post_times)  # eligibility 계산
-            if abs(elig) < self.cfg.eligibility_threshold:  # 너무 작으면 건너뜀
-                continue
-
-            delta_w = self._delta_w(elig=elig, reward=reward)  # 실제 목표 weight 변화량
-            direction = self._delta_w_to_direction(delta_w)  # 물리적 방향 계산
-            n_pulses = self._delta_w_to_pulse_count(delta_w)  # delta_w에 맞는 펄스 수 계산
-
-            if direction == 0 or n_pulses == 0:  # 방향 없거나 펄스 0이면 건너뜀
-                continue
-
-            result: ProgrammingResult = net.output_layer.controller.update_weight(
-                pair_id=(int(row), int(post_col)),  # 시냅스 위치
-                direction=int(direction),  # 방향
-                step_idx=int(net.global_step),  # 현재 global step
-                n_pulses=int(n_pulses),  # 계산된 펄스 수
-            )
-
-            updated_pairs.append((int(row), int(post_col)))  # pair 기록
-            delta_t_records.append(float(best_dt))  # dt 기록
-            eligibility_values.append(float(elig))  # eligibility 기록
-            directions.append(int(direction))  # 방향 기록
-            actions.append(str(result.chosen_action))  # 액션 기록
-            n_pulses_plus += int(result.n_pulses_plus)  # plus 펄스 누적
-            n_pulses_minus += int(result.n_pulses_minus)  # minus 펄스 누적
-            if result.did_refresh:  # refresh 발생 시
-                n_refresh += 1  # refresh 증가
-
-        return RSTDPUpdateEvent(
-            layer_name="output",  # output layer
-            updated_pairs=updated_pairs,  # 업데이트 pair들
-            delta_t_records=delta_t_records,  # dt 기록
-            eligibility_values=eligibility_values,  # eligibility 기록
-            directions=directions,  # 방향 기록
-            actions=actions,  # 액션 기록
-            n_pulses_plus=n_pulses_plus,  # plus 펄스 총합
-            n_pulses_minus=n_pulses_minus,  # minus 펄스 총합
-            n_refresh=n_refresh,  # refresh 총합
-            reward=float(reward),  # 보상 기록
-            winner=winner,  # winner 기록
-            target=target,  # target 기록
-            message="Output R-STDP pulse update executed." if updated_pairs else "No output pair crossed eligibility threshold.",
+        return self._apply_projection_rstdp(
+            layer_name="output",
+            controller=getattr(net.output_layer, "controller", None),
+            pre_spikes=pre_spikes,
+            post_col=post_col,
+            post_times=post_times,
+            reward=reward,
+            winner=winner,
+            target=target,
+            step_idx=int(net.global_step),
+            no_update_message="No output pair crossed eligibility threshold.",
+            success_message="Output R-STDP pulse update executed.",
         )
 
     # ------------------------------------------------------------------
     # Optional hidden-layer R-STDP
     # ------------------------------------------------------------------
-    def _learn_hidden(
+    def _learn_hidden(self, net: MemristiveSNNNetwork, reward: float) -> RSTDPUpdateEvent:
+        decision = net.last_decision
+        assert decision is not None
+
+        step_records = decision.step_records
+        if not step_records:
+            return self._empty_event("hidden", reward, -1, None, "No step records; skipped hidden R-STDP.")
+
+        selected_step = int(decision.selected_step)
+        if not (0 <= selected_step < len(step_records)):
+            return self._empty_event("hidden", reward, -1, None, "Selected step out of range; skipped hidden R-STDP.")
+
+        hidden_winner = int(step_records[selected_step].hidden_result.winner)
+        if hidden_winner < 0:
+            return self._empty_event("hidden", reward, -1, None, "No hidden winner at selected step; skipped hidden R-STDP.")
+
+        hidden_dim = int(net.hidden_dim)
+        post_spikes = self._stack_step_vectors(
+            [rec.hidden_result.spikes for rec in step_records],
+            expected_dim=hidden_dim,
+            name="hidden post spikes",
+            dtype=int,
+        )
+        post_times = np.flatnonzero(post_spikes[:, hidden_winner] > 0).astype(int).tolist()
+        if not post_times:
+            return self._empty_event(
+                "hidden",
+                reward,
+                hidden_winner,
+                None,
+                "No hidden postsynaptic spike available; skipped hidden R-STDP.",
+            )
+        if reward == 0.0:
+            return self._empty_event(
+                "hidden",
+                reward,
+                hidden_winner,
+                None,
+                "Reward is zero; no gated hidden R-STDP update applied.",
+            )
+
+        combined = self._new_accumulator(layer_name="hidden", reward=reward, winner=hidden_winner, target=None)
+
+        # Three-crossbar network: W_in and W_rec are separate physical arrays.
+        has_three_crossbar_records = all(hasattr(rec, "recurrent_feedback_used") for rec in step_records)
+
+        if has_three_crossbar_records and hasattr(net, "recurrent_layer"):
+            if bool(self.cfg.hidden_update_input_path):
+                input_dim = int(net.input_dim)
+                input_pre = self._stack_step_vectors(
+                    [rec.hidden_input_vector for rec in step_records],
+                    expected_dim=input_dim,
+                    name="input->hidden pre spikes",
+                    dtype=int,
+                )
+                event_in = self._apply_projection_rstdp(
+                    layer_name="hidden/input",
+                    controller=getattr(net.hidden_layer, "controller", None),
+                    pre_spikes=input_pre,
+                    post_col=hidden_winner,
+                    post_times=post_times,
+                    reward=reward,
+                    winner=hidden_winner,
+                    target=None,
+                    step_idx=int(net.global_step),
+                    no_update_message="No input->hidden pair crossed eligibility threshold.",
+                    success_message="Input->hidden R-STDP pulse update executed.",
+                )
+                self._merge_event(combined, event_in, pair_prefix="in")
+
+            if bool(self.cfg.hidden_update_recurrent_path):
+                rec_pre = self._stack_step_vectors(
+                    [rec.recurrent_feedback_used for rec in step_records],
+                    expected_dim=hidden_dim,
+                    name="recurrent hidden pre spikes",
+                    dtype=int,
+                )
+                event_rec = self._apply_projection_rstdp(
+                    layer_name="hidden/recurrent",
+                    controller=getattr(net.recurrent_layer, "controller", None),
+                    pre_spikes=rec_pre,
+                    post_col=hidden_winner,
+                    post_times=post_times,
+                    reward=reward,
+                    winner=hidden_winner,
+                    target=None,
+                    step_idx=int(net.global_step),
+                    no_update_message="No recurrent hidden pair crossed eligibility threshold.",
+                    success_message="Recurrent hidden R-STDP pulse update executed.",
+                )
+                self._merge_event(combined, event_rec, pair_prefix="rec")
+
+            if not combined.updated_pairs:
+                combined.message = "Hidden R-STDP enabled, but no enabled hidden path produced an update."
+            else:
+                combined.message = "Hidden R-STDP pulse update executed on enabled hidden path(s)."
+            return combined
+
+        # Legacy two-crossbar network: hidden_input_vector already contains
+        # [input, previous hidden] and is updated through net.hidden_layer.
+        legacy_dim = int(getattr(net, "hidden_input_dim", 0))
+        if legacy_dim <= 0:
+            return self._empty_event("hidden", reward, hidden_winner, None, "Unsupported network hidden structure; skipped hidden R-STDP.")
+
+        legacy_pre = self._stack_step_vectors(
+            [rec.hidden_input_vector for rec in step_records],
+            expected_dim=legacy_dim,
+            name="legacy hidden pre spikes",
+            dtype=int,
+        )
+        return self._apply_projection_rstdp(
+            layer_name="hidden",
+            controller=getattr(net.hidden_layer, "controller", None),
+            pre_spikes=legacy_pre,
+            post_col=hidden_winner,
+            post_times=post_times,
+            reward=reward,
+            winner=hidden_winner,
+            target=None,
+            step_idx=int(net.global_step),
+            no_update_message="No hidden pair crossed eligibility threshold.",
+            success_message="Hidden R-STDP pulse update executed.",
+        )
+
+    # ------------------------------------------------------------------
+    # Projection update core
+    # ------------------------------------------------------------------
+    def _apply_projection_rstdp(
         self,
-        net: MemristiveSNNNetwork,
+        *,
+        layer_name: str,
+        controller: Any,
+        pre_spikes: np.ndarray,
+        post_col: int,
+        post_times: Sequence[int],
         reward: float,
+        winner: int,
+        target: Optional[int],
+        step_idx: int,
+        no_update_message: str,
+        success_message: str,
     ) -> RSTDPUpdateEvent:
-        decision = net.last_decision  # 마지막 decision
-        assert decision is not None  # None 아님 보장
+        if controller is None or not hasattr(controller, "update_weight"):
+            return self._empty_event(layer_name, reward, winner, target, f"{layer_name} controller is not programmable; skipped R-STDP.")
 
-        step_records = decision.step_records  # step 기록들
-        selected_step = int(decision.selected_step)  # 선택된 step
-        if not (0 <= selected_step < len(step_records)):  # step 범위 검사
-            return RSTDPUpdateEvent(
-                layer_name="hidden",  # hidden layer
-                updated_pairs=[],  # 업데이트 없음
-                delta_t_records=[],  # 기록 없음
-                eligibility_values=[],  # 기록 없음
-                directions=[],  # 방향 없음
-                actions=[],  # 액션 없음
-                n_pulses_plus=0,  # plus 없음
-                n_pulses_minus=0,  # minus 없음
-                n_refresh=0,  # refresh 없음
-                reward=float(reward),  # 보상 기록
-                winner=-1,  # winner 없음
-                target=None,  # target 없음
-                message="Selected step out of range; skipped hidden R-STDP.",
-            )
+        n_pre = int(pre_spikes.shape[1])
+        updated_pairs: List[Tuple[int, int]] = []
+        delta_t_records: List[float] = []
+        eligibility_values: List[float] = []
+        directions: List[int] = []
+        actions: List[str] = []
+        n_pulses_plus = 0
+        n_pulses_minus = 0
+        n_refresh = 0
 
-        hidden_winner = int(step_records[selected_step].hidden_result.winner)  # hidden winner
-        if hidden_winner < 0:  # winner 없으면
-            return RSTDPUpdateEvent(
-                layer_name="hidden",  # hidden layer
-                updated_pairs=[],  # 업데이트 없음
-                delta_t_records=[],  # 기록 없음
-                eligibility_values=[],  # 기록 없음
-                directions=[],  # 방향 없음
-                actions=[],  # 액션 없음
-                n_pulses_plus=0,  # plus 없음
-                n_pulses_minus=0,  # minus 없음
-                n_refresh=0,  # refresh 없음
-                reward=float(reward),  # 보상 기록
-                winner=-1,  # winner 없음
-                target=None,  # target 없음
-                message="No hidden winner at selected step; skipped hidden R-STDP.",
-            )
-
-        pre_spikes = np.array(
-            [np.asarray(rec.hidden_input_vector, dtype=int) for rec in step_records],  # hidden 입력 spike들
-            dtype=int,
-        )  # [T, hidden_input_dim]
-
-        post_spikes = np.array(
-            [np.asarray(rec.hidden_result.spikes, dtype=int) for rec in step_records],  # hidden 출력 spike들
-            dtype=int,
-        )  # [T, hidden_dim]
-
-        post_times = np.flatnonzero(post_spikes[:, hidden_winner] > 0).astype(int).tolist()  # hidden post 시각
-        if not post_times:  # hidden post spike 없으면
-            return RSTDPUpdateEvent(
-                layer_name="hidden",  # hidden layer
-                updated_pairs=[],  # 업데이트 없음
-                delta_t_records=[],  # 기록 없음
-                eligibility_values=[],  # 기록 없음
-                directions=[],  # 방향 없음
-                actions=[],  # 액션 없음
-                n_pulses_plus=0,  # plus 없음
-                n_pulses_minus=0,  # minus 없음
-                n_refresh=0,  # refresh 없음
-                reward=float(reward),  # 보상 기록
-                winner=hidden_winner,  # winner 기록
-                target=None,  # target 없음
-                message="No hidden postsynaptic spike available; skipped hidden R-STDP.",
-            )
-
-        if reward == 0.0:  # 보상이 0이면
-            return RSTDPUpdateEvent(
-                layer_name="hidden",  # hidden layer
-                updated_pairs=[],  # 업데이트 없음
-                delta_t_records=[],  # 기록 없음
-                eligibility_values=[],  # 기록 없음
-                directions=[],  # 방향 없음
-                actions=[],  # 액션 없음
-                n_pulses_plus=0,  # plus 없음
-                n_pulses_minus=0,  # minus 없음
-                n_refresh=0,  # refresh 없음
-                reward=float(reward),  # 보상 기록
-                winner=hidden_winner,  # winner 기록
-                target=None,  # target 없음
-                message="Reward is zero; no gated hidden R-STDP update applied.",
-            )
-
-        updated_pairs: List[Tuple[int, int]] = []  # 업데이트 pair들
-        delta_t_records: List[float] = []  # dt 기록
-        eligibility_values: List[float] = []  # eligibility 기록
-        directions: List[int] = []  # 방향 기록
-        actions: List[str] = []  # 액션 기록
-        n_pulses_plus = 0  # plus 펄스 누적
-        n_pulses_minus = 0  # minus 펄스 누적
-        n_refresh = 0  # refresh 누적
-
-        n_pre = pre_spikes.shape[1]  # pre 입력 수
-        for row in range(n_pre):  # 모든 pre 입력 순회
-            pre_times = np.flatnonzero(pre_spikes[:, row] > 0).astype(int).tolist()  # pre spike 시각들
-            if not pre_times:  # spike 없으면 건너뜀
+        for row in range(n_pre):
+            pre_times = np.flatnonzero(pre_spikes[:, row] > 0).astype(int).tolist()
+            if not pre_times:
                 continue
 
-            best_dt, elig = self._pair_eligibility(pre_times, post_times)  # eligibility 계산
-            if abs(elig) < self.cfg.eligibility_threshold:  # 너무 작으면 건너뜀
+            best_dt, elig = self._pair_eligibility(pre_times, post_times)
+            if abs(elig) < float(self.cfg.eligibility_threshold):
                 continue
 
-            delta_w = self._delta_w(elig=elig, reward=reward)  # 실제 목표 weight 변화량
-            direction = self._delta_w_to_direction(delta_w)  # 방향 계산
-            n_pulses = self._delta_w_to_pulse_count(delta_w)  # 펄스 수 계산
-
-            if direction == 0 or n_pulses == 0:  # 방향 없거나 펄스 0이면 건너뜀
+            delta_w = self._delta_w(elig=elig, reward=reward)
+            direction = self._delta_w_to_direction(delta_w)
+            n_pulses = self._delta_w_to_pulse_count(delta_w)
+            if direction == 0 or n_pulses == 0:
                 continue
 
-            result: ProgrammingResult = net.hidden_layer.controller.update_weight(
-                pair_id=(int(row), int(hidden_winner)),  # hidden 시냅스 위치
-                direction=int(direction),  # 방향
-                step_idx=int(net.global_step),  # 현재 global step
-                n_pulses=int(n_pulses),  # 계산된 펄스 수
+            result: ProgrammingResult = controller.update_weight(
+                pair_id=(int(row), int(post_col)),
+                direction=int(direction),
+                step_idx=int(step_idx),
+                n_pulses=int(n_pulses),
             )
 
-            updated_pairs.append((int(row), int(hidden_winner)))  # pair 기록
-            delta_t_records.append(float(best_dt))  # dt 기록
-            eligibility_values.append(float(elig))  # eligibility 기록
-            directions.append(int(direction))  # 방향 기록
-            actions.append(str(result.chosen_action))  # 액션 기록
-            n_pulses_plus += int(result.n_pulses_plus)  # plus 펄스 누적
-            n_pulses_minus += int(result.n_pulses_minus)  # minus 펄스 누적
-            if result.did_refresh:  # refresh 발생 시
-                n_refresh += 1  # refresh 증가
+            updated_pairs.append((int(row), int(post_col)))
+            delta_t_records.append(float(best_dt))
+            eligibility_values.append(float(elig))
+            directions.append(int(direction))
+            actions.append(str(result.chosen_action))
+            n_pulses_plus += int(result.n_pulses_plus)
+            n_pulses_minus += int(result.n_pulses_minus)
+            if bool(result.did_refresh):
+                n_refresh += 1
 
         return RSTDPUpdateEvent(
-            layer_name="hidden",  # hidden layer
-            updated_pairs=updated_pairs,  # 업데이트 pair들
-            delta_t_records=delta_t_records,  # dt 기록
-            eligibility_values=eligibility_values,  # eligibility 기록
-            directions=directions,  # 방향 기록
-            actions=actions,  # 액션 기록
-            n_pulses_plus=n_pulses_plus,  # plus 펄스 총합
-            n_pulses_minus=n_pulses_minus,  # minus 펄스 총합
-            n_refresh=n_refresh,  # refresh 총합
-            reward=float(reward),  # 보상 기록
-            winner=hidden_winner,  # winner 기록
-            target=None,  # target 없음
-            message="Hidden R-STDP pulse update executed." if updated_pairs else "No hidden pair crossed eligibility threshold.",
+            layer_name=str(layer_name),
+            updated_pairs=updated_pairs,
+            delta_t_records=delta_t_records,
+            eligibility_values=eligibility_values,
+            directions=directions,
+            actions=actions,
+            n_pulses_plus=n_pulses_plus,
+            n_pulses_minus=n_pulses_minus,
+            n_refresh=n_refresh,
+            reward=float(reward),
+            winner=int(winner),
+            target=None if target is None else int(target),
+            message=success_message if updated_pairs else no_update_message,
         )
 
     # ------------------------------------------------------------------
     # STDP core
     # ------------------------------------------------------------------
     def _pair_eligibility(self, pre_times: Sequence[int], post_times: Sequence[int]) -> Tuple[float, float]:
-        """
-        Returns:
-            best_dt: delta_t of the strongest pair contribution
-            elig: summed STDP eligibility over all pre/post pairs
-        """
-        elig = 0.0  # 총 eligibility
-        best_dt = 0.0  # 가장 강한 dt
-        best_mag = -1.0  # 가장 큰 기여도 크기
+        elig = 0.0
+        best_dt = 0.0
+        best_mag = -1.0
 
-        for t_pre in pre_times:  # 모든 pre 시각 순회
-            for t_post in post_times:  # 모든 post 시각 순회
-                dt = float(t_post - t_pre)  # 시간차 계산
-                contrib = self._stdp_kernel(dt)  # STDP 기여도 계산
-                elig += contrib  # 총합 누적
+        for t_pre in pre_times:
+            for t_post in post_times:
+                dt = float(t_post - t_pre)
+                contrib = self._stdp_kernel(dt)
+                elig += contrib
+                if abs(contrib) > best_mag:
+                    best_mag = abs(contrib)
+                    best_dt = dt
 
-                if abs(contrib) > best_mag:  # 가장 큰 기여도면
-                    best_mag = abs(contrib)  # 최대 크기 갱신
-                    best_dt = dt  # 해당 dt 저장
-
-        return float(best_dt), float(elig)  # 결과 반환
+        return float(best_dt), float(elig)
 
     def _stdp_kernel(self, dt: float) -> float:
-        if dt > 0.0:  # pre가 먼저면
-            return float(self.cfg.a_plus * np.exp(-dt / max(self.cfg.tau_plus, 1e-12)))  # 강화
-        if dt < 0.0:  # post가 먼저면
-            return float(-self.cfg.a_minus * np.exp(-(-dt) / max(self.cfg.tau_minus, 1e-12)))  # 약화
-        return 0.0  # 동시에 발생하면 0
+        if dt > 0.0:
+            return float(self.cfg.a_plus * np.exp(-dt / max(float(self.cfg.tau_plus), 1e-12)))
+        if dt < 0.0:
+            return float(-self.cfg.a_minus * np.exp(-(-dt) / max(float(self.cfg.tau_minus), 1e-12)))
+        # Simultaneous pre/post spikes are left neutral to avoid inserting an
+        # arbitrary tie rule.
+        return 0.0
 
-    # ------------------------------------------------------------------
-    # Delta-w mapping
-    # ------------------------------------------------------------------
     def _delta_w(self, elig: float, reward: float) -> float:
         return float(self.cfg.delta_w_scale * float(reward) * float(elig))
 
@@ -432,14 +426,104 @@ class RewardModulatedSTDPLearner:
 
     def _delta_w_to_pulse_count(self, delta_w: float) -> int:
         mag = abs(float(delta_w))
-        if mag < self.cfg.eligibility_threshold:
+        if mag <= float(self.cfg.delta_w_min_abs):
             return 0
 
-        pulses = int(np.ceil(mag / max(self.cfg.delta_w_per_pulse, 1e-12)))
+        pulses = int(np.ceil(mag / max(float(self.cfg.delta_w_per_pulse), 1e-12)))
         pulses = max(int(self.cfg.pulse_base), pulses)
         pulses = min(int(self.cfg.pulse_max), pulses)
         return int(pulses)
 
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+    def _validate_config(self) -> None:
+        if self.cfg.tau_plus <= 0.0 or self.cfg.tau_minus <= 0.0:
+            raise ValueError("RSTDP tau_plus and tau_minus must be positive.")
+        if self.cfg.pulse_base < 0:
+            raise ValueError("pulse_base must be >= 0")
+        if self.cfg.pulse_max < 0:
+            raise ValueError("pulse_max must be >= 0")
+        if self.cfg.pulse_max < self.cfg.pulse_base:
+            raise ValueError("pulse_max must be >= pulse_base")
+        if self.cfg.delta_w_per_pulse <= 0.0:
+            raise ValueError("delta_w_per_pulse must be positive")
+        if self.cfg.eligibility_threshold < 0.0:
+            raise ValueError("eligibility_threshold must be >= 0")
 
-if __name__ == "__main__":
-    print("learning.py ready: delta_w = reward * eligibility -> direction + pulse-count path enabled.")
+    @staticmethod
+    def _stack_step_vectors(
+        vectors: Sequence[Any],
+        *,
+        expected_dim: int,
+        name: str,
+        dtype: Any,
+    ) -> np.ndarray:
+        arrs = []
+        for k, v in enumerate(vectors):
+            a = np.asarray(v, dtype=dtype).reshape(-1)
+            if a.size != int(expected_dim):
+                raise ValueError(f"{name} at step {k} has dim {a.size}, expected {expected_dim}")
+            if not np.all(np.isfinite(a.astype(float))):
+                raise ValueError(f"{name} at step {k} contains NaN or inf")
+            arrs.append(a)
+        if not arrs:
+            return np.zeros((0, int(expected_dim)), dtype=dtype)
+        return np.asarray(arrs, dtype=dtype)
+
+    @staticmethod
+    def _empty_event(
+        layer_name: str,
+        reward: float,
+        winner: int,
+        target: Optional[int],
+        message: str,
+    ) -> RSTDPUpdateEvent:
+        return RSTDPUpdateEvent(
+            layer_name=str(layer_name),
+            updated_pairs=[],
+            delta_t_records=[],
+            eligibility_values=[],
+            directions=[],
+            actions=[],
+            n_pulses_plus=0,
+            n_pulses_minus=0,
+            n_refresh=0,
+            reward=float(reward),
+            winner=int(winner),
+            target=None if target is None else int(target),
+            message=str(message),
+        )
+
+    @staticmethod
+    def _new_accumulator(layer_name: str, reward: float, winner: int, target: Optional[int]) -> RSTDPUpdateEvent:
+        return RSTDPUpdateEvent(
+            layer_name=str(layer_name),
+            updated_pairs=[],
+            delta_t_records=[],
+            eligibility_values=[],
+            directions=[],
+            actions=[],
+            n_pulses_plus=0,
+            n_pulses_minus=0,
+            n_refresh=0,
+            reward=float(reward),
+            winner=int(winner),
+            target=None if target is None else int(target),
+            message="",
+        )
+
+    @staticmethod
+    def _merge_event(dst: RSTDPUpdateEvent, src: RSTDPUpdateEvent, pair_prefix: str) -> None:
+        # updated_pairs remains numeric for compatibility with metrics/debugging.
+        # The path identity is stored in actions as a prefix.
+        dst.updated_pairs.extend(src.updated_pairs)
+        dst.delta_t_records.extend(src.delta_t_records)
+        dst.eligibility_values.extend(src.eligibility_values)
+        dst.directions.extend(src.directions)
+        dst.actions.extend([f"{pair_prefix}:{a}" for a in src.actions])
+        dst.n_pulses_plus += int(src.n_pulses_plus)
+        dst.n_pulses_minus += int(src.n_pulses_minus)
+        dst.n_refresh += int(src.n_refresh)
+
+
