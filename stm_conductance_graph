@@ -1,0 +1,276 @@
+from __future__ import annotations
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import config as cfg
+from stm_device_model import STMDeviceModel
+from stm_crossbar import STMCrossbar
+
+
+# ============================================================
+# 공통 설정
+# ============================================================
+POT_AMPLITUDE_V = 0.45
+DEP_AMPLITUDE_V = -0.45
+
+N_REPEATED_PULSES = 20
+
+# pulse 사이 짧은 휴식
+INTER_PULSE_GAP_S = 5.0e-3
+
+# 입력이 끊긴 뒤 긴 relaxation
+TAIL_RELAX_TOTAL_S = 0.20
+TAIL_RELAX_DT_S = 1.0e-3
+
+
+# ============================================================
+# 단일 STM 소자 그래프
+# ============================================================
+def plot_single_stm_device():
+    # 단일 STM 소자 생성
+    dev = STMDeviceModel(seed=0)
+    dev.reset("rest")
+
+    time = []
+    g = []
+    z = []
+    x = []
+    r = []
+    phase = []
+
+    def record(label: str):
+        s = dev.snapshot()
+        time.append(s.t_s)
+        g.append(s.g * 1e6)  # uS
+        z.append(s.z)
+        x.append(s.x)
+        r.append(s.r)
+        phase.append(label)
+
+    record("initial")
+
+    # ------------------------------------------------------------
+    # 1) potentiation pulse + 짧은 relaxation 반복
+    # ------------------------------------------------------------
+    pulse_times = []
+
+    for _ in range(N_REPEATED_PULSES):
+        # pot pulse 1번
+        dev.apply_pulse(
+            amplitude_v=POT_AMPLITUDE_V,
+            width_s=cfg.STM_PULSE_WIDTH_S,
+            record_history=False,
+        )
+        record("pot_pulse")
+        pulse_times.append(dev.snapshot().t_s)
+
+        # pulse 사이 짧은 휴식
+        dev.relax(INTER_PULSE_GAP_S, record_history=False)
+        record("short_relax")
+
+    # ------------------------------------------------------------
+    # 2) 입력이 끊긴 뒤 긴 relaxation
+    # ------------------------------------------------------------
+    n_tail = int(TAIL_RELAX_TOTAL_S / TAIL_RELAX_DT_S)
+
+    for _ in range(n_tail):
+        dev.relax(TAIL_RELAX_DT_S, record_history=False)
+        record("tail_relax")
+
+    # ------------------------------------------------------------
+    # Conductance 그래프
+    # ------------------------------------------------------------
+    plt.figure(figsize=(8, 4))
+    plt.plot(time, g, marker="o", markersize=2, linewidth=1.5)
+
+    for pt in pulse_times:
+        plt.axvline(pt, linestyle="--", alpha=0.20)
+
+    plt.xlabel("Time (s)")
+    plt.ylabel("Conductance (uS)")
+    plt.title("Single STM Device: Repeated Pulse + Short Relaxation")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    # ------------------------------------------------------------
+    # 내부 state 그래프
+    # ------------------------------------------------------------
+    plt.figure(figsize=(8, 4))
+    plt.plot(time, z, label="z: fast volatile state")
+    plt.plot(time, x, label="x: slow state")
+    plt.plot(time, r, label="r: resource")
+
+    for pt in pulse_times:
+        plt.axvline(pt, linestyle="--", alpha=0.12)
+
+    plt.xlabel("Time (s)")
+    plt.ylabel("State value")
+    plt.title("STM Internal States: Repeated Pulse + Relaxation")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# STM differential pair 그래프
+# ============================================================
+def plot_stm_differential_pair():
+    # differential pair STM synapse 확인
+    # 실제 weight = G_plus - G_minus
+    cb = STMCrossbar(n_rows=1, n_cols=1, seed=0)
+    pair_id = (0, 0)
+
+    time = []
+    g_plus = []
+    g_minus = []
+    weight = []
+    phase = []
+
+    def record(label: str):
+        gp, gm = cb.read_pair(pair_id)
+
+        # plus/minus 중 하나의 실제 시간 사용
+        row, logical_col = pair_id
+        plus_col = 2 * logical_col
+        t_s = cb.devices[row, plus_col].snapshot().t_s
+
+        time.append(t_s)
+        g_plus.append(gp * 1e6)
+        g_minus.append(gm * 1e6)
+        weight.append((gp - gm) * 1e6)
+        phase.append(label)
+
+    record("initial")
+
+    # ------------------------------------------------------------
+    # 1) positive recurrent memory 만들기
+    #    plus pot pulse + 짧은 relaxation 반복
+    # ------------------------------------------------------------
+    pulse_times = []
+
+    for _ in range(N_REPEATED_PULSES):
+        cb.apply_pulse(
+            pair_id,
+            side="plus",
+            polarity="pot",
+            n_pulses=1,
+        )
+        record("plus_pot")
+        pulse_times.append(time[-1])
+
+        cb.relax_pair(pair_id, INTER_PULSE_GAP_S)
+        record("short_relax")
+
+    # ------------------------------------------------------------
+    # 2) 입력이 끊긴 뒤 weight가 자연 감소하는지 확인
+    # ------------------------------------------------------------
+    n_tail = int(TAIL_RELAX_TOTAL_S / TAIL_RELAX_DT_S)
+
+    for _ in range(n_tail):
+        cb.relax_pair(pair_id, TAIL_RELAX_DT_S)
+        record("tail_relax")
+
+    # ------------------------------------------------------------
+    # G_plus, G_minus 그래프
+    # ------------------------------------------------------------
+    plt.figure(figsize=(8, 4))
+    plt.plot(time, g_plus, label="G_plus", linewidth=1.5)
+    plt.plot(time, g_minus, label="G_minus", linewidth=1.5)
+
+    for pt in pulse_times:
+        plt.axvline(pt, linestyle="--", alpha=0.20)
+
+    plt.xlabel("Time (s)")
+    plt.ylabel("Conductance (uS)")
+    plt.title("STM Differential Pair: Repeated Plus Potentiation")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+    # ------------------------------------------------------------
+    # weight 그래프
+    # ------------------------------------------------------------
+    plt.figure(figsize=(8, 4))
+    plt.plot(time, weight, marker="o", markersize=2, linewidth=1.5)
+    plt.axhline(0.0, linestyle="--")
+
+    for pt in pulse_times:
+        plt.axvline(pt, linestyle="--", alpha=0.20)
+
+    plt.xlabel("Time (s)")
+    plt.ylabel("Weight = G_plus - G_minus (uS)")
+    plt.title("STM Differential Pair Weight: Transient Memory")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# Optional: reset/depression pulse 확인
+# ============================================================
+def plot_stm_reset_by_depression():
+    # pot 반복 후 dep pulse로 빠르게 reset되는지 확인
+    dev = STMDeviceModel(seed=0)
+    dev.reset("rest")
+
+    time = []
+    g = []
+
+    def record():
+        s = dev.snapshot()
+        time.append(s.t_s)
+        g.append(s.g * 1e6)
+
+    record()
+
+    # pot pulse + 짧은 휴식 반복
+    for _ in range(N_REPEATED_PULSES):
+        dev.apply_pulse(
+            amplitude_v=POT_AMPLITUDE_V,
+            width_s=cfg.STM_PULSE_WIDTH_S,
+            record_history=False,
+        )
+        record()
+
+        dev.relax(INTER_PULSE_GAP_S, record_history=False)
+        record()
+
+    # dep pulse로 reset
+    dep_times = []
+
+    for _ in range(8):
+        dev.apply_pulse(
+            amplitude_v=DEP_AMPLITUDE_V,
+            width_s=cfg.STM_PULSE_WIDTH_S,
+            record_history=False,
+        )
+        record()
+        dep_times.append(dev.snapshot().t_s)
+
+        dev.relax(INTER_PULSE_GAP_S, record_history=False)
+        record()
+
+    plt.figure(figsize=(8, 4))
+    plt.plot(time, g, marker="o", markersize=2, linewidth=1.5)
+
+    for pt in dep_times:
+        plt.axvline(pt, linestyle="--", alpha=0.20)
+
+    plt.xlabel("Time (s)")
+    plt.ylabel("Conductance (uS)")
+    plt.title("STM Reset Check: Potentiation then Depression Pulses")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+if __name__ == "__main__":
+    plot_single_stm_device()
+    plot_stm_differential_pair()
+
+    # 필요하면 아래도 실행
+    # plot_stm_reset_by_depression()
