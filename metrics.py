@@ -47,6 +47,11 @@ class StepMetrics:
     # reward
     reward: float
 
+    collision: bool
+    moved: bool
+    danger_zone: bool
+    found_victim: bool
+
 
 # ============================================================
 # 전체 summary
@@ -96,6 +101,10 @@ class MetricsSummary:
     total_depression_count: int
 
     # action 선택 분포
+    collision_rate: float
+    moved_rate: float
+    danger_zone_rate: float
+    found_victim_count: int
     action_histogram: Dict[int, int] = field(default_factory=dict)
 
 
@@ -256,13 +265,34 @@ class SNNMetrics:
         hidden_silent = hidden_spike_count == 0
         output_silent = output_spike_count == 0
 
+        env_info = rollout_info.get("env_info", {})
+
+        collision = bool(
+            rollout_info.get("collision", env_info.get("collision", False))
+        )
+
+        moved = bool(
+            rollout_info.get("moved", env_info.get("moved", False))
+        )
+
+        danger_zone = bool(
+            rollout_info.get("danger_zone", env_info.get("danger_zone", False))
+        )
+
+        found_victim = bool(
+            rollout_info.get("found_victim", env_info.get("found_victim", False))
+        )
+
         # learning 없는 경우
         if learning_event is None:
             pulses_plus = 0
             pulses_minus = 0
             n_refresh = 0
 
-            reward = 0.0
+            reward = self._safe_float(
+                rollout_info.get("reward", 0.0),
+                0.0,
+            )
 
             winner = -1
             target = -1
@@ -335,6 +365,11 @@ class SNNMetrics:
             target=target,
 
             reward=reward,
+
+            collision=collision,
+            moved=moved,
+            danger_zone=danger_zone,
+            found_victim=found_victim,
         )
 
         # 저장
@@ -397,6 +432,11 @@ class SNNMetrics:
                 total_updated_pairs=0,
                 total_potentiation_count=0,
                 total_depression_count=0,
+
+                collision_rate=0.0,
+                moved_rate=0.0,
+                danger_zone_rate=0.0,
+                found_victim_count=0,
 
                 action_histogram={},
             )
@@ -467,6 +507,26 @@ class SNNMetrics:
             dtype=float,
         )
 
+        collisions = np.asarray(
+            [s.collision for s in self.steps],
+            dtype=float,
+        )
+
+        moved_arr = np.asarray(
+            [s.moved for s in self.steps],
+            dtype=float,
+        )
+
+        danger_zones = np.asarray(
+            [s.danger_zone for s in self.steps],
+            dtype=float,
+        )
+
+        found_victims = np.asarray(
+            [s.found_victim for s in self.steps],
+            dtype=float,
+        )
+
         # action 분포 계산
         action_histogram: Dict[int, int] = {}
 
@@ -522,6 +582,11 @@ class SNNMetrics:
             total_potentiation_count=int(pot_counts.sum()),
             total_depression_count=int(dep_counts.sum()),
 
+            collision_rate=float(collisions.mean()),
+            moved_rate=float(moved_arr.mean()),
+            danger_zone_rate=float(danger_zones.mean()),
+            found_victim_count=int(found_victims.sum()),
+
             action_histogram=action_histogram,
         )
 
@@ -564,6 +629,11 @@ class SNNMetrics:
             "total_updated_pairs": s.total_updated_pairs,
             "total_potentiation_count": s.total_potentiation_count,
             "total_depression_count": s.total_depression_count,
+
+            "collision_rate": s.collision_rate,
+            "moved_rate": s.moved_rate,
+            "danger_zone_rate": s.danger_zone_rate,
+            "found_victim_count": s.found_victim_count,
 
             "action_histogram": s.action_histogram,
         }
