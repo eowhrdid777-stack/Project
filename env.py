@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 import numpy as np
 
+from sensor_features import augment_observation_with_sensor_features
+
 
 Action = int
 GridPos = Tuple[int, int]
@@ -59,6 +61,14 @@ class AbstractRescueGridEnv:
         "<": 3,
     }
 
+    SENSOR_TRACE_KEYS = (
+        "front_clearance",
+        "left_clearance",
+        "right_clearance",
+        "victim_signal",
+        "sound_signal",
+    )
+
     def __init__(
         self,
         width: int = 8,
@@ -67,6 +77,7 @@ class AbstractRescueGridEnv:
         obstacle_density: float = 0.12,
         seed: Optional[int] = None,
         victim_signal_sigma: float = 2.2,
+        victim_detection_radius: Optional[float] = None,
         reward_step_penalty: float = 0.0,
         reward_collision: float = -0.05,
         reward_closer: float = 0.10,
@@ -111,6 +122,9 @@ class AbstractRescueGridEnv:
         if reward_danger is None:
             reward_danger = float(self._cfg(cfg, "ENV_REWARD_DANGER", -1.0))
 
+        if victim_detection_radius is None:
+            victim_detection_radius = float(self._cfg(cfg, "ENV_VICTIM_DETECTION_RADIUS", 0.0))
+
         if width < 1 or height < 1:
             raise ValueError("width and height must be >= 1")
         if max_steps < 1:
@@ -121,6 +135,8 @@ class AbstractRescueGridEnv:
             raise ValueError("n_victims must be >= 1")
         if victim_signal_sigma <= 0.0:
             raise ValueError("victim_signal_sigma must be > 0")
+        if float(victim_detection_radius) < 0.0:
+            raise ValueError("victim_detection_radius must be >= 0")
         if generation_max_attempts < 1:
             raise ValueError("generation_max_attempts must be >= 1")
 
@@ -129,6 +145,7 @@ class AbstractRescueGridEnv:
         self.max_steps = int(max_steps)
         self.obstacle_density = float(obstacle_density)
         self.victim_signal_sigma = float(victim_signal_sigma)
+        self.victim_detection_radius = float(victim_detection_radius)
 
         self.reward_step_penalty = float(reward_step_penalty)
         self.reward_collision = float(reward_collision)
@@ -179,6 +196,10 @@ class AbstractRescueGridEnv:
         self.episode_index: int = 0
         self.rescued_count: int = 0
         self.initial_victim_count: int = self.n_victims
+        self._previous_sensor_obs_for_delta: Dict[str, float] = {}
+        self._last_action_for_observation: Optional[int] = None
+        self._last_collision_for_observation: bool = False
+        self._last_moved_for_observation: bool = False
 
         self.reset()
         self.episode_index = 0
@@ -211,6 +232,7 @@ class AbstractRescueGridEnv:
                 )
 
             self.last_distance_to_victim = self._nearest_victim_distance(self.agent_pos)
+            self._reset_temporal_observation_state()
             return self.get_observation()
 
         last_error: Optional[Exception] = None
@@ -225,6 +247,7 @@ class AbstractRescueGridEnv:
                         else 0
                     )
                     self.last_distance_to_victim = self._nearest_victim_distance(self.agent_pos)
+                    self._reset_temporal_observation_state()
                     return self.get_observation()
             except Exception as exc:
                 last_error = exc
@@ -384,6 +407,7 @@ class AbstractRescueGridEnv:
         if action not in self.ACTION_NAMES:
             raise ValueError(f"Unsupported action {action}.")
 
+        previous_sensor_obs = self._base_observation()
         old_pos = self.agent_pos
         old_heading = self.agent_heading
         old_distance = self._nearest_victim_distance(old_pos)
@@ -411,8 +435,17 @@ class AbstractRescueGridEnv:
 
         self.step_count += 1
 
+        nearest_victim_pos = None
         new_distance = self._nearest_victim_distance(self.agent_pos)
-        found_victim = self.agent_pos in self.victim_positions
+        if self.victim_positions:
+            nearest_victim_pos = min(
+                self.victim_positions,
+                key=lambda victim_pos: self._distance(self.agent_pos, victim_pos),
+            )
+        found_victim = (
+            nearest_victim_pos is not None
+            and new_distance <= self.victim_detection_radius
+        )
         danger_zone = self.agent_pos in self.danger_positions
 
         reward = float(self.reward_step_penalty)
@@ -434,7 +467,7 @@ class AbstractRescueGridEnv:
             reward += self.reward_turn
 
         if found_victim:
-            self.victim_positions.remove(self.agent_pos)
+            self.victim_positions.remove(nearest_victim_pos)
             self.rescued_count += 1
             reward += self.reward_found_victim
 
@@ -445,6 +478,10 @@ class AbstractRescueGridEnv:
             self.done = True
 
         self.last_distance_to_victim = self._nearest_victim_distance(self.agent_pos)
+        self._previous_sensor_obs_for_delta = dict(previous_sensor_obs)
+        self._last_action_for_observation = int(action)
+        self._last_collision_for_observation = bool(collision)
+        self._last_moved_for_observation = bool(moved)
 
         info = {
             "action_name": self.ACTION_NAMES[action],
@@ -457,6 +494,8 @@ class AbstractRescueGridEnv:
             "danger_zone": bool(danger_zone),
             "distance_to_nearest_victim": float(new_distance),
             "found_victim": bool(found_victim),
+            "found_victim_pos": nearest_victim_pos if found_victim else None,
+            "victim_detection_radius": float(self.victim_detection_radius),
             "remaining_victims": int(len(self.victim_positions)),
             "rescued_count": int(self.rescued_count),
             "step_count": int(self.step_count),
@@ -474,7 +513,7 @@ class AbstractRescueGridEnv:
     # ============================================================
     # observation
     # ============================================================
-    def get_observation(self) -> Dict[str, float]:
+    def _base_observation(self) -> Dict[str, float]:
         front_clearance = self._directional_clearance(self.agent_heading)
         left_clearance = self._directional_clearance((self.agent_heading - 1) % 4)
         right_clearance = self._directional_clearance((self.agent_heading + 1) % 4)
@@ -485,10 +524,68 @@ class AbstractRescueGridEnv:
             "left_clearance": float(left_clearance),
             "right_clearance": float(right_clearance),
             "victim_signal": float(victim_signal),
+            # 현재 시뮬레이션에서는 victim_signal을 생존자 소리 신호처럼 사용
+            "sound_signal": float(victim_signal),
         }
+        obs = augment_observation_with_sensor_features(
+            obs,
+            danger_zone=bool(self.agent_pos in self.danger_positions),
+            heading=int(self.agent_heading),
+        )
 
         self._validate_observation(obs)
         return obs
+
+    def _reset_temporal_observation_state(self) -> None:
+        base_obs = self._base_observation()
+        self._previous_sensor_obs_for_delta = dict(base_obs)
+        self._last_action_for_observation = None
+        self._last_collision_for_observation = False
+        self._last_moved_for_observation = False
+
+    @classmethod
+    def _with_temporal_features(
+        cls,
+        obs: Dict[str, float],
+        previous_obs: Optional[Dict[str, float]],
+        last_action: Optional[int],
+        last_collision: bool,
+        last_moved: bool,
+    ) -> Dict[str, float]:
+        out = dict(obs)
+        prev = previous_obs if previous_obs is not None else obs
+        out["front_delta"] = float(
+            out.get("front_clearance", 0.0) - prev.get("front_clearance", out.get("front_clearance", 0.0))
+        )
+        out["left_delta"] = float(
+            out.get("left_clearance", 0.0) - prev.get("left_clearance", out.get("left_clearance", 0.0))
+        )
+        out["right_delta"] = float(
+            out.get("right_clearance", 0.0) - prev.get("right_clearance", out.get("right_clearance", 0.0))
+        )
+        out["victim_signal_delta"] = float(
+            out.get("victim_signal", 0.0) - prev.get("victim_signal", out.get("victim_signal", 0.0))
+        )
+        out["sound_signal_delta"] = float(
+            out.get("sound_signal", 0.0) - prev.get("sound_signal", out.get("sound_signal", 0.0))
+        )
+        action = None if last_action is None else int(last_action)
+        out["last_action_forward"] = float(action == 0)
+        out["last_action_left"] = float(action == 1)
+        out["last_action_right"] = float(action == 2)
+        out["last_collision"] = float(bool(last_collision))
+        out["last_moved"] = float(bool(last_moved))
+        return out
+
+    def get_observation(self) -> Dict[str, float]:
+        base_obs = self._base_observation()
+        return self._with_temporal_features(
+            base_obs,
+            self._previous_sensor_obs_for_delta,
+            self._last_action_for_observation,
+            self._last_collision_for_observation,
+            self._last_moved_for_observation,
+        )
 
     # ============================================================
     # fixed-map utility

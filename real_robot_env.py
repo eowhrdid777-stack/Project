@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from robot_interface import ArduinoRobotInterface, RobotCalibration
 from env import EnvStepResult, MapSpec, AbstractRescueGridEnv
+from sensor_features import augment_observation_with_sensor_features
 
 GridPos = Tuple[int, int]
 
@@ -44,6 +45,7 @@ class RealRescueRobotEnv:
     ACTION_NAMES = AbstractRescueGridEnv.ACTION_NAMES
     HEADING_NAMES = AbstractRescueGridEnv.HEADING_NAMES
     HEADING_FROM_CHAR = AbstractRescueGridEnv.HEADING_FROM_CHAR
+    SENSOR_TRACE_KEYS = AbstractRescueGridEnv.SENSOR_TRACE_KEYS
 
     def __init__(
         self,
@@ -78,6 +80,10 @@ class RealRescueRobotEnv:
         self.step_count: int = 0
         self.done: bool = False
         self.last_distance_to_victim: float = 0.0
+        self._previous_sensor_obs_for_delta: Dict[str, float] = {}
+        self._last_action_for_observation: Optional[int] = None
+        self._last_collision_for_observation: bool = False
+        self._last_moved_for_observation: bool = False
 
     def reset(self, map_index: Optional[int] = None) -> Dict[str, float]:
         idx = self.fixed_map_index if map_index is None else int(map_index)
@@ -93,10 +99,50 @@ class RealRescueRobotEnv:
         self.step_count = 0
         self.done = False
         self.last_distance_to_victim = self._nearest_victim_distance(self.agent_pos)
-        return self.get_observation()
+        base_obs = self._base_observation()
+        self._reset_temporal_observation_state(base_obs)
+        return self._with_temporal_features(base_obs)
+
+    def _base_observation(self) -> Dict[str, float]:
+        return augment_observation_with_sensor_features(
+            self.interface.get_observation(),
+            heading=int(self.agent_heading),
+        )
+
+    def _reset_temporal_observation_state(self, base_obs: Dict[str, float]) -> None:
+        self._previous_sensor_obs_for_delta = dict(base_obs)
+        self._last_action_for_observation = None
+        self._last_collision_for_observation = False
+        self._last_moved_for_observation = False
+
+    def _with_temporal_features(self, obs: Dict[str, float]) -> Dict[str, float]:
+        out = dict(obs)
+        prev = self._previous_sensor_obs_for_delta or obs
+        out["front_delta"] = float(
+            out.get("front_clearance", 0.0) - prev.get("front_clearance", out.get("front_clearance", 0.0))
+        )
+        out["left_delta"] = float(
+            out.get("left_clearance", 0.0) - prev.get("left_clearance", out.get("left_clearance", 0.0))
+        )
+        out["right_delta"] = float(
+            out.get("right_clearance", 0.0) - prev.get("right_clearance", out.get("right_clearance", 0.0))
+        )
+        out["victim_signal_delta"] = float(
+            out.get("victim_signal", 0.0) - prev.get("victim_signal", out.get("victim_signal", 0.0))
+        )
+        out["sound_signal_delta"] = float(
+            out.get("sound_signal", 0.0) - prev.get("sound_signal", out.get("sound_signal", 0.0))
+        )
+        action = self._last_action_for_observation
+        out["last_action_forward"] = float(action == 0)
+        out["last_action_left"] = float(action == 1)
+        out["last_action_right"] = float(action == 2)
+        out["last_collision"] = float(bool(self._last_collision_for_observation))
+        out["last_moved"] = float(bool(self._last_moved_for_observation))
+        return out
 
     def get_observation(self) -> Dict[str, float]:
-        return self.interface.get_observation()
+        return self._with_temporal_features(self._base_observation())
 
     def step(self, action: int) -> EnvStepResult:
         if self.done:
@@ -111,9 +157,10 @@ class RealRescueRobotEnv:
 
         # Pre-read for collision-risk logging; Arduino firmware should also block
         # unsafe forward movement based on its front ToF sensor.
-        before_obs = self.get_observation()
+        before_sensor_obs = self._base_observation()
+        before_obs = self._with_temporal_features(before_sensor_obs)
         ack = self.interface.execute_action(action)
-        after_obs = self.get_observation()
+        after_sensor_obs = self._base_observation()
 
         collision = bool(ack.get("collision", False))
         moved = False
@@ -128,6 +175,12 @@ class RealRescueRobotEnv:
             else:
                 self.agent_pos = next_pos
                 moved = True
+
+        self._previous_sensor_obs_for_delta = dict(before_sensor_obs)
+        self._last_action_for_observation = int(action)
+        self._last_collision_for_observation = bool(collision)
+        self._last_moved_for_observation = bool(moved)
+        after_obs = self._with_temporal_features(after_sensor_obs)
 
         self.step_count += 1
         found_victim = False

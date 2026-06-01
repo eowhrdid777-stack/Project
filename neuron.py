@@ -240,14 +240,15 @@ class MemristiveLIFOutputLayer:
     # ------------------------------------------------------------------
     # State and inspection helpers
     # ------------------------------------------------------------------
-    def reset_state(self) -> None:
-        """Reset membrane, traces, refractory counters, and optional threshold devices."""
+    def reset_state(self, reset_threshold_devices: bool = False) -> None:
+        """Reset dynamic neuron state, optionally resetting adaptive threshold devices."""
         self.vmem.fill(self.reset_voltage)
         self.spike_trace.fill(0.0)
         self.refractory.fill(0)
         self.last_spike_step.fill(-10**9)
-        for dev in self.threshold_devices:
-            dev.reset("mid")
+        if reset_threshold_devices:
+            for dev in self.threshold_devices:
+                dev.reset("mid")
 
     def describe(self) -> Dict[str, Any]:
         """Return current layer settings for experiment logging."""

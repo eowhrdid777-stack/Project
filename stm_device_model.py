@@ -73,8 +73,9 @@ class STMDeviceModel:
         # neuron thresholds/input gains do not require a completely different
         # tuning regime. The default peak is still lower than LTM G_MAX because
         # this cell is intended as a transient feedback device.
-        self.g_rest_nom = float(_cfg("STM_G_REST", 1.25e-8))
-        self.g_peak_nom = float(_cfg("STM_G_PEAK", 1.20e-7))
+        conductance_scale = float(_cfg("STM_CONDUCTANCE_SCALE", 1.0))
+        self.g_rest_nom = float(_cfg("STM_G_REST", 1.25e-8)) * conductance_scale
+        self.g_peak_nom = float(_cfg("STM_G_PEAK", 1.20e-7)) * conductance_scale
         self.g_nonlinearity = float(_cfg("STM_G_NONLINEARITY", 1.35))
 
         # ------------------------------------------------------------

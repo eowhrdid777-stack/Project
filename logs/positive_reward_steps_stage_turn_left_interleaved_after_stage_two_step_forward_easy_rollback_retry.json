@@ -1,0 +1,124 @@
+[
+  {
+    "episode_idx": 0,
+    "step_idx": 6,
+    "snn_action": 0,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.3,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": null,
+    "learning_event_message": "skipped by output column balance (target=0, column_mean=6.69632317454643e-09, threshold=5.712138466289044e-10)",
+    "updated_pairs": [],
+    "directions": [],
+    "n_pulses_plus": 0,
+    "n_pulses_minus": 0,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 0,
+    "step_idx": 28,
+    "snn_action": 2,
+    "executed_action": 0,
+    "reward": 3.1,
+    "raw_reward": 3.1,
+    "learning_reward": 1.0,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": null,
+    "learning_event_message": "skipped by output column balance (target=0, column_mean=6.69632317454643e-09, threshold=7.59850804232839e-10)",
+    "updated_pairs": [],
+    "directions": [],
+    "n_pulses_plus": 0,
+    "n_pulses_minus": 0,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 1,
+    "step_idx": 24,
+    "snn_action": 0,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.3,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 0,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode.",
+    "updated_pairs": [
+      [
+        1,
+        0
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        7,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 6,
+    "n_pulses_minus": 9,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 1,
+    "step_idx": 28,
+    "snn_action": 0,
+    "executed_action": 0,
+    "reward": 3.1,
+    "raw_reward": 3.1,
+    "learning_reward": 1.0,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": null,
+    "learning_event_message": "skipped by output column balance (target=0, column_mean=1.2121406630911134e-08, threshold=1.9065917449531216e-09)",
+    "updated_pairs": [],
+    "directions": [],
+    "n_pulses_plus": 0,
+    "n_pulses_minus": 0,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 2,
+    "step_idx": 3,
+    "snn_action": 0,
+    "executed_action": 0,
+    "reward": 3.1,
+    "raw_reward": 3.1,
+    "learning_reward": 1.0,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": null,
+    "learning_event_message": "skipped by output column balance (target=0, column_mean=1.2121406630911134e-08, threshold=2.361003648599334e-09)",
+    "updated_pairs": [],
+    "directions": [],
+    "n_pulses_plus": 0,
+    "n_pulses_minus": 0,
+    "used_surrogate_target_post": false
+  }
+]

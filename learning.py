@@ -38,6 +38,8 @@ class RSTDPConfig:
 
     # Fallback is a readout decision, not a postsynaptic spike by default.
     use_surrogate_post_on_fallback: bool = False
+    use_surrogate_post_on_target: bool = False
+    use_abs_eligibility_on_target_negative: bool = False
 
     # Main learning path is output R-STDP. Hidden R-STDP is optional.
     enable_hidden_rstdp: bool = False
@@ -55,6 +57,9 @@ class RSTDPConfig:
     pulse_max: int = 4
     delta_w_per_pulse: float = 0.05
     delta_w_min_abs: float = 0.0
+    output_depression_scale: float = 1.0
+    anti_target_depression: bool = False
+    anti_target_depression_scale: float = 0.25
 
 
 @dataclass
@@ -72,6 +77,7 @@ class RSTDPUpdateEvent:
     winner: int
     target: Optional[int]
     message: str
+    used_surrogate_post: bool = False
 
 
 class RewardModulatedSTDPLearner:
@@ -96,11 +102,23 @@ class RewardModulatedSTDPLearner:
         net: MemristiveSNNNetwork,
         reward: float,
         target: Optional[int] = None,
+        use_abs_eligibility_on_target_negative: Optional[bool] = None,
+        use_surrogate_post_on_target_negative: bool = False,
     ) -> Dict[str, Optional[RSTDPUpdateEvent]]:
         if net.last_decision is None:
             raise RuntimeError("No decision available. Call net.decide(obs) before learner.learn(...).")
 
-        output_event = self._learn_output(net=net, reward=float(reward), target=target)
+        output_event = self._learn_output(
+            net=net,
+            reward=float(reward),
+            target=target,
+            use_abs_eligibility_on_target_negative=(
+                use_abs_eligibility_on_target_negative
+            ),
+            use_surrogate_post_on_target_negative=bool(
+                use_surrogate_post_on_target_negative
+            ),
+        )
         hidden_event = None
         if bool(self.cfg.enable_hidden_rstdp):
             hidden_event = self._learn_hidden(net=net, reward=float(reward))
@@ -115,6 +133,8 @@ class RewardModulatedSTDPLearner:
         net: MemristiveSNNNetwork,
         reward: float,
         target: Optional[int],
+        use_abs_eligibility_on_target_negative: Optional[bool],
+        use_surrogate_post_on_target_negative: bool,
     ) -> RSTDPUpdateEvent:
         decision = net.last_decision
         assert decision is not None
@@ -145,8 +165,26 @@ class RewardModulatedSTDPLearner:
             raise ValueError(f"Target/post column out of range: {post_col}")
 
         post_times = np.flatnonzero(post_spikes[:, post_col] > 0).astype(int).tolist()
+        used_surrogate_post = False
         if (not post_times) and bool(decision.used_fallback) and bool(self.cfg.use_surrogate_post_on_fallback):
             post_times = [int(decision.selected_step)]
+            used_surrogate_post = True
+        if (
+            (not post_times)
+            and target is not None
+            and float(reward) > 0.0
+            and bool(self.cfg.use_surrogate_post_on_target)
+        ):
+            post_times = [int(decision.selected_step)]
+            used_surrogate_post = True
+        if (
+            (not post_times)
+            and target is not None
+            and float(reward) < 0.0
+            and bool(use_surrogate_post_on_target_negative)
+        ):
+            post_times = [int(decision.selected_step)]
+            used_surrogate_post = True
 
         if not post_times:
             return self._empty_event(
@@ -165,19 +203,59 @@ class RewardModulatedSTDPLearner:
                 "Reward is zero; no gated output R-STDP update applied.",
             )
 
-        return self._apply_projection_rstdp(
+        effective_reward = float(reward)
+        if effective_reward < 0.0:
+            effective_reward *= float(self.cfg.output_depression_scale)
+
+        event = self._apply_projection_rstdp(
             layer_name="output",
             controller=getattr(net.output_layer, "controller", None),
             pre_spikes=pre_spikes,
             post_col=post_col,
             post_times=post_times,
-            reward=reward,
+            reward=effective_reward,
             winner=winner,
             target=target,
+            use_abs_eligibility_on_target_negative=(
+                use_abs_eligibility_on_target_negative
+            ),
             step_idx=int(net.global_step),
             no_update_message="No output pair crossed eligibility threshold.",
             success_message="Output R-STDP pulse update executed.",
         )
+        event.used_surrogate_post = bool(used_surrogate_post)
+        if used_surrogate_post:
+            event.message += " surrogate target post used at selected_step."
+        if (
+            bool(self.cfg.anti_target_depression)
+            and target is not None
+            and float(reward) > 0.0
+            and 0 <= int(target) < n_post
+        ):
+            anti_reward = -abs(float(reward)) * float(self.cfg.anti_target_depression_scale)
+            anti_reward *= float(self.cfg.output_depression_scale)
+            anti_times = [int(decision.selected_step)]
+            for anti_col in range(n_post):
+                if int(anti_col) == int(target):
+                    continue
+                anti_event = self._apply_projection_rstdp(
+                    layer_name="output/anti_target",
+                    controller=getattr(net.output_layer, "controller", None),
+                    pre_spikes=pre_spikes,
+                    post_col=int(anti_col),
+                    post_times=anti_times,
+                    reward=anti_reward,
+                    winner=winner,
+                    target=int(target),
+                    use_abs_eligibility_on_target_negative=True,
+                    step_idx=int(net.global_step),
+                    no_update_message="No anti-target output pair crossed eligibility threshold.",
+                    success_message="Anti-target output R-STDP depression executed.",
+                )
+                self._merge_event(event, anti_event, pair_prefix=f"anti{anti_col}")
+            if event.updated_pairs:
+                event.message += " anti-target depression path evaluated."
+        return event
 
     # ------------------------------------------------------------------
     # Optional hidden-layer R-STDP
@@ -320,6 +398,7 @@ class RewardModulatedSTDPLearner:
         reward: float,
         winner: int,
         target: Optional[int],
+        use_abs_eligibility_on_target_negative: Optional[bool] = None,
         step_idx: int,
         no_update_message: str,
         success_message: str,
@@ -336,6 +415,16 @@ class RewardModulatedSTDPLearner:
         n_pulses_plus = 0
         n_pulses_minus = 0
         n_refresh = 0
+        target_positive_abs_mode = target is not None and float(reward) > 0.0
+        target_negative_abs_mode = (
+            target is not None
+            and float(reward) < 0.0
+            and (
+                bool(self.cfg.use_abs_eligibility_on_target_negative)
+                if use_abs_eligibility_on_target_negative is None
+                else bool(use_abs_eligibility_on_target_negative)
+            )
+        )
 
         for row in range(n_pre):
             pre_times = np.flatnonzero(pre_spikes[:, row] > 0).astype(int).tolist()
@@ -346,7 +435,12 @@ class RewardModulatedSTDPLearner:
             if abs(elig) < float(self.cfg.eligibility_threshold):
                 continue
 
-            delta_w = self._delta_w(elig=elig, reward=reward)
+            effective_elig = (
+                abs(elig)
+                if target_positive_abs_mode or target_negative_abs_mode
+                else elig
+            )
+            delta_w = self._delta_w(elig=effective_elig, reward=reward)
             direction = self._delta_w_to_direction(delta_w)
             n_pulses = self._delta_w_to_pulse_count(delta_w)
             if direction == 0 or n_pulses == 0:
@@ -361,13 +455,21 @@ class RewardModulatedSTDPLearner:
 
             updated_pairs.append((int(row), int(post_col)))
             delta_t_records.append(float(best_dt))
-            eligibility_values.append(float(elig))
+            eligibility_values.append(float(effective_elig))
             directions.append(int(direction))
             actions.append(str(result.chosen_action))
             n_pulses_plus += int(result.n_pulses_plus)
             n_pulses_minus += int(result.n_pulses_minus)
             if bool(result.did_refresh):
                 n_refresh += 1
+
+        mode_message = (
+            " target-positive abs eligibility mode."
+            if target_positive_abs_mode
+            else ""
+        )
+        if target_negative_abs_mode:
+            mode_message += " target-negative abs eligibility mode."
 
         return RSTDPUpdateEvent(
             layer_name=str(layer_name),
@@ -382,7 +484,7 @@ class RewardModulatedSTDPLearner:
             reward=float(reward),
             winner=int(winner),
             target=None if target is None else int(target),
-            message=success_message if updated_pairs else no_update_message,
+            message=(success_message if updated_pairs else no_update_message) + mode_message,
         )
 
     # ------------------------------------------------------------------
@@ -450,6 +552,10 @@ class RewardModulatedSTDPLearner:
             raise ValueError("delta_w_per_pulse must be positive")
         if self.cfg.eligibility_threshold < 0.0:
             raise ValueError("eligibility_threshold must be >= 0")
+        if self.cfg.output_depression_scale < 0.0:
+            raise ValueError("output_depression_scale must be >= 0")
+        if self.cfg.anti_target_depression_scale < 0.0:
+            raise ValueError("anti_target_depression_scale must be >= 0")
 
     @staticmethod
     def _stack_step_vectors(

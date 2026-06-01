@@ -1,0 +1,5554 @@
+{
+  "enabled": true,
+  "primitive_core_checkpoint_found": true,
+  "episodes_requested": 100,
+  "episodes_consumed": 4,
+  "task_sampling": "balanced_cycle",
+  "block_size": 4,
+  "eval_interval": 4,
+  "block_rollback_enabled": true,
+  "primitive_rstdp_scale": {
+    "stage_forward": 0.5,
+    "stage_turn_right": 0.5,
+    "stage_turn_left": 0.5,
+    "stage_wall_avoid": 0.5
+  },
+  "primitive_core_hidden_trace_input_scale": 0.0,
+  "primitive_core_enable_hidden_trace": false,
+  "primitive_core_stm_recurrent_current_scale": 0.0,
+  "output_depression_scale": 1.0,
+  "anti_target_depression": false,
+  "final_score": 380.0,
+  "final_regression": {
+    "passed": true,
+    "warnings": [],
+    "criteria": {
+      "stage_forward": "eval_success == 1.0",
+      "stage_turn_right": "eval_success == 1.0",
+      "stage_turn_left": "eval_success == 1.0",
+      "stage_wall_avoid": "eval_success == 1.0"
+    },
+    "stages": {
+      "stage_forward": {
+        "eval_success": 1.0,
+        "action_sequence": [
+          0
+        ],
+        "raw_action_sequence": [
+          0
+        ],
+        "valid_actions_only": true,
+        "no_action_count": 0,
+        "no_spike_count": 0,
+        "early_done_before_action": false,
+        "collision_sequence": [
+          false
+        ],
+        "moved_sequence": [
+          true
+        ],
+        "collision_count": 0,
+        "moved_count": 1,
+        "found_victim_count": 1,
+        "action_histogram": {
+          "0": 1
+        },
+        "snn_action_histogram": {
+          "0": 1
+        },
+        "spike_selected_action_histogram": {
+          "0": 1
+        },
+        "fallback_action_histogram": {},
+        "output_winner_histogram": {
+          "0": 2,
+          "2": 1
+        },
+        "output_column_weight_mean": {
+          "0": 2.19156683504397e-08,
+          "1": -1.3216832769257159e-08,
+          "2": 6.170951788700615e-09
+        },
+        "output_column_weight_std": {
+          "0": 1.0556438885569323e-07,
+          "1": 7.017675817931633e-08,
+          "2": 8.462369861378005e-08
+        },
+        "output_column_effective_score": {
+          "0": 2.19156683504397e-08,
+          "1": -1.3216832769257159e-08,
+          "2": 6.170951788700615e-09
+        },
+        "output_spike_count_by_action": {
+          "0": 3,
+          "1": 0,
+          "2": 3
+        },
+        "output_first_spike_time_by_action_mean": {
+          "0": 0.0,
+          "1": -1.0,
+          "2": 0.0
+        },
+        "pulse_plus_count_by_action": {},
+        "pulse_minus_count_by_action": {},
+        "reward_by_action": {
+          "0": 3.1
+        },
+        "event_count_by_action": {
+          "0": {
+            "found_victim": 1,
+            "collision": 0,
+            "moved": 1
+          }
+        },
+        "eval_state_reset_debug": {
+          "hidden_trace_reset": true,
+          "neuron_state_reset": true,
+          "prev_hidden_spikes_reset": true,
+          "output_buffer_reset": true,
+          "action_history_reset": true
+        },
+        "mean_recurrent_to_input_current_ratio": 0.17048538939345173,
+        "hidden_trace_mean": 0.0,
+        "hidden_trace_nonzero_count": 0.0
+      },
+      "stage_turn_right": {
+        "eval_success": 1.0,
+        "action_sequence": [
+          0,
+          2,
+          0,
+          0
+        ],
+        "raw_action_sequence": [
+          0,
+          2,
+          0,
+          0
+        ],
+        "valid_actions_only": true,
+        "no_action_count": 0,
+        "no_spike_count": 0,
+        "early_done_before_action": false,
+        "collision_sequence": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "moved_sequence": [
+          true,
+          false,
+          true,
+          true
+        ],
+        "collision_count": 0,
+        "moved_count": 3,
+        "found_victim_count": 1,
+        "action_histogram": {
+          "0": 3,
+          "2": 1
+        },
+        "snn_action_histogram": {
+          "0": 3,
+          "2": 1
+        },
+        "spike_selected_action_histogram": {
+          "0": 3,
+          "2": 1
+        },
+        "fallback_action_histogram": {},
+        "output_winner_histogram": {
+          "0": 8,
+          "2": 3,
+          "1": 1
+        },
+        "output_column_weight_mean": {
+          "0": 2.19156683504397e-08,
+          "1": -1.3216832769257159e-08,
+          "2": 6.170951788700615e-09
+        },
+        "output_column_weight_std": {
+          "0": 1.0556438885569323e-07,
+          "1": 7.017675817931633e-08,
+          "2": 8.462369861378005e-08
+        },
+        "output_column_effective_score": {
+          "0": 2.19156683504397e-08,
+          "1": -1.3216832769257159e-08,
+          "2": 6.170951788700615e-09
+        },
+        "output_spike_count_by_action": {
+          "0": 11,
+          "1": 6,
+          "2": 11
+        },
+        "output_first_spike_time_by_action_mean": {
+          "0": 0.0,
+          "1": 1.25,
+          "2": 0.0
+        },
+        "pulse_plus_count_by_action": {},
+        "pulse_minus_count_by_action": {},
+        "reward_by_action": {
+          "0": 1.0566666666666666,
+          "2": -0.002
+        },
+        "event_count_by_action": {
+          "0": {
+            "found_victim": 1,
+            "collision": 0,
+            "moved": 3
+          },
+          "2": {
+            "found_victim": 0,
+            "collision": 0,
+            "moved": 0
+          }
+        },
+        "eval_state_reset_debug": {
+          "hidden_trace_reset": true,
+          "neuron_state_reset": true,
+          "prev_hidden_spikes_reset": true,
+          "output_buffer_reset": true,
+          "action_history_reset": true
+        },
+        "mean_recurrent_to_input_current_ratio": 0.1481195737736826,
+        "hidden_trace_mean": 0.0,
+        "hidden_trace_nonzero_count": 0.0
+      },
+      "stage_turn_left": {
+        "eval_success": 1.0,
+        "action_sequence": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "raw_action_sequence": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "valid_actions_only": true,
+        "no_action_count": 0,
+        "no_spike_count": 0,
+        "early_done_before_action": false,
+        "collision_sequence": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "moved_sequence": [
+          true,
+          false,
+          true,
+          true
+        ],
+        "collision_count": 0,
+        "moved_count": 3,
+        "found_victim_count": 1,
+        "action_histogram": {
+          "0": 3,
+          "1": 1
+        },
+        "snn_action_histogram": {
+          "0": 3,
+          "1": 1
+        },
+        "spike_selected_action_histogram": {
+          "0": 3,
+          "1": 1
+        },
+        "fallback_action_histogram": {},
+        "output_winner_histogram": {
+          "0": 7,
+          "2": 4,
+          "1": 1
+        },
+        "output_column_weight_mean": {
+          "0": 2.19156683504397e-08,
+          "1": -1.3216832769257159e-08,
+          "2": 6.170951788700615e-09
+        },
+        "output_column_weight_std": {
+          "0": 1.0556438885569323e-07,
+          "1": 7.017675817931633e-08,
+          "2": 8.462369861378005e-08
+        },
+        "output_column_effective_score": {
+          "0": 2.19156683504397e-08,
+          "1": -1.3216832769257159e-08,
+          "2": 6.170951788700615e-09
+        },
+        "output_spike_count_by_action": {
+          "0": 9,
+          "1": 2,
+          "2": 7
+        },
+        "output_first_spike_time_by_action_mean": {
+          "0": 2.5,
+          "1": 0.0,
+          "2": 4.75
+        },
+        "pulse_plus_count_by_action": {},
+        "pulse_minus_count_by_action": {},
+        "reward_by_action": {
+          "0": 1.0566666666666666,
+          "1": -0.002
+        },
+        "event_count_by_action": {
+          "0": {
+            "found_victim": 1,
+            "collision": 0,
+            "moved": 3
+          },
+          "1": {
+            "found_victim": 0,
+            "collision": 0,
+            "moved": 0
+          }
+        },
+        "eval_state_reset_debug": {
+          "hidden_trace_reset": true,
+          "neuron_state_reset": true,
+          "prev_hidden_spikes_reset": true,
+          "output_buffer_reset": true,
+          "action_history_reset": true
+        },
+        "mean_recurrent_to_input_current_ratio": 0.14562891625890712,
+        "hidden_trace_mean": 0.0,
+        "hidden_trace_nonzero_count": 0.0
+      },
+      "stage_wall_avoid": {
+        "eval_success": 1.0,
+        "action_sequence": [
+          2,
+          0,
+          1,
+          1,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        "raw_action_sequence": [
+          2,
+          0,
+          1,
+          1,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        "valid_actions_only": true,
+        "no_action_count": 0,
+        "no_spike_count": 0,
+        "early_done_before_action": false,
+        "collision_sequence": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "moved_sequence": [
+          false,
+          true,
+          false,
+          false,
+          true,
+          true,
+          false,
+          true,
+          true
+        ],
+        "collision_count": 0,
+        "moved_count": 5,
+        "found_victim_count": 1,
+        "action_histogram": {
+          "2": 2,
+          "0": 5,
+          "1": 2
+        },
+        "snn_action_histogram": {
+          "2": 2,
+          "0": 5,
+          "1": 2
+        },
+        "spike_selected_action_histogram": {
+          "2": 2,
+          "0": 5,
+          "1": 2
+        },
+        "fallback_action_histogram": {},
+        "output_winner_histogram": {
+          "2": 13,
+          "0": 27,
+          "1": 2
+        },
+        "output_column_weight_mean": {
+          "0": 2.19156683504397e-08,
+          "1": -1.3216832769257159e-08,
+          "2": 6.170951788700615e-09
+        },
+        "output_column_weight_std": {
+          "0": 1.0556438885569323e-07,
+          "1": 7.017675817931633e-08,
+          "2": 8.462369861378005e-08
+        },
+        "output_column_effective_score": {
+          "0": 2.19156683504397e-08,
+          "1": -1.3216832769257159e-08,
+          "2": 6.170951788700615e-09
+        },
+        "output_spike_count_by_action": {
+          "0": 29,
+          "1": 7,
+          "2": 24
+        },
+        "output_first_spike_time_by_action_mean": {
+          "0": 0.8888888888888888,
+          "1": 0.0,
+          "2": 1.4444444444444444
+        },
+        "pulse_plus_count_by_action": {},
+        "pulse_minus_count_by_action": {},
+        "reward_by_action": {
+          "2": -0.002,
+          "0": 0.648,
+          "1": -0.002
+        },
+        "event_count_by_action": {
+          "2": {
+            "found_victim": 0,
+            "collision": 0,
+            "moved": 0
+          },
+          "0": {
+            "found_victim": 1,
+            "collision": 0,
+            "moved": 5
+          },
+          "1": {
+            "found_victim": 0,
+            "collision": 0,
+            "moved": 0
+          }
+        },
+        "eval_state_reset_debug": {
+          "hidden_trace_reset": true,
+          "neuron_state_reset": true,
+          "prev_hidden_spikes_reset": true,
+          "output_buffer_reset": true,
+          "action_history_reset": true
+        },
+        "mean_recurrent_to_input_current_ratio": 0.4724940676230729,
+        "hidden_trace_mean": 0.21183268229166666,
+        "hidden_trace_nonzero_count": 12.444444444444445
+      }
+    },
+    "primitive_action_confusion": {
+      "reference_actions": {
+        "stage_forward": 0,
+        "stage_turn_right": 2,
+        "stage_turn_left": 1,
+        "stage_wall_avoid": 2
+      },
+      "action_histogram_confusion": {
+        "stage_forward": {
+          "0": 1,
+          "1": 0,
+          "2": 0
+        },
+        "stage_turn_right": {
+          "0": 3,
+          "1": 0,
+          "2": 1
+        },
+        "stage_turn_left": {
+          "0": 3,
+          "1": 1,
+          "2": 0
+        },
+        "stage_wall_avoid": {
+          "0": 5,
+          "1": 2,
+          "2": 2
+        }
+      },
+      "first_action_confusion": {
+        "stage_forward": {
+          "0": 1,
+          "1": 0,
+          "2": 0
+        },
+        "stage_turn_right": {
+          "0": 1,
+          "1": 0,
+          "2": 0
+        },
+        "stage_turn_left": {
+          "0": 1,
+          "1": 0,
+          "2": 0
+        },
+        "stage_wall_avoid": {
+          "0": 0,
+          "1": 0,
+          "2": 1
+        }
+      },
+      "dominant_action_confusion": {
+        "stage_forward": {
+          "0": 1,
+          "1": 0,
+          "2": 0
+        },
+        "stage_turn_right": {
+          "0": 1,
+          "1": 0,
+          "2": 0
+        },
+        "stage_turn_left": {
+          "0": 1,
+          "1": 0,
+          "2": 0
+        },
+        "stage_wall_avoid": {
+          "0": 1,
+          "1": 0,
+          "2": 0
+        }
+      },
+      "action_sequence_entropy": {
+        "stage_forward": -0.0,
+        "stage_turn_right": 0.8112781244591328,
+        "stage_turn_left": 0.8112781244591328,
+        "stage_wall_avoid": 1.4355205042826666
+      },
+      "alternating_lr_oscillation_count": {
+        "stage_forward": 0,
+        "stage_turn_right": 0,
+        "stage_turn_left": 0,
+        "stage_wall_avoid": 0
+      },
+      "action0_suppression_score": {
+        "stage_forward": 0.0,
+        "stage_turn_right": 0.25,
+        "stage_turn_left": 0.25,
+        "stage_wall_avoid": 0.4444444444444444
+      }
+    },
+    "stage_forward": {
+      "eval_success": 1.0,
+      "action_sequence": [
+        0
+      ],
+      "raw_action_sequence": [
+        0
+      ],
+      "valid_actions_only": true,
+      "no_action_count": 0,
+      "no_spike_count": 0,
+      "early_done_before_action": false,
+      "collision_sequence": [
+        false
+      ],
+      "moved_sequence": [
+        true
+      ],
+      "collision_count": 0,
+      "moved_count": 1,
+      "found_victim_count": 1,
+      "action_histogram": {
+        "0": 1
+      },
+      "snn_action_histogram": {
+        "0": 1
+      },
+      "spike_selected_action_histogram": {
+        "0": 1
+      },
+      "fallback_action_histogram": {},
+      "output_winner_histogram": {
+        "0": 2,
+        "2": 1
+      },
+      "output_column_weight_mean": {
+        "0": 2.19156683504397e-08,
+        "1": -1.3216832769257159e-08,
+        "2": 6.170951788700615e-09
+      },
+      "output_column_weight_std": {
+        "0": 1.0556438885569323e-07,
+        "1": 7.017675817931633e-08,
+        "2": 8.462369861378005e-08
+      },
+      "output_column_effective_score": {
+        "0": 2.19156683504397e-08,
+        "1": -1.3216832769257159e-08,
+        "2": 6.170951788700615e-09
+      },
+      "output_spike_count_by_action": {
+        "0": 3,
+        "1": 0,
+        "2": 3
+      },
+      "output_first_spike_time_by_action_mean": {
+        "0": 0.0,
+        "1": -1.0,
+        "2": 0.0
+      },
+      "pulse_plus_count_by_action": {},
+      "pulse_minus_count_by_action": {},
+      "reward_by_action": {
+        "0": 3.1
+      },
+      "event_count_by_action": {
+        "0": {
+          "found_victim": 1,
+          "collision": 0,
+          "moved": 1
+        }
+      },
+      "eval_state_reset_debug": {
+        "hidden_trace_reset": true,
+        "neuron_state_reset": true,
+        "prev_hidden_spikes_reset": true,
+        "output_buffer_reset": true,
+        "action_history_reset": true
+      },
+      "mean_recurrent_to_input_current_ratio": 0.17048538939345173,
+      "hidden_trace_mean": 0.0,
+      "hidden_trace_nonzero_count": 0.0
+    },
+    "stage_turn_right": {
+      "eval_success": 1.0,
+      "action_sequence": [
+        0,
+        2,
+        0,
+        0
+      ],
+      "raw_action_sequence": [
+        0,
+        2,
+        0,
+        0
+      ],
+      "valid_actions_only": true,
+      "no_action_count": 0,
+      "no_spike_count": 0,
+      "early_done_before_action": false,
+      "collision_sequence": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "moved_sequence": [
+        true,
+        false,
+        true,
+        true
+      ],
+      "collision_count": 0,
+      "moved_count": 3,
+      "found_victim_count": 1,
+      "action_histogram": {
+        "0": 3,
+        "2": 1
+      },
+      "snn_action_histogram": {
+        "0": 3,
+        "2": 1
+      },
+      "spike_selected_action_histogram": {
+        "0": 3,
+        "2": 1
+      },
+      "fallback_action_histogram": {},
+      "output_winner_histogram": {
+        "0": 8,
+        "2": 3,
+        "1": 1
+      },
+      "output_column_weight_mean": {
+        "0": 2.19156683504397e-08,
+        "1": -1.3216832769257159e-08,
+        "2": 6.170951788700615e-09
+      },
+      "output_column_weight_std": {
+        "0": 1.0556438885569323e-07,
+        "1": 7.017675817931633e-08,
+        "2": 8.462369861378005e-08
+      },
+      "output_column_effective_score": {
+        "0": 2.19156683504397e-08,
+        "1": -1.3216832769257159e-08,
+        "2": 6.170951788700615e-09
+      },
+      "output_spike_count_by_action": {
+        "0": 11,
+        "1": 6,
+        "2": 11
+      },
+      "output_first_spike_time_by_action_mean": {
+        "0": 0.0,
+        "1": 1.25,
+        "2": 0.0
+      },
+      "pulse_plus_count_by_action": {},
+      "pulse_minus_count_by_action": {},
+      "reward_by_action": {
+        "0": 1.0566666666666666,
+        "2": -0.002
+      },
+      "event_count_by_action": {
+        "0": {
+          "found_victim": 1,
+          "collision": 0,
+          "moved": 3
+        },
+        "2": {
+          "found_victim": 0,
+          "collision": 0,
+          "moved": 0
+        }
+      },
+      "eval_state_reset_debug": {
+        "hidden_trace_reset": true,
+        "neuron_state_reset": true,
+        "prev_hidden_spikes_reset": true,
+        "output_buffer_reset": true,
+        "action_history_reset": true
+      },
+      "mean_recurrent_to_input_current_ratio": 0.1481195737736826,
+      "hidden_trace_mean": 0.0,
+      "hidden_trace_nonzero_count": 0.0
+    },
+    "stage_turn_left": {
+      "eval_success": 1.0,
+      "action_sequence": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "raw_action_sequence": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "valid_actions_only": true,
+      "no_action_count": 0,
+      "no_spike_count": 0,
+      "early_done_before_action": false,
+      "collision_sequence": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "moved_sequence": [
+        true,
+        false,
+        true,
+        true
+      ],
+      "collision_count": 0,
+      "moved_count": 3,
+      "found_victim_count": 1,
+      "action_histogram": {
+        "0": 3,
+        "1": 1
+      },
+      "snn_action_histogram": {
+        "0": 3,
+        "1": 1
+      },
+      "spike_selected_action_histogram": {
+        "0": 3,
+        "1": 1
+      },
+      "fallback_action_histogram": {},
+      "output_winner_histogram": {
+        "0": 7,
+        "2": 4,
+        "1": 1
+      },
+      "output_column_weight_mean": {
+        "0": 2.19156683504397e-08,
+        "1": -1.3216832769257159e-08,
+        "2": 6.170951788700615e-09
+      },
+      "output_column_weight_std": {
+        "0": 1.0556438885569323e-07,
+        "1": 7.017675817931633e-08,
+        "2": 8.462369861378005e-08
+      },
+      "output_column_effective_score": {
+        "0": 2.19156683504397e-08,
+        "1": -1.3216832769257159e-08,
+        "2": 6.170951788700615e-09
+      },
+      "output_spike_count_by_action": {
+        "0": 9,
+        "1": 2,
+        "2": 7
+      },
+      "output_first_spike_time_by_action_mean": {
+        "0": 2.5,
+        "1": 0.0,
+        "2": 4.75
+      },
+      "pulse_plus_count_by_action": {},
+      "pulse_minus_count_by_action": {},
+      "reward_by_action": {
+        "0": 1.0566666666666666,
+        "1": -0.002
+      },
+      "event_count_by_action": {
+        "0": {
+          "found_victim": 1,
+          "collision": 0,
+          "moved": 3
+        },
+        "1": {
+          "found_victim": 0,
+          "collision": 0,
+          "moved": 0
+        }
+      },
+      "eval_state_reset_debug": {
+        "hidden_trace_reset": true,
+        "neuron_state_reset": true,
+        "prev_hidden_spikes_reset": true,
+        "output_buffer_reset": true,
+        "action_history_reset": true
+      },
+      "mean_recurrent_to_input_current_ratio": 0.14562891625890712,
+      "hidden_trace_mean": 0.0,
+      "hidden_trace_nonzero_count": 0.0
+    },
+    "stage_wall_avoid": {
+      "eval_success": 1.0,
+      "action_sequence": [
+        2,
+        0,
+        1,
+        1,
+        0,
+        0,
+        2,
+        0,
+        0
+      ],
+      "raw_action_sequence": [
+        2,
+        0,
+        1,
+        1,
+        0,
+        0,
+        2,
+        0,
+        0
+      ],
+      "valid_actions_only": true,
+      "no_action_count": 0,
+      "no_spike_count": 0,
+      "early_done_before_action": false,
+      "collision_sequence": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "moved_sequence": [
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        false,
+        true,
+        true
+      ],
+      "collision_count": 0,
+      "moved_count": 5,
+      "found_victim_count": 1,
+      "action_histogram": {
+        "2": 2,
+        "0": 5,
+        "1": 2
+      },
+      "snn_action_histogram": {
+        "2": 2,
+        "0": 5,
+        "1": 2
+      },
+      "spike_selected_action_histogram": {
+        "2": 2,
+        "0": 5,
+        "1": 2
+      },
+      "fallback_action_histogram": {},
+      "output_winner_histogram": {
+        "2": 13,
+        "0": 27,
+        "1": 2
+      },
+      "output_column_weight_mean": {
+        "0": 2.19156683504397e-08,
+        "1": -1.3216832769257159e-08,
+        "2": 6.170951788700615e-09
+      },
+      "output_column_weight_std": {
+        "0": 1.0556438885569323e-07,
+        "1": 7.017675817931633e-08,
+        "2": 8.462369861378005e-08
+      },
+      "output_column_effective_score": {
+        "0": 2.19156683504397e-08,
+        "1": -1.3216832769257159e-08,
+        "2": 6.170951788700615e-09
+      },
+      "output_spike_count_by_action": {
+        "0": 29,
+        "1": 7,
+        "2": 24
+      },
+      "output_first_spike_time_by_action_mean": {
+        "0": 0.8888888888888888,
+        "1": 0.0,
+        "2": 1.4444444444444444
+      },
+      "pulse_plus_count_by_action": {},
+      "pulse_minus_count_by_action": {},
+      "reward_by_action": {
+        "2": -0.002,
+        "0": 0.648,
+        "1": -0.002
+      },
+      "event_count_by_action": {
+        "2": {
+          "found_victim": 0,
+          "collision": 0,
+          "moved": 0
+        },
+        "0": {
+          "found_victim": 1,
+          "collision": 0,
+          "moved": 5
+        },
+        "1": {
+          "found_victim": 0,
+          "collision": 0,
+          "moved": 0
+        }
+      },
+      "eval_state_reset_debug": {
+        "hidden_trace_reset": true,
+        "neuron_state_reset": true,
+        "prev_hidden_spikes_reset": true,
+        "output_buffer_reset": true,
+        "action_history_reset": true
+      },
+      "mean_recurrent_to_input_current_ratio": 0.4724940676230729,
+      "hidden_trace_mean": 0.21183268229166666,
+      "hidden_trace_nonzero_count": 12.444444444444445
+    }
+  },
+  "output_bias_diagnostics": {
+    "output_column_weight_mean": {
+      "0": 2.19156683504397e-08,
+      "1": -1.3216832769257159e-08,
+      "2": 6.170951788700615e-09
+    },
+    "output_column_weight_std": {
+      "0": 1.0556438885569323e-07,
+      "1": 7.017675817931633e-08,
+      "2": 8.462369861378005e-08
+    },
+    "output_column_effective_score": {
+      "0": 2.19156683504397e-08,
+      "1": -1.3216832769257159e-08,
+      "2": 6.170951788700615e-09
+    },
+    "output_spike_count_by_action": {
+      "0": 52,
+      "1": 15,
+      "2": 45
+    },
+    "first_spike_time_mean_by_action": {
+      "0": 0.8472222222222222,
+      "1": 0.0625,
+      "2": 1.5486111111111112
+    },
+    "pulse_plus_count_by_action": {},
+    "pulse_minus_count_by_action": {},
+    "reward_sum_by_action": {
+      "0": 5.861333333333333,
+      "2": -0.004,
+      "1": -0.004
+    },
+    "reward_mean_by_action": {
+      "0": 1.4653333333333332,
+      "2": -0.002,
+      "1": -0.002
+    },
+    "collision_count_by_action": {
+      "0": 0,
+      "2": 0,
+      "1": 0
+    },
+    "found_count_by_action": {
+      "0": 4,
+      "2": 0,
+      "1": 0
+    }
+  },
+  "output_column_status": {
+    "0": {
+      "conductance_mean": 9.764251446756595e-08,
+      "conductance_std": 5.40164640979266e-08,
+      "g_plus_mean": 1.086003486427858e-07,
+      "g_minus_mean": 8.668468029234609e-08,
+      "effective_signed_weight_mean": 2.19156683504397e-08,
+      "effective_signed_weight_norm": 4.3126115918264607e-07,
+      "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+      "effective_signed_weight_std": 1.0556438885569323e-07,
+      "effective_signed_weight_min": -1.5893294609047368e-07,
+      "effective_signed_weight_max": 1.6867761799395598e-07,
+      "common_mode_mean": 9.764251446756595e-08
+    },
+    "1": {
+      "conductance_mean": 9.395030033488316e-08,
+      "conductance_std": 3.627105720232219e-08,
+      "g_plus_mean": 8.73418839502546e-08,
+      "g_minus_mean": 1.0055871671951176e-07,
+      "effective_signed_weight_mean": -1.3216832769257159e-08,
+      "effective_signed_weight_norm": 2.85642071327282e-07,
+      "effective_signed_weight_abs_mean": 5.634373857322246e-08,
+      "effective_signed_weight_std": 7.017675817931633e-08,
+      "effective_signed_weight_min": -1.5586256582077022e-07,
+      "effective_signed_weight_max": 8.061878390090551e-08,
+      "common_mode_mean": 9.395030033488316e-08
+    },
+    "2": {
+      "conductance_mean": 9.823313037528516e-08,
+      "conductance_std": 4.2664129555973304e-08,
+      "g_plus_mean": 1.0131860626963546e-07,
+      "g_minus_mean": 9.514765448093484e-08,
+      "effective_signed_weight_mean": 6.170951788700615e-09,
+      "effective_signed_weight_norm": 3.3939360071879603e-07,
+      "effective_signed_weight_abs_mean": 6.995090658803274e-08,
+      "effective_signed_weight_std": 8.462369861378005e-08,
+      "effective_signed_weight_min": -1.2346933008529893e-07,
+      "effective_signed_weight_max": 1.7107418852030844e-07,
+      "common_mode_mean": 9.823313037528516e-08
+    }
+  },
+  "output_column_interference_diagnostic": {
+    "enabled": true,
+    "final_output_column_status": {
+      "0": {
+        "conductance_mean": 9.764251446756595e-08,
+        "conductance_std": 5.40164640979266e-08,
+        "g_plus_mean": 1.086003486427858e-07,
+        "g_minus_mean": 8.668468029234609e-08,
+        "effective_signed_weight_mean": 2.19156683504397e-08,
+        "effective_signed_weight_norm": 4.3126115918264607e-07,
+        "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+        "effective_signed_weight_std": 1.0556438885569323e-07,
+        "effective_signed_weight_min": -1.5893294609047368e-07,
+        "effective_signed_weight_max": 1.6867761799395598e-07,
+        "common_mode_mean": 9.764251446756595e-08
+      },
+      "1": {
+        "conductance_mean": 9.395030033488316e-08,
+        "conductance_std": 3.627105720232219e-08,
+        "g_plus_mean": 8.73418839502546e-08,
+        "g_minus_mean": 1.0055871671951176e-07,
+        "effective_signed_weight_mean": -1.3216832769257159e-08,
+        "effective_signed_weight_norm": 2.85642071327282e-07,
+        "effective_signed_weight_abs_mean": 5.634373857322246e-08,
+        "effective_signed_weight_std": 7.017675817931633e-08,
+        "effective_signed_weight_min": -1.5586256582077022e-07,
+        "effective_signed_weight_max": 8.061878390090551e-08,
+        "common_mode_mean": 9.395030033488316e-08
+      },
+      "2": {
+        "conductance_mean": 9.823313037528516e-08,
+        "conductance_std": 4.2664129555973304e-08,
+        "g_plus_mean": 1.0131860626963546e-07,
+        "g_minus_mean": 9.514765448093484e-08,
+        "effective_signed_weight_mean": 6.170951788700615e-09,
+        "effective_signed_weight_norm": 3.3939360071879603e-07,
+        "effective_signed_weight_abs_mean": 6.995090658803274e-08,
+        "effective_signed_weight_std": 8.462369861378005e-08,
+        "effective_signed_weight_min": -1.2346933008529893e-07,
+        "effective_signed_weight_max": 1.7107418852030844e-07,
+        "common_mode_mean": 9.823313037528516e-08
+      }
+    },
+    "final_output_column_interference_by_action": {
+      "0": {
+        "conductance_mean": 9.764251446756595e-08,
+        "conductance_std": 5.40164640979266e-08,
+        "g_plus_mean": 1.086003486427858e-07,
+        "g_minus_mean": 8.668468029234609e-08,
+        "effective_signed_weight_mean": 2.19156683504397e-08,
+        "effective_signed_weight_norm": 4.3126115918264607e-07,
+        "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+        "effective_signed_weight_std": 1.0556438885569323e-07,
+        "effective_signed_weight_min": -1.5893294609047368e-07,
+        "effective_signed_weight_max": 1.6867761799395598e-07,
+        "common_mode_mean": 9.764251446756595e-08,
+        "pulse_plus_count": 0,
+        "pulse_minus_count": 0,
+        "reward_sum": 0.0,
+        "positive_reward_sum": 0.0,
+        "negative_reward_sum": 0.0,
+        "positive_update_count": 0,
+        "negative_update_count": 0,
+        "selected_count": 0,
+        "collision_count": 0,
+        "collision_penalty_count": 0,
+        "found_count": 0
+      },
+      "1": {
+        "conductance_mean": 9.395030033488316e-08,
+        "conductance_std": 3.627105720232219e-08,
+        "g_plus_mean": 8.73418839502546e-08,
+        "g_minus_mean": 1.0055871671951176e-07,
+        "effective_signed_weight_mean": -1.3216832769257159e-08,
+        "effective_signed_weight_norm": 2.85642071327282e-07,
+        "effective_signed_weight_abs_mean": 5.634373857322246e-08,
+        "effective_signed_weight_std": 7.017675817931633e-08,
+        "effective_signed_weight_min": -1.5586256582077022e-07,
+        "effective_signed_weight_max": 8.061878390090551e-08,
+        "common_mode_mean": 9.395030033488316e-08,
+        "pulse_plus_count": 0,
+        "pulse_minus_count": 0,
+        "reward_sum": 0.0,
+        "positive_reward_sum": 0.0,
+        "negative_reward_sum": 0.0,
+        "positive_update_count": 0,
+        "negative_update_count": 0,
+        "selected_count": 0,
+        "collision_count": 0,
+        "collision_penalty_count": 0,
+        "found_count": 0
+      },
+      "2": {
+        "conductance_mean": 9.823313037528516e-08,
+        "conductance_std": 4.2664129555973304e-08,
+        "g_plus_mean": 1.0131860626963546e-07,
+        "g_minus_mean": 9.514765448093484e-08,
+        "effective_signed_weight_mean": 6.170951788700615e-09,
+        "effective_signed_weight_norm": 3.3939360071879603e-07,
+        "effective_signed_weight_abs_mean": 6.995090658803274e-08,
+        "effective_signed_weight_std": 8.462369861378005e-08,
+        "effective_signed_weight_min": -1.2346933008529893e-07,
+        "effective_signed_weight_max": 1.7107418852030844e-07,
+        "common_mode_mean": 9.823313037528516e-08,
+        "pulse_plus_count": 0,
+        "pulse_minus_count": 0,
+        "reward_sum": 0.0,
+        "positive_reward_sum": 0.0,
+        "negative_reward_sum": 0.0,
+        "positive_update_count": 0,
+        "negative_update_count": 0,
+        "selected_count": 0,
+        "collision_count": 0,
+        "collision_penalty_count": 0,
+        "found_count": 0
+      }
+    },
+    "block_history": [
+      {
+        "block_index": -1,
+        "episode_end": 0,
+        "tasks": [],
+        "accepted": true,
+        "passed": false,
+        "score": -790.0,
+        "train": [],
+        "delta_output_column_status_candidate_block": {},
+        "output_column_interference_by_action_after_block": {}
+      },
+      {
+        "block_index": 0,
+        "episode_end": 4,
+        "tasks": [
+          "stage_forward",
+          "stage_turn_right",
+          "stage_turn_left",
+          "stage_wall_avoid"
+        ],
+        "accepted": true,
+        "passed": true,
+        "score": 380.0,
+        "train": [
+          {
+            "task": "stage_forward",
+            "episode_index": 0,
+            "delta_output_column_status": {
+              "0": {
+                "common_mode_mean": 0.0,
+                "conductance_mean": 0.0,
+                "conductance_std": 0.0,
+                "effective_signed_weight_abs_mean": 0.0,
+                "effective_signed_weight_max": 0.0,
+                "effective_signed_weight_mean": 0.0,
+                "effective_signed_weight_min": 0.0,
+                "effective_signed_weight_norm": 0.0,
+                "effective_signed_weight_std": 0.0,
+                "g_minus_mean": 0.0,
+                "g_plus_mean": 0.0
+              },
+              "1": {
+                "common_mode_mean": 0.0,
+                "conductance_mean": 0.0,
+                "conductance_std": 0.0,
+                "effective_signed_weight_abs_mean": 0.0,
+                "effective_signed_weight_max": 0.0,
+                "effective_signed_weight_mean": 0.0,
+                "effective_signed_weight_min": 0.0,
+                "effective_signed_weight_norm": 0.0,
+                "effective_signed_weight_std": 0.0,
+                "g_minus_mean": 0.0,
+                "g_plus_mean": 0.0
+              },
+              "2": {
+                "common_mode_mean": 0.0,
+                "conductance_mean": 0.0,
+                "conductance_std": 0.0,
+                "effective_signed_weight_abs_mean": 0.0,
+                "effective_signed_weight_max": 0.0,
+                "effective_signed_weight_mean": 0.0,
+                "effective_signed_weight_min": 0.0,
+                "effective_signed_weight_norm": 0.0,
+                "effective_signed_weight_std": 0.0,
+                "g_minus_mean": 0.0,
+                "g_plus_mean": 0.0
+              }
+            },
+            "output_column_interference_by_action": {
+              "0": {
+                "conductance_mean": 9.775178111503212e-08,
+                "conductance_std": 5.4946971242313544e-08,
+                "g_plus_mean": 1.1208929179507281e-07,
+                "g_minus_mean": 8.34142704349914e-08,
+                "effective_signed_weight_mean": 2.8675021360081426e-08,
+                "effective_signed_weight_norm": 4.3869847725524677e-07,
+                "effective_signed_weight_abs_mean": 9.517824944068417e-08,
+                "effective_signed_weight_std": 1.0585964893021512e-07,
+                "effective_signed_weight_min": -1.5893294609047368e-07,
+                "effective_signed_weight_max": 1.6867761799395598e-07,
+                "common_mode_mean": 9.775178111503212e-08,
+                "pulse_plus_count": 0,
+                "pulse_minus_count": 0,
+                "reward_sum": 3.1,
+                "positive_reward_sum": 3.1,
+                "negative_reward_sum": 0.0,
+                "positive_update_count": 0,
+                "negative_update_count": 0,
+                "selected_count": 1,
+                "collision_count": 0,
+                "collision_penalty_count": 0,
+                "found_count": 1
+              },
+              "1": {
+                "conductance_mean": 9.486611475580811e-08,
+                "conductance_std": 3.794987565463486e-08,
+                "g_plus_mean": 8.425720473043072e-08,
+                "g_minus_mean": 1.0547502478118548e-07,
+                "effective_signed_weight_mean": -2.121782005075475e-08,
+                "effective_signed_weight_norm": 2.9675494263996133e-07,
+                "effective_signed_weight_abs_mean": 5.539668654866763e-08,
+                "effective_signed_weight_std": 7.108989106139993e-08,
+                "effective_signed_weight_min": -1.746570702117317e-07,
+                "effective_signed_weight_max": 8.061878390090551e-08,
+                "common_mode_mean": 9.48661147558081e-08,
+                "pulse_plus_count": 0,
+                "pulse_minus_count": 0,
+                "reward_sum": 0.0,
+                "positive_reward_sum": 0.0,
+                "negative_reward_sum": 0.0,
+                "positive_update_count": 0,
+                "negative_update_count": 0,
+                "selected_count": 0,
+                "collision_count": 0,
+                "collision_penalty_count": 0,
+                "found_count": 0
+              },
+              "2": {
+                "conductance_mean": 9.726037827469163e-08,
+                "conductance_std": 4.088600754954849e-08,
+                "g_plus_mean": 9.491700817194295e-08,
+                "g_minus_mean": 9.960374837744029e-08,
+                "effective_signed_weight_mean": -4.686740205497339e-09,
+                "effective_signed_weight_norm": 3.2514047141842737e-07,
+                "effective_signed_weight_abs_mean": 6.551773260217144e-08,
+                "effective_signed_weight_std": 8.114989125614093e-08,
+                "effective_signed_weight_min": -1.3765312930923456e-07,
+                "effective_signed_weight_max": 1.6210881666093508e-07,
+                "common_mode_mean": 9.726037827469163e-08,
+                "pulse_plus_count": 0,
+                "pulse_minus_count": 0,
+                "reward_sum": 0.0,
+                "positive_reward_sum": 0.0,
+                "negative_reward_sum": 0.0,
+                "positive_update_count": 0,
+                "negative_update_count": 0,
+                "selected_count": 0,
+                "collision_count": 0,
+                "collision_penalty_count": 0,
+                "found_count": 0
+              }
+            }
+          },
+          {
+            "task": "stage_turn_right",
+            "episode_index": 1,
+            "delta_output_column_status": {
+              "0": {
+                "common_mode_mean": -5.019389527143896e-10,
+                "conductance_mean": -5.019389527143896e-10,
+                "conductance_std": -1.3435459030905332e-10,
+                "effective_signed_weight_abs_mean": -2.462931416209307e-09,
+                "effective_signed_weight_max": 0.0,
+                "effective_signed_weight_mean": -2.4629314162093237e-09,
+                "effective_signed_weight_min": 0.0,
+                "effective_signed_weight_norm": -9.173207819149108e-10,
+                "effective_signed_weight_std": 4.0039836400477727e-10,
+                "g_minus_mean": 7.295267553902772e-10,
+                "g_plus_mean": -1.7334046608190299e-09
+              },
+              "1": {
+                "common_mode_mean": 0.0,
+                "conductance_mean": 0.0,
+                "conductance_std": 0.0,
+                "effective_signed_weight_abs_mean": 0.0,
+                "effective_signed_weight_max": 0.0,
+                "effective_signed_weight_mean": 0.0,
+                "effective_signed_weight_min": 0.0,
+                "effective_signed_weight_norm": 0.0,
+                "effective_signed_weight_std": 0.0,
+                "g_minus_mean": 0.0,
+                "g_plus_mean": 0.0
+              },
+              "2": {
+                "common_mode_mean": 1.223190000149195e-09,
+                "conductance_mean": 1.223190000149195e-09,
+                "conductance_std": 1.1583864252462606e-09,
+                "effective_signed_weight_abs_mean": 2.9788969108712493e-09,
+                "effective_signed_weight_max": 4.2601352845829795e-09,
+                "effective_signed_weight_mean": 6.368982478802634e-09,
+                "effective_signed_weight_min": 8.672276602012556e-09,
+                "effective_signed_weight_norm": 8.838595388560063e-09,
+                "effective_signed_weight_std": 2.3279269203845072e-09,
+                "g_minus_mean": -1.9613012392521257e-09,
+                "g_plus_mean": 4.407681239550516e-09
+              }
+            },
+            "output_column_interference_by_action": {
+              "0": {
+                "conductance_mean": 9.724984216231773e-08,
+                "conductance_std": 5.481261665200449e-08,
+                "g_plus_mean": 1.1035588713425378e-07,
+                "g_minus_mean": 8.414379719038167e-08,
+                "effective_signed_weight_mean": 2.6212089943872102e-08,
+                "effective_signed_weight_norm": 4.3778115647333186e-07,
+                "effective_signed_weight_abs_mean": 9.271531802447487e-08,
+                "effective_signed_weight_std": 1.062600472942199e-07,
+                "effective_signed_weight_min": -1.5893294609047368e-07,
+                "effective_signed_weight_max": 1.6867761799395598e-07,
+                "common_mode_mean": 9.724984216231773e-08,
+                "pulse_plus_count": 2,
+                "pulse_minus_count": 5,
+                "reward_sum": 3.17,
+                "positive_reward_sum": 3.17,
+                "negative_reward_sum": 0.0,
+                "positive_update_count": 1,
+                "negative_update_count": 1,
+                "selected_count": 3,
+                "collision_count": 0,
+                "collision_penalty_count": 0,
+                "found_count": 1
+              },
+              "1": {
+                "conductance_mean": 9.486611475580811e-08,
+                "conductance_std": 3.794987565463486e-08,
+                "g_plus_mean": 8.425720473043072e-08,
+                "g_minus_mean": 1.0547502478118548e-07,
+                "effective_signed_weight_mean": -2.121782005075475e-08,
+                "effective_signed_weight_norm": 2.9675494263996133e-07,
+                "effective_signed_weight_abs_mean": 5.539668654866763e-08,
+                "effective_signed_weight_std": 7.108989106139993e-08,
+                "effective_signed_weight_min": -1.746570702117317e-07,
+                "effective_signed_weight_max": 8.061878390090551e-08,
+                "common_mode_mean": 9.48661147558081e-08,
+                "pulse_plus_count": 0,
+                "pulse_minus_count": 0,
+                "reward_sum": 0.0,
+                "positive_reward_sum": 0.0,
+                "negative_reward_sum": 0.0,
+                "positive_update_count": 0,
+                "negative_update_count": 0,
+                "selected_count": 0,
+                "collision_count": 0,
+                "collision_penalty_count": 0,
+                "found_count": 0
+              },
+              "2": {
+                "conductance_mean": 9.848356827484082e-08,
+                "conductance_std": 4.204439397479475e-08,
+                "g_plus_mean": 9.932468941149347e-08,
+                "g_minus_mean": 9.764244713818816e-08,
+                "effective_signed_weight_mean": 1.6822422733052952e-09,
+                "effective_signed_weight_norm": 3.3397906680698743e-07,
+                "effective_signed_weight_abs_mean": 6.849662951304269e-08,
+                "effective_signed_weight_std": 8.347781817652544e-08,
+                "effective_signed_weight_min": -1.28980852707222e-07,
+                "effective_signed_weight_max": 1.6636895194551806e-07,
+                "common_mode_mean": 9.848356827484082e-08,
+                "pulse_plus_count": 8,
+                "pulse_minus_count": 0,
+                "reward_sum": -0.002,
+                "positive_reward_sum": 0.0,
+                "negative_reward_sum": -0.002,
+                "positive_update_count": 1,
+                "negative_update_count": 0,
+                "selected_count": 1,
+                "collision_count": 0,
+                "collision_penalty_count": 0,
+                "found_count": 0
+              }
+            }
+          },
+          {
+            "task": "stage_turn_left",
+            "episode_index": 2,
+            "delta_output_column_status": {
+              "0": {
+                "common_mode_mean": 3.926723052482248e-10,
+                "conductance_mean": 3.926723052482248e-10,
+                "conductance_std": -7.96152554077892e-10,
+                "effective_signed_weight_abs_mean": -2.599783961695338e-09,
+                "effective_signed_weight_max": 0.0,
+                "effective_signed_weight_mean": -4.296421593432401e-09,
+                "effective_signed_weight_min": 0.0,
+                "effective_signed_weight_norm": -6.519997290685796e-09,
+                "effective_signed_weight_std": -6.956584385266637e-10,
+                "g_minus_mean": 2.5408831019644185e-09,
+                "g_plus_mean": -1.7555384914679821e-09
+              },
+              "1": {
+                "common_mode_mean": -1.5264212032804446e-10,
+                "conductance_mean": -1.526421203280577e-10,
+                "conductance_std": -5.579930292296894e-10,
+                "effective_signed_weight_abs_mean": 5.217559497629106e-10,
+                "effective_signed_weight_max": 0.0,
+                "effective_signed_weight_mean": 4.1076268011680514e-09,
+                "effective_signed_weight_min": 3.791322073633223e-09,
+                "effective_signed_weight_norm": -3.130992651624353e-09,
+                "effective_signed_weight_std": 2.94142779395912e-10,
+                "g_minus_mean": -2.20645552091209e-09,
+                "g_plus_mean": 1.901171280255988e-09
+              },
+              "2": {
+                "common_mode_mean": 0.0,
+                "conductance_mean": 0.0,
+                "conductance_std": 0.0,
+                "effective_signed_weight_abs_mean": 0.0,
+                "effective_signed_weight_max": 0.0,
+                "effective_signed_weight_mean": 0.0,
+                "effective_signed_weight_min": 0.0,
+                "effective_signed_weight_norm": 0.0,
+                "effective_signed_weight_std": 0.0,
+                "g_minus_mean": 0.0,
+                "g_plus_mean": 0.0
+              }
+            },
+            "output_column_interference_by_action": {
+              "0": {
+                "conductance_mean": 9.764251446756595e-08,
+                "conductance_std": 5.40164640979266e-08,
+                "g_plus_mean": 1.086003486427858e-07,
+                "g_minus_mean": 8.668468029234609e-08,
+                "effective_signed_weight_mean": 2.19156683504397e-08,
+                "effective_signed_weight_norm": 4.3126115918264607e-07,
+                "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+                "effective_signed_weight_std": 1.0556438885569323e-07,
+                "effective_signed_weight_min": -1.5893294609047368e-07,
+                "effective_signed_weight_max": 1.6867761799395598e-07,
+                "common_mode_mean": 9.764251446756595e-08,
+                "pulse_plus_count": 2,
+                "pulse_minus_count": 6,
+                "reward_sum": 3.17,
+                "positive_reward_sum": 3.17,
+                "negative_reward_sum": 0.0,
+                "positive_update_count": 1,
+                "negative_update_count": 1,
+                "selected_count": 3,
+                "collision_count": 0,
+                "collision_penalty_count": 0,
+                "found_count": 1
+              },
+              "1": {
+                "conductance_mean": 9.471347263548005e-08,
+                "conductance_std": 3.739188262540517e-08,
+                "g_plus_mean": 8.615837601068671e-08,
+                "g_minus_mean": 1.032685692602734e-07,
+                "effective_signed_weight_mean": -1.71101932495867e-08,
+                "effective_signed_weight_norm": 2.93623949988337e-07,
+                "effective_signed_weight_abs_mean": 5.591844249843054e-08,
+                "effective_signed_weight_std": 7.138403384079585e-08,
+                "effective_signed_weight_min": -1.7086574813809848e-07,
+                "effective_signed_weight_max": 8.061878390090551e-08,
+                "common_mode_mean": 9.471347263548005e-08,
+                "pulse_plus_count": 7,
+                "pulse_minus_count": 0,
+                "reward_sum": -0.002,
+                "positive_reward_sum": 0.0,
+                "negative_reward_sum": -0.002,
+                "positive_update_count": 1,
+                "negative_update_count": 0,
+                "selected_count": 1,
+                "collision_count": 0,
+                "collision_penalty_count": 0,
+                "found_count": 0
+              },
+              "2": {
+                "conductance_mean": 9.848356827484082e-08,
+                "conductance_std": 4.204439397479475e-08,
+                "g_plus_mean": 9.932468941149347e-08,
+                "g_minus_mean": 9.764244713818816e-08,
+                "effective_signed_weight_mean": 1.6822422733052952e-09,
+                "effective_signed_weight_norm": 3.3397906680698743e-07,
+                "effective_signed_weight_abs_mean": 6.849662951304269e-08,
+                "effective_signed_weight_std": 8.347781817652544e-08,
+                "effective_signed_weight_min": -1.28980852707222e-07,
+                "effective_signed_weight_max": 1.6636895194551806e-07,
+                "common_mode_mean": 9.848356827484082e-08,
+                "pulse_plus_count": 0,
+                "pulse_minus_count": 0,
+                "reward_sum": 0.0,
+                "positive_reward_sum": 0.0,
+                "negative_reward_sum": 0.0,
+                "positive_update_count": 0,
+                "negative_update_count": 0,
+                "selected_count": 0,
+                "collision_count": 0,
+                "collision_penalty_count": 0,
+                "found_count": 0
+              }
+            }
+          },
+          {
+            "task": "stage_wall_avoid",
+            "episode_index": 3,
+            "delta_output_column_status": {
+              "0": {
+                "common_mode_mean": 0.0,
+                "conductance_mean": 0.0,
+                "conductance_std": 0.0,
+                "effective_signed_weight_abs_mean": 0.0,
+                "effective_signed_weight_max": 0.0,
+                "effective_signed_weight_mean": 0.0,
+                "effective_signed_weight_min": 0.0,
+                "effective_signed_weight_norm": 0.0,
+                "effective_signed_weight_std": 0.0,
+                "g_minus_mean": 0.0,
+                "g_plus_mean": 0.0
+              },
+              "1": {
+                "common_mode_mean": -7.631723005968855e-10,
+                "conductance_mean": -7.631723005968855e-10,
+                "conductance_std": -1.120825423082979e-09,
+                "effective_signed_weight_abs_mean": 4.252960747919179e-10,
+                "effective_signed_weight_max": 0.0,
+                "effective_signed_weight_mean": 3.8933604803295404e-09,
+                "effective_signed_weight_min": 1.5003182317328258e-08,
+                "effective_signed_weight_norm": -7.981878661054984e-09,
+                "effective_signed_weight_std": -1.2072756614795115e-09,
+                "g_minus_mean": -2.709852540761631e-09,
+                "g_plus_mean": 1.1835079395678863e-09
+              },
+              "2": {
+                "common_mode_mean": -2.5043789955566294e-10,
+                "conductance_mean": -2.5043789955566294e-10,
+                "conductance_std": 6.19735581178554e-10,
+                "effective_signed_weight_abs_mean": 1.4542770749900436e-09,
+                "effective_signed_weight_max": 4.705236574790388e-09,
+                "effective_signed_weight_mean": 4.48870951539532e-09,
+                "effective_signed_weight_min": 5.511522621923079e-09,
+                "effective_signed_weight_norm": 5.4145339118086e-09,
+                "effective_signed_weight_std": 1.1458804372546108e-09,
+                "g_minus_mean": -2.4947926572533196e-09,
+                "g_plus_mean": 1.9939168581419937e-09
+              }
+            },
+            "output_column_interference_by_action": {
+              "0": {
+                "conductance_mean": 9.764251446756595e-08,
+                "conductance_std": 5.40164640979266e-08,
+                "g_plus_mean": 1.086003486427858e-07,
+                "g_minus_mean": 8.668468029234609e-08,
+                "effective_signed_weight_mean": 2.19156683504397e-08,
+                "effective_signed_weight_norm": 4.3126115918264607e-07,
+                "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+                "effective_signed_weight_std": 1.0556438885569323e-07,
+                "effective_signed_weight_min": -1.5893294609047368e-07,
+                "effective_signed_weight_max": 1.6867761799395598e-07,
+                "common_mode_mean": 9.764251446756595e-08,
+                "pulse_plus_count": 0,
+                "pulse_minus_count": 0,
+                "reward_sum": 3.17,
+                "positive_reward_sum": 3.17,
+                "negative_reward_sum": 0.0,
+                "positive_update_count": 0,
+                "negative_update_count": 0,
+                "selected_count": 3,
+                "collision_count": 0,
+                "collision_penalty_count": 0,
+                "found_count": 1
+              },
+              "1": {
+                "conductance_mean": 9.395030033488316e-08,
+                "conductance_std": 3.627105720232219e-08,
+                "g_plus_mean": 8.73418839502546e-08,
+                "g_minus_mean": 1.0055871671951176e-07,
+                "effective_signed_weight_mean": -1.3216832769257159e-08,
+                "effective_signed_weight_norm": 2.85642071327282e-07,
+                "effective_signed_weight_abs_mean": 5.634373857322246e-08,
+                "effective_signed_weight_std": 7.017675817931633e-08,
+                "effective_signed_weight_min": -1.5586256582077022e-07,
+                "effective_signed_weight_max": 8.061878390090551e-08,
+                "common_mode_mean": 9.395030033488316e-08,
+                "pulse_plus_count": 7,
+                "pulse_minus_count": 0,
+                "reward_sum": -0.002,
+                "positive_reward_sum": 0.0,
+                "negative_reward_sum": -0.002,
+                "positive_update_count": 1,
+                "negative_update_count": 0,
+                "selected_count": 1,
+                "collision_count": 0,
+                "collision_penalty_count": 0,
+                "found_count": 0
+              },
+              "2": {
+                "conductance_mean": 9.823313037528516e-08,
+                "conductance_std": 4.2664129555973304e-08,
+                "g_plus_mean": 1.0131860626963546e-07,
+                "g_minus_mean": 9.514765448093484e-08,
+                "effective_signed_weight_mean": 6.170951788700615e-09,
+                "effective_signed_weight_norm": 3.3939360071879603e-07,
+                "effective_signed_weight_abs_mean": 6.995090658803274e-08,
+                "effective_signed_weight_std": 8.462369861378005e-08,
+                "effective_signed_weight_min": -1.2346933008529893e-07,
+                "effective_signed_weight_max": 1.7107418852030844e-07,
+                "common_mode_mean": 9.823313037528516e-08,
+                "pulse_plus_count": 9,
+                "pulse_minus_count": 0,
+                "reward_sum": -0.002,
+                "positive_reward_sum": 0.0,
+                "negative_reward_sum": -0.002,
+                "positive_update_count": 1,
+                "negative_update_count": 0,
+                "selected_count": 1,
+                "collision_count": 0,
+                "collision_penalty_count": 0,
+                "found_count": 0
+              }
+            }
+          }
+        ],
+        "delta_output_column_status_candidate_block": {
+          "0": {
+            "common_mode_mean": -1.0926664746616478e-10,
+            "conductance_mean": -1.0926664746616478e-10,
+            "conductance_std": -9.305071443869454e-10,
+            "effective_signed_weight_abs_mean": -5.062715377904645e-09,
+            "effective_signed_weight_max": 0.0,
+            "effective_signed_weight_mean": -6.759353009641724e-09,
+            "effective_signed_weight_min": 0.0,
+            "effective_signed_weight_norm": -7.437318072600707e-09,
+            "effective_signed_weight_std": -2.952600745218864e-10,
+            "g_minus_mean": 3.2704098573546957e-09,
+            "g_plus_mean": -3.488943152287012e-09
+          },
+          "1": {
+            "common_mode_mean": -9.1581442092493e-10,
+            "conductance_mean": -9.158144209249432e-10,
+            "conductance_std": -1.6788184523126685e-09,
+            "effective_signed_weight_abs_mean": 9.470520245548285e-10,
+            "effective_signed_weight_max": 0.0,
+            "effective_signed_weight_mean": 8.000987281497592e-09,
+            "effective_signed_weight_min": 1.879450439096148e-08,
+            "effective_signed_weight_norm": -1.1112871312679337e-08,
+            "effective_signed_weight_std": -9.131328820835994e-10,
+            "g_minus_mean": -4.916308061673721e-09,
+            "g_plus_mean": 3.084679219823874e-09
+          },
+          "2": {
+            "common_mode_mean": 9.72752100593532e-10,
+            "conductance_mean": 9.72752100593532e-10,
+            "conductance_std": 1.7781220064248147e-09,
+            "effective_signed_weight_abs_mean": 4.433173985861293e-09,
+            "effective_signed_weight_max": 8.965371859373367e-09,
+            "effective_signed_weight_mean": 1.0857691994197955e-08,
+            "effective_signed_weight_min": 1.4183799223935634e-08,
+            "effective_signed_weight_norm": 1.4253129300368663e-08,
+            "effective_signed_weight_std": 3.473807357639118e-09,
+            "g_minus_mean": -4.456093896505445e-09,
+            "g_plus_mean": 6.4015980976925095e-09
+          }
+        },
+        "output_column_interference_by_action_after_block": {
+          "0": {
+            "conductance_mean": 9.764251446756595e-08,
+            "conductance_std": 5.40164640979266e-08,
+            "g_plus_mean": 1.086003486427858e-07,
+            "g_minus_mean": 8.668468029234609e-08,
+            "effective_signed_weight_mean": 2.19156683504397e-08,
+            "effective_signed_weight_norm": 4.3126115918264607e-07,
+            "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+            "effective_signed_weight_std": 1.0556438885569323e-07,
+            "effective_signed_weight_min": -1.5893294609047368e-07,
+            "effective_signed_weight_max": 1.6867761799395598e-07,
+            "common_mode_mean": 9.764251446756595e-08,
+            "pulse_plus_count": 0,
+            "pulse_minus_count": 0,
+            "reward_sum": 0.0,
+            "positive_reward_sum": 0.0,
+            "negative_reward_sum": 0.0,
+            "positive_update_count": 0,
+            "negative_update_count": 0,
+            "selected_count": 0,
+            "collision_count": 0,
+            "collision_penalty_count": 0,
+            "found_count": 0
+          },
+          "1": {
+            "conductance_mean": 9.395030033488316e-08,
+            "conductance_std": 3.627105720232219e-08,
+            "g_plus_mean": 8.73418839502546e-08,
+            "g_minus_mean": 1.0055871671951176e-07,
+            "effective_signed_weight_mean": -1.3216832769257159e-08,
+            "effective_signed_weight_norm": 2.85642071327282e-07,
+            "effective_signed_weight_abs_mean": 5.634373857322246e-08,
+            "effective_signed_weight_std": 7.017675817931633e-08,
+            "effective_signed_weight_min": -1.5586256582077022e-07,
+            "effective_signed_weight_max": 8.061878390090551e-08,
+            "common_mode_mean": 9.395030033488316e-08,
+            "pulse_plus_count": 0,
+            "pulse_minus_count": 0,
+            "reward_sum": 0.0,
+            "positive_reward_sum": 0.0,
+            "negative_reward_sum": 0.0,
+            "positive_update_count": 0,
+            "negative_update_count": 0,
+            "selected_count": 0,
+            "collision_count": 0,
+            "collision_penalty_count": 0,
+            "found_count": 0
+          },
+          "2": {
+            "conductance_mean": 9.823313037528516e-08,
+            "conductance_std": 4.2664129555973304e-08,
+            "g_plus_mean": 1.0131860626963546e-07,
+            "g_minus_mean": 9.514765448093484e-08,
+            "effective_signed_weight_mean": 6.170951788700615e-09,
+            "effective_signed_weight_norm": 3.3939360071879603e-07,
+            "effective_signed_weight_abs_mean": 6.995090658803274e-08,
+            "effective_signed_weight_std": 8.462369861378005e-08,
+            "effective_signed_weight_min": -1.2346933008529893e-07,
+            "effective_signed_weight_max": 1.7107418852030844e-07,
+            "common_mode_mean": 9.823313037528516e-08,
+            "pulse_plus_count": 0,
+            "pulse_minus_count": 0,
+            "reward_sum": 0.0,
+            "positive_reward_sum": 0.0,
+            "negative_reward_sum": 0.0,
+            "positive_update_count": 0,
+            "negative_update_count": 0,
+            "selected_count": 0,
+            "collision_count": 0,
+            "collision_penalty_count": 0,
+            "found_count": 0
+          }
+        }
+      }
+    ]
+  },
+  "history": [
+    {
+      "block_index": -1,
+      "episode_end": 0,
+      "accepted": true,
+      "passed": false,
+      "score": -790.0,
+      "regression": {
+        "passed": false,
+        "warnings": [
+          "stage_turn_right: eval_success=0.0 < 1.0",
+          "stage_wall_avoid: eval_success=0.0 < 1.0"
+        ],
+        "criteria": {
+          "stage_forward": "eval_success == 1.0",
+          "stage_turn_right": "eval_success == 1.0",
+          "stage_turn_left": "eval_success == 1.0",
+          "stage_wall_avoid": "eval_success == 1.0"
+        },
+        "stages": {
+          "stage_forward": {
+            "eval_success": 1.0,
+            "action_sequence": [
+              0
+            ],
+            "raw_action_sequence": [
+              0
+            ],
+            "valid_actions_only": true,
+            "no_action_count": 0,
+            "no_spike_count": 0,
+            "early_done_before_action": false,
+            "collision_sequence": [
+              false
+            ],
+            "moved_sequence": [
+              true
+            ],
+            "collision_count": 0,
+            "moved_count": 1,
+            "found_victim_count": 1,
+            "action_histogram": {
+              "0": 1
+            },
+            "snn_action_histogram": {
+              "0": 1
+            },
+            "spike_selected_action_histogram": {
+              "0": 1
+            },
+            "fallback_action_histogram": {},
+            "output_winner_histogram": {
+              "0": 2,
+              "2": 1
+            },
+            "output_column_weight_mean": {
+              "0": 2.8675021360081426e-08,
+              "1": -2.121782005075475e-08,
+              "2": -4.686740205497339e-09
+            },
+            "output_column_weight_std": {
+              "0": 1.0585964893021512e-07,
+              "1": 7.108989106139993e-08,
+              "2": 8.114989125614093e-08
+            },
+            "output_column_effective_score": {
+              "0": 2.8675021360081426e-08,
+              "1": -2.121782005075475e-08,
+              "2": -4.686740205497339e-09
+            },
+            "output_spike_count_by_action": {
+              "0": 3,
+              "1": 0,
+              "2": 2
+            },
+            "output_first_spike_time_by_action_mean": {
+              "0": 0.0,
+              "1": -1.0,
+              "2": 3.0
+            },
+            "pulse_plus_count_by_action": {},
+            "pulse_minus_count_by_action": {},
+            "reward_by_action": {
+              "0": 3.1
+            },
+            "event_count_by_action": {
+              "0": {
+                "found_victim": 1,
+                "collision": 0,
+                "moved": 1
+              }
+            },
+            "eval_state_reset_debug": {
+              "hidden_trace_reset": true,
+              "neuron_state_reset": true,
+              "prev_hidden_spikes_reset": true,
+              "output_buffer_reset": true,
+              "action_history_reset": true
+            },
+            "mean_recurrent_to_input_current_ratio": 0.17048538939345173,
+            "hidden_trace_mean": 0.0,
+            "hidden_trace_nonzero_count": 0.0
+          },
+          "stage_turn_right": {
+            "eval_success": 0.0,
+            "action_sequence": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "raw_action_sequence": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "valid_actions_only": true,
+            "no_action_count": 0,
+            "no_spike_count": 0,
+            "early_done_before_action": false,
+            "collision_sequence": [
+              false,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "moved_sequence": [
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "collision_count": 49,
+            "moved_count": 1,
+            "found_victim_count": 0,
+            "action_histogram": {
+              "0": 50
+            },
+            "snn_action_histogram": {
+              "0": 50
+            },
+            "spike_selected_action_histogram": {
+              "0": 50
+            },
+            "fallback_action_histogram": {},
+            "output_winner_histogram": {
+              "0": 149,
+              "2": 1
+            },
+            "output_column_weight_mean": {
+              "0": 2.8675021360081426e-08,
+              "1": -2.121782005075475e-08,
+              "2": -4.686740205497339e-09
+            },
+            "output_column_weight_std": {
+              "0": 1.0585964893021512e-07,
+              "1": 7.108989106139993e-08,
+              "2": 8.114989125614093e-08
+            },
+            "output_column_effective_score": {
+              "0": 2.8675021360081426e-08,
+              "1": -2.121782005075475e-08,
+              "2": -4.686740205497339e-09
+            },
+            "output_spike_count_by_action": {
+              "0": 150,
+              "1": 1,
+              "2": 150
+            },
+            "output_first_spike_time_by_action_mean": {
+              "0": 0.0,
+              "1": 0.0,
+              "2": 0.0
+            },
+            "pulse_plus_count_by_action": {},
+            "pulse_minus_count_by_action": {},
+            "reward_by_action": {
+              "0": -0.04959999999999999
+            },
+            "event_count_by_action": {
+              "0": {
+                "found_victim": 0,
+                "collision": 49,
+                "moved": 1
+              }
+            },
+            "eval_state_reset_debug": {
+              "hidden_trace_reset": true,
+              "neuron_state_reset": true,
+              "prev_hidden_spikes_reset": true,
+              "output_buffer_reset": true,
+              "action_history_reset": true
+            },
+            "mean_recurrent_to_input_current_ratio": 0.15319187229226783,
+            "hidden_trace_mean": 0.0,
+            "hidden_trace_nonzero_count": 0.0
+          },
+          "stage_turn_left": {
+            "eval_success": 1.0,
+            "action_sequence": [
+              0,
+              1,
+              0,
+              0
+            ],
+            "raw_action_sequence": [
+              0,
+              1,
+              0,
+              0
+            ],
+            "valid_actions_only": true,
+            "no_action_count": 0,
+            "no_spike_count": 0,
+            "early_done_before_action": false,
+            "collision_sequence": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "moved_sequence": [
+              true,
+              false,
+              true,
+              true
+            ],
+            "collision_count": 0,
+            "moved_count": 3,
+            "found_victim_count": 1,
+            "action_histogram": {
+              "0": 3,
+              "1": 1
+            },
+            "snn_action_histogram": {
+              "0": 3,
+              "1": 1
+            },
+            "spike_selected_action_histogram": {
+              "0": 3,
+              "1": 1
+            },
+            "fallback_action_histogram": {},
+            "output_winner_histogram": {
+              "0": 10,
+              "1": 1
+            },
+            "output_column_weight_mean": {
+              "0": 2.8675021360081426e-08,
+              "1": -2.121782005075475e-08,
+              "2": -4.686740205497339e-09
+            },
+            "output_column_weight_std": {
+              "0": 1.0585964893021512e-07,
+              "1": 7.108989106139993e-08,
+              "2": 8.114989125614093e-08
+            },
+            "output_column_effective_score": {
+              "0": 2.8675021360081426e-08,
+              "1": -2.121782005075475e-08,
+              "2": -4.686740205497339e-09
+            },
+            "output_spike_count_by_action": {
+              "0": 10,
+              "1": 1,
+              "2": 4
+            },
+            "output_first_spike_time_by_action_mean": {
+              "0": 2.0,
+              "1": 0.0,
+              "2": 4.0
+            },
+            "pulse_plus_count_by_action": {},
+            "pulse_minus_count_by_action": {},
+            "reward_by_action": {
+              "0": 1.0566666666666666,
+              "1": -0.002
+            },
+            "event_count_by_action": {
+              "0": {
+                "found_victim": 1,
+                "collision": 0,
+                "moved": 3
+              },
+              "1": {
+                "found_victim": 0,
+                "collision": 0,
+                "moved": 0
+              }
+            },
+            "eval_state_reset_debug": {
+              "hidden_trace_reset": true,
+              "neuron_state_reset": true,
+              "prev_hidden_spikes_reset": true,
+              "output_buffer_reset": true,
+              "action_history_reset": true
+            },
+            "mean_recurrent_to_input_current_ratio": 0.14562891625890712,
+            "hidden_trace_mean": 0.0,
+            "hidden_trace_nonzero_count": 0.0
+          },
+          "stage_wall_avoid": {
+            "eval_success": 0.0,
+            "action_sequence": [
+              2,
+              0,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "raw_action_sequence": [
+              2,
+              0,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "valid_actions_only": true,
+            "no_action_count": 0,
+            "no_spike_count": 0,
+            "early_done_before_action": false,
+            "collision_sequence": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "moved_sequence": [
+              false,
+              true,
+              false,
+              false,
+              true,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "collision_count": 44,
+            "moved_count": 3,
+            "found_victim_count": 0,
+            "action_histogram": {
+              "2": 1,
+              "0": 47,
+              "1": 2
+            },
+            "snn_action_histogram": {
+              "2": 1,
+              "0": 47,
+              "1": 2
+            },
+            "spike_selected_action_histogram": {
+              "2": 1,
+              "0": 47,
+              "1": 2
+            },
+            "fallback_action_histogram": {},
+            "output_winner_histogram": {
+              "2": 92,
+              "0": 151,
+              "1": 3
+            },
+            "output_column_weight_mean": {
+              "0": 2.8675021360081426e-08,
+              "1": -2.121782005075475e-08,
+              "2": -4.686740205497339e-09
+            },
+            "output_column_weight_std": {
+              "0": 1.0585964893021512e-07,
+              "1": 7.108989106139993e-08,
+              "2": 8.114989125614093e-08
+            },
+            "output_column_effective_score": {
+              "0": 2.8675021360081426e-08,
+              "1": -2.121782005075475e-08,
+              "2": -4.686740205497339e-09
+            },
+            "output_spike_count_by_action": {
+              "0": 155,
+              "1": 50,
+              "2": 141
+            },
+            "output_first_spike_time_by_action_mean": {
+              "0": 0.02,
+              "1": 0.0,
+              "2": 0.16666666666666666
+            },
+            "pulse_plus_count_by_action": {},
+            "pulse_minus_count_by_action": {},
+            "reward_by_action": {
+              "2": -0.002,
+              "0": -0.04595744680851065,
+              "1": -0.002
+            },
+            "event_count_by_action": {
+              "2": {
+                "found_victim": 0,
+                "collision": 0,
+                "moved": 0
+              },
+              "0": {
+                "found_victim": 0,
+                "collision": 44,
+                "moved": 3
+              },
+              "1": {
+                "found_victim": 0,
+                "collision": 0,
+                "moved": 0
+              }
+            },
+            "eval_state_reset_debug": {
+              "hidden_trace_reset": true,
+              "neuron_state_reset": true,
+              "prev_hidden_spikes_reset": true,
+              "output_buffer_reset": true,
+              "action_history_reset": true
+            },
+            "mean_recurrent_to_input_current_ratio": 0.47566290541257655,
+            "hidden_trace_mean": 0.24218749999999997,
+            "hidden_trace_nonzero_count": 14.64
+          }
+        },
+        "primitive_action_confusion": {
+          "reference_actions": {
+            "stage_forward": 0,
+            "stage_turn_right": 2,
+            "stage_turn_left": 1,
+            "stage_wall_avoid": 2
+          },
+          "action_histogram_confusion": {
+            "stage_forward": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_turn_right": {
+              "0": 50,
+              "1": 0,
+              "2": 0
+            },
+            "stage_turn_left": {
+              "0": 3,
+              "1": 1,
+              "2": 0
+            },
+            "stage_wall_avoid": {
+              "0": 47,
+              "1": 2,
+              "2": 1
+            }
+          },
+          "first_action_confusion": {
+            "stage_forward": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_turn_right": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_turn_left": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_wall_avoid": {
+              "0": 0,
+              "1": 0,
+              "2": 1
+            }
+          },
+          "dominant_action_confusion": {
+            "stage_forward": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_turn_right": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_turn_left": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_wall_avoid": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            }
+          },
+          "action_sequence_entropy": {
+            "stage_forward": -0.0,
+            "stage_turn_right": -0.0,
+            "stage_turn_left": 0.8112781244591328,
+            "stage_wall_avoid": 0.38254266919774566
+          },
+          "alternating_lr_oscillation_count": {
+            "stage_forward": 0,
+            "stage_turn_right": 0,
+            "stage_turn_left": 0,
+            "stage_wall_avoid": 0
+          },
+          "action0_suppression_score": {
+            "stage_forward": 0.0,
+            "stage_turn_right": 0.0,
+            "stage_turn_left": 0.25,
+            "stage_wall_avoid": 0.06000000000000005
+          }
+        },
+        "stage_forward": {
+          "eval_success": 1.0,
+          "action_sequence": [
+            0
+          ],
+          "raw_action_sequence": [
+            0
+          ],
+          "valid_actions_only": true,
+          "no_action_count": 0,
+          "no_spike_count": 0,
+          "early_done_before_action": false,
+          "collision_sequence": [
+            false
+          ],
+          "moved_sequence": [
+            true
+          ],
+          "collision_count": 0,
+          "moved_count": 1,
+          "found_victim_count": 1,
+          "action_histogram": {
+            "0": 1
+          },
+          "snn_action_histogram": {
+            "0": 1
+          },
+          "spike_selected_action_histogram": {
+            "0": 1
+          },
+          "fallback_action_histogram": {},
+          "output_winner_histogram": {
+            "0": 2,
+            "2": 1
+          },
+          "output_column_weight_mean": {
+            "0": 2.8675021360081426e-08,
+            "1": -2.121782005075475e-08,
+            "2": -4.686740205497339e-09
+          },
+          "output_column_weight_std": {
+            "0": 1.0585964893021512e-07,
+            "1": 7.108989106139993e-08,
+            "2": 8.114989125614093e-08
+          },
+          "output_column_effective_score": {
+            "0": 2.8675021360081426e-08,
+            "1": -2.121782005075475e-08,
+            "2": -4.686740205497339e-09
+          },
+          "output_spike_count_by_action": {
+            "0": 3,
+            "1": 0,
+            "2": 2
+          },
+          "output_first_spike_time_by_action_mean": {
+            "0": 0.0,
+            "1": -1.0,
+            "2": 3.0
+          },
+          "pulse_plus_count_by_action": {},
+          "pulse_minus_count_by_action": {},
+          "reward_by_action": {
+            "0": 3.1
+          },
+          "event_count_by_action": {
+            "0": {
+              "found_victim": 1,
+              "collision": 0,
+              "moved": 1
+            }
+          },
+          "eval_state_reset_debug": {
+            "hidden_trace_reset": true,
+            "neuron_state_reset": true,
+            "prev_hidden_spikes_reset": true,
+            "output_buffer_reset": true,
+            "action_history_reset": true
+          },
+          "mean_recurrent_to_input_current_ratio": 0.17048538939345173,
+          "hidden_trace_mean": 0.0,
+          "hidden_trace_nonzero_count": 0.0
+        },
+        "stage_turn_right": {
+          "eval_success": 0.0,
+          "action_sequence": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "raw_action_sequence": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "valid_actions_only": true,
+          "no_action_count": 0,
+          "no_spike_count": 0,
+          "early_done_before_action": false,
+          "collision_sequence": [
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "moved_sequence": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "collision_count": 49,
+          "moved_count": 1,
+          "found_victim_count": 0,
+          "action_histogram": {
+            "0": 50
+          },
+          "snn_action_histogram": {
+            "0": 50
+          },
+          "spike_selected_action_histogram": {
+            "0": 50
+          },
+          "fallback_action_histogram": {},
+          "output_winner_histogram": {
+            "0": 149,
+            "2": 1
+          },
+          "output_column_weight_mean": {
+            "0": 2.8675021360081426e-08,
+            "1": -2.121782005075475e-08,
+            "2": -4.686740205497339e-09
+          },
+          "output_column_weight_std": {
+            "0": 1.0585964893021512e-07,
+            "1": 7.108989106139993e-08,
+            "2": 8.114989125614093e-08
+          },
+          "output_column_effective_score": {
+            "0": 2.8675021360081426e-08,
+            "1": -2.121782005075475e-08,
+            "2": -4.686740205497339e-09
+          },
+          "output_spike_count_by_action": {
+            "0": 150,
+            "1": 1,
+            "2": 150
+          },
+          "output_first_spike_time_by_action_mean": {
+            "0": 0.0,
+            "1": 0.0,
+            "2": 0.0
+          },
+          "pulse_plus_count_by_action": {},
+          "pulse_minus_count_by_action": {},
+          "reward_by_action": {
+            "0": -0.04959999999999999
+          },
+          "event_count_by_action": {
+            "0": {
+              "found_victim": 0,
+              "collision": 49,
+              "moved": 1
+            }
+          },
+          "eval_state_reset_debug": {
+            "hidden_trace_reset": true,
+            "neuron_state_reset": true,
+            "prev_hidden_spikes_reset": true,
+            "output_buffer_reset": true,
+            "action_history_reset": true
+          },
+          "mean_recurrent_to_input_current_ratio": 0.15319187229226783,
+          "hidden_trace_mean": 0.0,
+          "hidden_trace_nonzero_count": 0.0
+        },
+        "stage_turn_left": {
+          "eval_success": 1.0,
+          "action_sequence": [
+            0,
+            1,
+            0,
+            0
+          ],
+          "raw_action_sequence": [
+            0,
+            1,
+            0,
+            0
+          ],
+          "valid_actions_only": true,
+          "no_action_count": 0,
+          "no_spike_count": 0,
+          "early_done_before_action": false,
+          "collision_sequence": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "moved_sequence": [
+            true,
+            false,
+            true,
+            true
+          ],
+          "collision_count": 0,
+          "moved_count": 3,
+          "found_victim_count": 1,
+          "action_histogram": {
+            "0": 3,
+            "1": 1
+          },
+          "snn_action_histogram": {
+            "0": 3,
+            "1": 1
+          },
+          "spike_selected_action_histogram": {
+            "0": 3,
+            "1": 1
+          },
+          "fallback_action_histogram": {},
+          "output_winner_histogram": {
+            "0": 10,
+            "1": 1
+          },
+          "output_column_weight_mean": {
+            "0": 2.8675021360081426e-08,
+            "1": -2.121782005075475e-08,
+            "2": -4.686740205497339e-09
+          },
+          "output_column_weight_std": {
+            "0": 1.0585964893021512e-07,
+            "1": 7.108989106139993e-08,
+            "2": 8.114989125614093e-08
+          },
+          "output_column_effective_score": {
+            "0": 2.8675021360081426e-08,
+            "1": -2.121782005075475e-08,
+            "2": -4.686740205497339e-09
+          },
+          "output_spike_count_by_action": {
+            "0": 10,
+            "1": 1,
+            "2": 4
+          },
+          "output_first_spike_time_by_action_mean": {
+            "0": 2.0,
+            "1": 0.0,
+            "2": 4.0
+          },
+          "pulse_plus_count_by_action": {},
+          "pulse_minus_count_by_action": {},
+          "reward_by_action": {
+            "0": 1.0566666666666666,
+            "1": -0.002
+          },
+          "event_count_by_action": {
+            "0": {
+              "found_victim": 1,
+              "collision": 0,
+              "moved": 3
+            },
+            "1": {
+              "found_victim": 0,
+              "collision": 0,
+              "moved": 0
+            }
+          },
+          "eval_state_reset_debug": {
+            "hidden_trace_reset": true,
+            "neuron_state_reset": true,
+            "prev_hidden_spikes_reset": true,
+            "output_buffer_reset": true,
+            "action_history_reset": true
+          },
+          "mean_recurrent_to_input_current_ratio": 0.14562891625890712,
+          "hidden_trace_mean": 0.0,
+          "hidden_trace_nonzero_count": 0.0
+        },
+        "stage_wall_avoid": {
+          "eval_success": 0.0,
+          "action_sequence": [
+            2,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "raw_action_sequence": [
+            2,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "valid_actions_only": true,
+          "no_action_count": 0,
+          "no_spike_count": 0,
+          "early_done_before_action": false,
+          "collision_sequence": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "moved_sequence": [
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "collision_count": 44,
+          "moved_count": 3,
+          "found_victim_count": 0,
+          "action_histogram": {
+            "2": 1,
+            "0": 47,
+            "1": 2
+          },
+          "snn_action_histogram": {
+            "2": 1,
+            "0": 47,
+            "1": 2
+          },
+          "spike_selected_action_histogram": {
+            "2": 1,
+            "0": 47,
+            "1": 2
+          },
+          "fallback_action_histogram": {},
+          "output_winner_histogram": {
+            "2": 92,
+            "0": 151,
+            "1": 3
+          },
+          "output_column_weight_mean": {
+            "0": 2.8675021360081426e-08,
+            "1": -2.121782005075475e-08,
+            "2": -4.686740205497339e-09
+          },
+          "output_column_weight_std": {
+            "0": 1.0585964893021512e-07,
+            "1": 7.108989106139993e-08,
+            "2": 8.114989125614093e-08
+          },
+          "output_column_effective_score": {
+            "0": 2.8675021360081426e-08,
+            "1": -2.121782005075475e-08,
+            "2": -4.686740205497339e-09
+          },
+          "output_spike_count_by_action": {
+            "0": 155,
+            "1": 50,
+            "2": 141
+          },
+          "output_first_spike_time_by_action_mean": {
+            "0": 0.02,
+            "1": 0.0,
+            "2": 0.16666666666666666
+          },
+          "pulse_plus_count_by_action": {},
+          "pulse_minus_count_by_action": {},
+          "reward_by_action": {
+            "2": -0.002,
+            "0": -0.04595744680851065,
+            "1": -0.002
+          },
+          "event_count_by_action": {
+            "2": {
+              "found_victim": 0,
+              "collision": 0,
+              "moved": 0
+            },
+            "0": {
+              "found_victim": 0,
+              "collision": 44,
+              "moved": 3
+            },
+            "1": {
+              "found_victim": 0,
+              "collision": 0,
+              "moved": 0
+            }
+          },
+          "eval_state_reset_debug": {
+            "hidden_trace_reset": true,
+            "neuron_state_reset": true,
+            "prev_hidden_spikes_reset": true,
+            "output_buffer_reset": true,
+            "action_history_reset": true
+          },
+          "mean_recurrent_to_input_current_ratio": 0.47566290541257655,
+          "hidden_trace_mean": 0.24218749999999997,
+          "hidden_trace_nonzero_count": 14.64
+        }
+      },
+      "output_column_status": {
+        "0": {
+          "conductance_mean": 9.775178111503212e-08,
+          "conductance_std": 5.4946971242313544e-08,
+          "g_plus_mean": 1.1208929179507281e-07,
+          "g_minus_mean": 8.34142704349914e-08,
+          "effective_signed_weight_mean": 2.8675021360081426e-08,
+          "effective_signed_weight_norm": 4.3869847725524677e-07,
+          "effective_signed_weight_abs_mean": 9.517824944068417e-08,
+          "effective_signed_weight_std": 1.0585964893021512e-07,
+          "effective_signed_weight_min": -1.5893294609047368e-07,
+          "effective_signed_weight_max": 1.6867761799395598e-07,
+          "common_mode_mean": 9.775178111503212e-08
+        },
+        "1": {
+          "conductance_mean": 9.486611475580811e-08,
+          "conductance_std": 3.794987565463486e-08,
+          "g_plus_mean": 8.425720473043072e-08,
+          "g_minus_mean": 1.0547502478118548e-07,
+          "effective_signed_weight_mean": -2.121782005075475e-08,
+          "effective_signed_weight_norm": 2.9675494263996133e-07,
+          "effective_signed_weight_abs_mean": 5.539668654866763e-08,
+          "effective_signed_weight_std": 7.108989106139993e-08,
+          "effective_signed_weight_min": -1.746570702117317e-07,
+          "effective_signed_weight_max": 8.061878390090551e-08,
+          "common_mode_mean": 9.48661147558081e-08
+        },
+        "2": {
+          "conductance_mean": 9.726037827469163e-08,
+          "conductance_std": 4.088600754954849e-08,
+          "g_plus_mean": 9.491700817194295e-08,
+          "g_minus_mean": 9.960374837744029e-08,
+          "effective_signed_weight_mean": -4.686740205497339e-09,
+          "effective_signed_weight_norm": 3.2514047141842737e-07,
+          "effective_signed_weight_abs_mean": 6.551773260217144e-08,
+          "effective_signed_weight_std": 8.114989125614093e-08,
+          "effective_signed_weight_min": -1.3765312930923456e-07,
+          "effective_signed_weight_max": 1.6210881666093508e-07,
+          "common_mode_mean": 9.726037827469163e-08
+        }
+      },
+      "output_column_interference_by_action": {
+        "0": {
+          "conductance_mean": 9.775178111503212e-08,
+          "conductance_std": 5.4946971242313544e-08,
+          "g_plus_mean": 1.1208929179507281e-07,
+          "g_minus_mean": 8.34142704349914e-08,
+          "effective_signed_weight_mean": 2.8675021360081426e-08,
+          "effective_signed_weight_norm": 4.3869847725524677e-07,
+          "effective_signed_weight_abs_mean": 9.517824944068417e-08,
+          "effective_signed_weight_std": 1.0585964893021512e-07,
+          "effective_signed_weight_min": -1.5893294609047368e-07,
+          "effective_signed_weight_max": 1.6867761799395598e-07,
+          "common_mode_mean": 9.775178111503212e-08,
+          "pulse_plus_count": 0,
+          "pulse_minus_count": 0,
+          "reward_sum": 0.0,
+          "positive_reward_sum": 0.0,
+          "negative_reward_sum": 0.0,
+          "positive_update_count": 0,
+          "negative_update_count": 0,
+          "selected_count": 0,
+          "collision_count": 0,
+          "collision_penalty_count": 0,
+          "found_count": 0
+        },
+        "1": {
+          "conductance_mean": 9.486611475580811e-08,
+          "conductance_std": 3.794987565463486e-08,
+          "g_plus_mean": 8.425720473043072e-08,
+          "g_minus_mean": 1.0547502478118548e-07,
+          "effective_signed_weight_mean": -2.121782005075475e-08,
+          "effective_signed_weight_norm": 2.9675494263996133e-07,
+          "effective_signed_weight_abs_mean": 5.539668654866763e-08,
+          "effective_signed_weight_std": 7.108989106139993e-08,
+          "effective_signed_weight_min": -1.746570702117317e-07,
+          "effective_signed_weight_max": 8.061878390090551e-08,
+          "common_mode_mean": 9.48661147558081e-08,
+          "pulse_plus_count": 0,
+          "pulse_minus_count": 0,
+          "reward_sum": 0.0,
+          "positive_reward_sum": 0.0,
+          "negative_reward_sum": 0.0,
+          "positive_update_count": 0,
+          "negative_update_count": 0,
+          "selected_count": 0,
+          "collision_count": 0,
+          "collision_penalty_count": 0,
+          "found_count": 0
+        },
+        "2": {
+          "conductance_mean": 9.726037827469163e-08,
+          "conductance_std": 4.088600754954849e-08,
+          "g_plus_mean": 9.491700817194295e-08,
+          "g_minus_mean": 9.960374837744029e-08,
+          "effective_signed_weight_mean": -4.686740205497339e-09,
+          "effective_signed_weight_norm": 3.2514047141842737e-07,
+          "effective_signed_weight_abs_mean": 6.551773260217144e-08,
+          "effective_signed_weight_std": 8.114989125614093e-08,
+          "effective_signed_weight_min": -1.3765312930923456e-07,
+          "effective_signed_weight_max": 1.6210881666093508e-07,
+          "common_mode_mean": 9.726037827469163e-08,
+          "pulse_plus_count": 0,
+          "pulse_minus_count": 0,
+          "reward_sum": 0.0,
+          "positive_reward_sum": 0.0,
+          "negative_reward_sum": 0.0,
+          "positive_update_count": 0,
+          "negative_update_count": 0,
+          "selected_count": 0,
+          "collision_count": 0,
+          "collision_penalty_count": 0,
+          "found_count": 0
+        }
+      },
+      "output_bias_diagnostics": {
+        "output_column_weight_mean": {
+          "0": 2.8675021360081426e-08,
+          "1": -2.121782005075475e-08,
+          "2": -4.686740205497339e-09
+        },
+        "output_column_weight_std": {
+          "0": 1.0585964893021512e-07,
+          "1": 7.108989106139993e-08,
+          "2": 8.114989125614093e-08
+        },
+        "output_column_effective_score": {
+          "0": 2.8675021360081426e-08,
+          "1": -2.121782005075475e-08,
+          "2": -4.686740205497339e-09
+        },
+        "output_spike_count_by_action": {
+          "0": 318,
+          "1": 52,
+          "2": 297
+        },
+        "first_spike_time_mean_by_action": {
+          "0": 0.505,
+          "1": -0.25,
+          "2": 1.7916666666666667
+        },
+        "pulse_plus_count_by_action": {},
+        "pulse_minus_count_by_action": {},
+        "reward_sum_by_action": {
+          "0": 4.061109219858156,
+          "1": -0.004,
+          "2": -0.002
+        },
+        "reward_mean_by_action": {
+          "0": 1.015277304964539,
+          "1": -0.002,
+          "2": -0.002
+        },
+        "collision_count_by_action": {
+          "0": 93,
+          "1": 0,
+          "2": 0
+        },
+        "found_count_by_action": {
+          "0": 2,
+          "1": 0,
+          "2": 0
+        }
+      }
+    },
+    {
+      "block_index": 0,
+      "episode_end": 4,
+      "tasks": [
+        "stage_forward",
+        "stage_turn_right",
+        "stage_turn_left",
+        "stage_wall_avoid"
+      ],
+      "train": [
+        {
+          "task": "stage_forward",
+          "episode_index": 0,
+          "train": {
+            "eval_success": 1.0,
+            "action_sequence": [],
+            "raw_action_sequence": [],
+            "valid_actions_only": true,
+            "no_action_count": 0,
+            "no_spike_count": 0,
+            "early_done_before_action": false,
+            "collision_sequence": [],
+            "moved_sequence": [],
+            "collision_count": 0,
+            "moved_count": 1,
+            "found_victim_count": 1,
+            "action_histogram": {
+              "0": 1
+            },
+            "snn_action_histogram": {
+              "0": 1
+            },
+            "spike_selected_action_histogram": {
+              "0": 1
+            },
+            "fallback_action_histogram": {},
+            "output_winner_histogram": {
+              "0": 2,
+              "2": 1
+            },
+            "output_column_weight_mean": {
+              "0": 2.8675021360081426e-08,
+              "1": -2.121782005075475e-08,
+              "2": -4.686740205497339e-09
+            },
+            "output_column_weight_std": {
+              "0": 1.0585964893021512e-07,
+              "1": 7.108989106139993e-08,
+              "2": 8.114989125614093e-08
+            },
+            "output_column_effective_score": {
+              "0": 2.8675021360081426e-08,
+              "1": -2.121782005075475e-08,
+              "2": -4.686740205497339e-09
+            },
+            "output_spike_count_by_action": {
+              "0": 3,
+              "1": 0,
+              "2": 2
+            },
+            "output_first_spike_time_by_action_mean": {
+              "0": 0.0,
+              "1": -1.0,
+              "2": 3.0
+            },
+            "pulse_plus_count_by_action": {},
+            "pulse_minus_count_by_action": {},
+            "reward_by_action": {
+              "0": 3.1
+            },
+            "event_count_by_action": {
+              "0": {
+                "found_victim": 1,
+                "collision": 0,
+                "moved": 1
+              }
+            },
+            "eval_state_reset_debug": {
+              "hidden_trace_reset": false,
+              "neuron_state_reset": false,
+              "prev_hidden_spikes_reset": false,
+              "output_buffer_reset": false,
+              "action_history_reset": false
+            },
+            "mean_recurrent_to_input_current_ratio": 0.0,
+            "hidden_trace_mean": 0.0,
+            "hidden_trace_nonzero_count": 0.0
+          },
+          "output_column_status_before": {
+            "0": {
+              "conductance_mean": 9.775178111503212e-08,
+              "conductance_std": 5.4946971242313544e-08,
+              "g_plus_mean": 1.1208929179507281e-07,
+              "g_minus_mean": 8.34142704349914e-08,
+              "effective_signed_weight_mean": 2.8675021360081426e-08,
+              "effective_signed_weight_norm": 4.3869847725524677e-07,
+              "effective_signed_weight_abs_mean": 9.517824944068417e-08,
+              "effective_signed_weight_std": 1.0585964893021512e-07,
+              "effective_signed_weight_min": -1.5893294609047368e-07,
+              "effective_signed_weight_max": 1.6867761799395598e-07,
+              "common_mode_mean": 9.775178111503212e-08
+            },
+            "1": {
+              "conductance_mean": 9.486611475580811e-08,
+              "conductance_std": 3.794987565463486e-08,
+              "g_plus_mean": 8.425720473043072e-08,
+              "g_minus_mean": 1.0547502478118548e-07,
+              "effective_signed_weight_mean": -2.121782005075475e-08,
+              "effective_signed_weight_norm": 2.9675494263996133e-07,
+              "effective_signed_weight_abs_mean": 5.539668654866763e-08,
+              "effective_signed_weight_std": 7.108989106139993e-08,
+              "effective_signed_weight_min": -1.746570702117317e-07,
+              "effective_signed_weight_max": 8.061878390090551e-08,
+              "common_mode_mean": 9.48661147558081e-08
+            },
+            "2": {
+              "conductance_mean": 9.726037827469163e-08,
+              "conductance_std": 4.088600754954849e-08,
+              "g_plus_mean": 9.491700817194295e-08,
+              "g_minus_mean": 9.960374837744029e-08,
+              "effective_signed_weight_mean": -4.686740205497339e-09,
+              "effective_signed_weight_norm": 3.2514047141842737e-07,
+              "effective_signed_weight_abs_mean": 6.551773260217144e-08,
+              "effective_signed_weight_std": 8.114989125614093e-08,
+              "effective_signed_weight_min": -1.3765312930923456e-07,
+              "effective_signed_weight_max": 1.6210881666093508e-07,
+              "common_mode_mean": 9.726037827469163e-08
+            }
+          },
+          "output_column_status_after": {
+            "0": {
+              "conductance_mean": 9.775178111503212e-08,
+              "conductance_std": 5.4946971242313544e-08,
+              "g_plus_mean": 1.1208929179507281e-07,
+              "g_minus_mean": 8.34142704349914e-08,
+              "effective_signed_weight_mean": 2.8675021360081426e-08,
+              "effective_signed_weight_norm": 4.3869847725524677e-07,
+              "effective_signed_weight_abs_mean": 9.517824944068417e-08,
+              "effective_signed_weight_std": 1.0585964893021512e-07,
+              "effective_signed_weight_min": -1.5893294609047368e-07,
+              "effective_signed_weight_max": 1.6867761799395598e-07,
+              "common_mode_mean": 9.775178111503212e-08
+            },
+            "1": {
+              "conductance_mean": 9.486611475580811e-08,
+              "conductance_std": 3.794987565463486e-08,
+              "g_plus_mean": 8.425720473043072e-08,
+              "g_minus_mean": 1.0547502478118548e-07,
+              "effective_signed_weight_mean": -2.121782005075475e-08,
+              "effective_signed_weight_norm": 2.9675494263996133e-07,
+              "effective_signed_weight_abs_mean": 5.539668654866763e-08,
+              "effective_signed_weight_std": 7.108989106139993e-08,
+              "effective_signed_weight_min": -1.746570702117317e-07,
+              "effective_signed_weight_max": 8.061878390090551e-08,
+              "common_mode_mean": 9.48661147558081e-08
+            },
+            "2": {
+              "conductance_mean": 9.726037827469163e-08,
+              "conductance_std": 4.088600754954849e-08,
+              "g_plus_mean": 9.491700817194295e-08,
+              "g_minus_mean": 9.960374837744029e-08,
+              "effective_signed_weight_mean": -4.686740205497339e-09,
+              "effective_signed_weight_norm": 3.2514047141842737e-07,
+              "effective_signed_weight_abs_mean": 6.551773260217144e-08,
+              "effective_signed_weight_std": 8.114989125614093e-08,
+              "effective_signed_weight_min": -1.3765312930923456e-07,
+              "effective_signed_weight_max": 1.6210881666093508e-07,
+              "common_mode_mean": 9.726037827469163e-08
+            }
+          },
+          "delta_output_column_status": {
+            "0": {
+              "common_mode_mean": 0.0,
+              "conductance_mean": 0.0,
+              "conductance_std": 0.0,
+              "effective_signed_weight_abs_mean": 0.0,
+              "effective_signed_weight_max": 0.0,
+              "effective_signed_weight_mean": 0.0,
+              "effective_signed_weight_min": 0.0,
+              "effective_signed_weight_norm": 0.0,
+              "effective_signed_weight_std": 0.0,
+              "g_minus_mean": 0.0,
+              "g_plus_mean": 0.0
+            },
+            "1": {
+              "common_mode_mean": 0.0,
+              "conductance_mean": 0.0,
+              "conductance_std": 0.0,
+              "effective_signed_weight_abs_mean": 0.0,
+              "effective_signed_weight_max": 0.0,
+              "effective_signed_weight_mean": 0.0,
+              "effective_signed_weight_min": 0.0,
+              "effective_signed_weight_norm": 0.0,
+              "effective_signed_weight_std": 0.0,
+              "g_minus_mean": 0.0,
+              "g_plus_mean": 0.0
+            },
+            "2": {
+              "common_mode_mean": 0.0,
+              "conductance_mean": 0.0,
+              "conductance_std": 0.0,
+              "effective_signed_weight_abs_mean": 0.0,
+              "effective_signed_weight_max": 0.0,
+              "effective_signed_weight_mean": 0.0,
+              "effective_signed_weight_min": 0.0,
+              "effective_signed_weight_norm": 0.0,
+              "effective_signed_weight_std": 0.0,
+              "g_minus_mean": 0.0,
+              "g_plus_mean": 0.0
+            }
+          },
+          "output_column_interference_by_action": {
+            "0": {
+              "conductance_mean": 9.775178111503212e-08,
+              "conductance_std": 5.4946971242313544e-08,
+              "g_plus_mean": 1.1208929179507281e-07,
+              "g_minus_mean": 8.34142704349914e-08,
+              "effective_signed_weight_mean": 2.8675021360081426e-08,
+              "effective_signed_weight_norm": 4.3869847725524677e-07,
+              "effective_signed_weight_abs_mean": 9.517824944068417e-08,
+              "effective_signed_weight_std": 1.0585964893021512e-07,
+              "effective_signed_weight_min": -1.5893294609047368e-07,
+              "effective_signed_weight_max": 1.6867761799395598e-07,
+              "common_mode_mean": 9.775178111503212e-08,
+              "pulse_plus_count": 0,
+              "pulse_minus_count": 0,
+              "reward_sum": 3.1,
+              "positive_reward_sum": 3.1,
+              "negative_reward_sum": 0.0,
+              "positive_update_count": 0,
+              "negative_update_count": 0,
+              "selected_count": 1,
+              "collision_count": 0,
+              "collision_penalty_count": 0,
+              "found_count": 1
+            },
+            "1": {
+              "conductance_mean": 9.486611475580811e-08,
+              "conductance_std": 3.794987565463486e-08,
+              "g_plus_mean": 8.425720473043072e-08,
+              "g_minus_mean": 1.0547502478118548e-07,
+              "effective_signed_weight_mean": -2.121782005075475e-08,
+              "effective_signed_weight_norm": 2.9675494263996133e-07,
+              "effective_signed_weight_abs_mean": 5.539668654866763e-08,
+              "effective_signed_weight_std": 7.108989106139993e-08,
+              "effective_signed_weight_min": -1.746570702117317e-07,
+              "effective_signed_weight_max": 8.061878390090551e-08,
+              "common_mode_mean": 9.48661147558081e-08,
+              "pulse_plus_count": 0,
+              "pulse_minus_count": 0,
+              "reward_sum": 0.0,
+              "positive_reward_sum": 0.0,
+              "negative_reward_sum": 0.0,
+              "positive_update_count": 0,
+              "negative_update_count": 0,
+              "selected_count": 0,
+              "collision_count": 0,
+              "collision_penalty_count": 0,
+              "found_count": 0
+            },
+            "2": {
+              "conductance_mean": 9.726037827469163e-08,
+              "conductance_std": 4.088600754954849e-08,
+              "g_plus_mean": 9.491700817194295e-08,
+              "g_minus_mean": 9.960374837744029e-08,
+              "effective_signed_weight_mean": -4.686740205497339e-09,
+              "effective_signed_weight_norm": 3.2514047141842737e-07,
+              "effective_signed_weight_abs_mean": 6.551773260217144e-08,
+              "effective_signed_weight_std": 8.114989125614093e-08,
+              "effective_signed_weight_min": -1.3765312930923456e-07,
+              "effective_signed_weight_max": 1.6210881666093508e-07,
+              "common_mode_mean": 9.726037827469163e-08,
+              "pulse_plus_count": 0,
+              "pulse_minus_count": 0,
+              "reward_sum": 0.0,
+              "positive_reward_sum": 0.0,
+              "negative_reward_sum": 0.0,
+              "positive_update_count": 0,
+              "negative_update_count": 0,
+              "selected_count": 0,
+              "collision_count": 0,
+              "collision_penalty_count": 0,
+              "found_count": 0
+            }
+          }
+        },
+        {
+          "task": "stage_turn_right",
+          "episode_index": 1,
+          "train": {
+            "eval_success": 1.0,
+            "action_sequence": [],
+            "raw_action_sequence": [],
+            "valid_actions_only": true,
+            "no_action_count": 0,
+            "no_spike_count": 0,
+            "early_done_before_action": false,
+            "collision_sequence": [],
+            "moved_sequence": [],
+            "collision_count": 0,
+            "moved_count": 3,
+            "found_victim_count": 1,
+            "action_histogram": {
+              "0": 3,
+              "2": 1
+            },
+            "snn_action_histogram": {
+              "0": 3,
+              "2": 1
+            },
+            "spike_selected_action_histogram": {
+              "0": 3,
+              "2": 1
+            },
+            "fallback_action_histogram": {},
+            "output_winner_histogram": {
+              "0": 8,
+              "2": 3
+            },
+            "output_column_weight_mean": {
+              "0": 2.6212089943872102e-08,
+              "1": -2.121782005075475e-08,
+              "2": 1.6822422733052952e-09
+            },
+            "output_column_weight_std": {
+              "0": 1.062600472942199e-07,
+              "1": 7.108989106139993e-08,
+              "2": 8.347781817652544e-08
+            },
+            "output_column_effective_score": {
+              "0": 2.6212089943872102e-08,
+              "1": -2.121782005075475e-08,
+              "2": 1.6822422733052952e-09
+            },
+            "output_spike_count_by_action": {
+              "0": 11,
+              "1": 2,
+              "2": 11
+            },
+            "output_first_spike_time_by_action_mean": {
+              "0": 0.0,
+              "1": 0.0,
+              "2": 0.0
+            },
+            "pulse_plus_count_by_action": {
+              "0": 2,
+              "2": 8
+            },
+            "pulse_minus_count_by_action": {
+              "0": 5
+            },
+            "reward_by_action": {
+              "0": 1.0566666666666666,
+              "2": -0.002
+            },
+            "event_count_by_action": {
+              "0": {
+                "found_victim": 1,
+                "collision": 0,
+                "moved": 3
+              },
+              "2": {
+                "found_victim": 0,
+                "collision": 0,
+                "moved": 0
+              }
+            },
+            "eval_state_reset_debug": {
+              "hidden_trace_reset": false,
+              "neuron_state_reset": false,
+              "prev_hidden_spikes_reset": false,
+              "output_buffer_reset": false,
+              "action_history_reset": false
+            },
+            "mean_recurrent_to_input_current_ratio": 0.0,
+            "hidden_trace_mean": 0.0,
+            "hidden_trace_nonzero_count": 0.0
+          },
+          "output_column_status_before": {
+            "0": {
+              "conductance_mean": 9.775178111503212e-08,
+              "conductance_std": 5.4946971242313544e-08,
+              "g_plus_mean": 1.1208929179507281e-07,
+              "g_minus_mean": 8.34142704349914e-08,
+              "effective_signed_weight_mean": 2.8675021360081426e-08,
+              "effective_signed_weight_norm": 4.3869847725524677e-07,
+              "effective_signed_weight_abs_mean": 9.517824944068417e-08,
+              "effective_signed_weight_std": 1.0585964893021512e-07,
+              "effective_signed_weight_min": -1.5893294609047368e-07,
+              "effective_signed_weight_max": 1.6867761799395598e-07,
+              "common_mode_mean": 9.775178111503212e-08
+            },
+            "1": {
+              "conductance_mean": 9.486611475580811e-08,
+              "conductance_std": 3.794987565463486e-08,
+              "g_plus_mean": 8.425720473043072e-08,
+              "g_minus_mean": 1.0547502478118548e-07,
+              "effective_signed_weight_mean": -2.121782005075475e-08,
+              "effective_signed_weight_norm": 2.9675494263996133e-07,
+              "effective_signed_weight_abs_mean": 5.539668654866763e-08,
+              "effective_signed_weight_std": 7.108989106139993e-08,
+              "effective_signed_weight_min": -1.746570702117317e-07,
+              "effective_signed_weight_max": 8.061878390090551e-08,
+              "common_mode_mean": 9.48661147558081e-08
+            },
+            "2": {
+              "conductance_mean": 9.726037827469163e-08,
+              "conductance_std": 4.088600754954849e-08,
+              "g_plus_mean": 9.491700817194295e-08,
+              "g_minus_mean": 9.960374837744029e-08,
+              "effective_signed_weight_mean": -4.686740205497339e-09,
+              "effective_signed_weight_norm": 3.2514047141842737e-07,
+              "effective_signed_weight_abs_mean": 6.551773260217144e-08,
+              "effective_signed_weight_std": 8.114989125614093e-08,
+              "effective_signed_weight_min": -1.3765312930923456e-07,
+              "effective_signed_weight_max": 1.6210881666093508e-07,
+              "common_mode_mean": 9.726037827469163e-08
+            }
+          },
+          "output_column_status_after": {
+            "0": {
+              "conductance_mean": 9.724984216231773e-08,
+              "conductance_std": 5.481261665200449e-08,
+              "g_plus_mean": 1.1035588713425378e-07,
+              "g_minus_mean": 8.414379719038167e-08,
+              "effective_signed_weight_mean": 2.6212089943872102e-08,
+              "effective_signed_weight_norm": 4.3778115647333186e-07,
+              "effective_signed_weight_abs_mean": 9.271531802447487e-08,
+              "effective_signed_weight_std": 1.062600472942199e-07,
+              "effective_signed_weight_min": -1.5893294609047368e-07,
+              "effective_signed_weight_max": 1.6867761799395598e-07,
+              "common_mode_mean": 9.724984216231773e-08
+            },
+            "1": {
+              "conductance_mean": 9.486611475580811e-08,
+              "conductance_std": 3.794987565463486e-08,
+              "g_plus_mean": 8.425720473043072e-08,
+              "g_minus_mean": 1.0547502478118548e-07,
+              "effective_signed_weight_mean": -2.121782005075475e-08,
+              "effective_signed_weight_norm": 2.9675494263996133e-07,
+              "effective_signed_weight_abs_mean": 5.539668654866763e-08,
+              "effective_signed_weight_std": 7.108989106139993e-08,
+              "effective_signed_weight_min": -1.746570702117317e-07,
+              "effective_signed_weight_max": 8.061878390090551e-08,
+              "common_mode_mean": 9.48661147558081e-08
+            },
+            "2": {
+              "conductance_mean": 9.848356827484082e-08,
+              "conductance_std": 4.204439397479475e-08,
+              "g_plus_mean": 9.932468941149347e-08,
+              "g_minus_mean": 9.764244713818816e-08,
+              "effective_signed_weight_mean": 1.6822422733052952e-09,
+              "effective_signed_weight_norm": 3.3397906680698743e-07,
+              "effective_signed_weight_abs_mean": 6.849662951304269e-08,
+              "effective_signed_weight_std": 8.347781817652544e-08,
+              "effective_signed_weight_min": -1.28980852707222e-07,
+              "effective_signed_weight_max": 1.6636895194551806e-07,
+              "common_mode_mean": 9.848356827484082e-08
+            }
+          },
+          "delta_output_column_status": {
+            "0": {
+              "common_mode_mean": -5.019389527143896e-10,
+              "conductance_mean": -5.019389527143896e-10,
+              "conductance_std": -1.3435459030905332e-10,
+              "effective_signed_weight_abs_mean": -2.462931416209307e-09,
+              "effective_signed_weight_max": 0.0,
+              "effective_signed_weight_mean": -2.4629314162093237e-09,
+              "effective_signed_weight_min": 0.0,
+              "effective_signed_weight_norm": -9.173207819149108e-10,
+              "effective_signed_weight_std": 4.0039836400477727e-10,
+              "g_minus_mean": 7.295267553902772e-10,
+              "g_plus_mean": -1.7334046608190299e-09
+            },
+            "1": {
+              "common_mode_mean": 0.0,
+              "conductance_mean": 0.0,
+              "conductance_std": 0.0,
+              "effective_signed_weight_abs_mean": 0.0,
+              "effective_signed_weight_max": 0.0,
+              "effective_signed_weight_mean": 0.0,
+              "effective_signed_weight_min": 0.0,
+              "effective_signed_weight_norm": 0.0,
+              "effective_signed_weight_std": 0.0,
+              "g_minus_mean": 0.0,
+              "g_plus_mean": 0.0
+            },
+            "2": {
+              "common_mode_mean": 1.223190000149195e-09,
+              "conductance_mean": 1.223190000149195e-09,
+              "conductance_std": 1.1583864252462606e-09,
+              "effective_signed_weight_abs_mean": 2.9788969108712493e-09,
+              "effective_signed_weight_max": 4.2601352845829795e-09,
+              "effective_signed_weight_mean": 6.368982478802634e-09,
+              "effective_signed_weight_min": 8.672276602012556e-09,
+              "effective_signed_weight_norm": 8.838595388560063e-09,
+              "effective_signed_weight_std": 2.3279269203845072e-09,
+              "g_minus_mean": -1.9613012392521257e-09,
+              "g_plus_mean": 4.407681239550516e-09
+            }
+          },
+          "output_column_interference_by_action": {
+            "0": {
+              "conductance_mean": 9.724984216231773e-08,
+              "conductance_std": 5.481261665200449e-08,
+              "g_plus_mean": 1.1035588713425378e-07,
+              "g_minus_mean": 8.414379719038167e-08,
+              "effective_signed_weight_mean": 2.6212089943872102e-08,
+              "effective_signed_weight_norm": 4.3778115647333186e-07,
+              "effective_signed_weight_abs_mean": 9.271531802447487e-08,
+              "effective_signed_weight_std": 1.062600472942199e-07,
+              "effective_signed_weight_min": -1.5893294609047368e-07,
+              "effective_signed_weight_max": 1.6867761799395598e-07,
+              "common_mode_mean": 9.724984216231773e-08,
+              "pulse_plus_count": 2,
+              "pulse_minus_count": 5,
+              "reward_sum": 3.17,
+              "positive_reward_sum": 3.17,
+              "negative_reward_sum": 0.0,
+              "positive_update_count": 1,
+              "negative_update_count": 1,
+              "selected_count": 3,
+              "collision_count": 0,
+              "collision_penalty_count": 0,
+              "found_count": 1
+            },
+            "1": {
+              "conductance_mean": 9.486611475580811e-08,
+              "conductance_std": 3.794987565463486e-08,
+              "g_plus_mean": 8.425720473043072e-08,
+              "g_minus_mean": 1.0547502478118548e-07,
+              "effective_signed_weight_mean": -2.121782005075475e-08,
+              "effective_signed_weight_norm": 2.9675494263996133e-07,
+              "effective_signed_weight_abs_mean": 5.539668654866763e-08,
+              "effective_signed_weight_std": 7.108989106139993e-08,
+              "effective_signed_weight_min": -1.746570702117317e-07,
+              "effective_signed_weight_max": 8.061878390090551e-08,
+              "common_mode_mean": 9.48661147558081e-08,
+              "pulse_plus_count": 0,
+              "pulse_minus_count": 0,
+              "reward_sum": 0.0,
+              "positive_reward_sum": 0.0,
+              "negative_reward_sum": 0.0,
+              "positive_update_count": 0,
+              "negative_update_count": 0,
+              "selected_count": 0,
+              "collision_count": 0,
+              "collision_penalty_count": 0,
+              "found_count": 0
+            },
+            "2": {
+              "conductance_mean": 9.848356827484082e-08,
+              "conductance_std": 4.204439397479475e-08,
+              "g_plus_mean": 9.932468941149347e-08,
+              "g_minus_mean": 9.764244713818816e-08,
+              "effective_signed_weight_mean": 1.6822422733052952e-09,
+              "effective_signed_weight_norm": 3.3397906680698743e-07,
+              "effective_signed_weight_abs_mean": 6.849662951304269e-08,
+              "effective_signed_weight_std": 8.347781817652544e-08,
+              "effective_signed_weight_min": -1.28980852707222e-07,
+              "effective_signed_weight_max": 1.6636895194551806e-07,
+              "common_mode_mean": 9.848356827484082e-08,
+              "pulse_plus_count": 8,
+              "pulse_minus_count": 0,
+              "reward_sum": -0.002,
+              "positive_reward_sum": 0.0,
+              "negative_reward_sum": -0.002,
+              "positive_update_count": 1,
+              "negative_update_count": 0,
+              "selected_count": 1,
+              "collision_count": 0,
+              "collision_penalty_count": 0,
+              "found_count": 0
+            }
+          }
+        },
+        {
+          "task": "stage_turn_left",
+          "episode_index": 2,
+          "train": {
+            "eval_success": 1.0,
+            "action_sequence": [],
+            "raw_action_sequence": [],
+            "valid_actions_only": true,
+            "no_action_count": 0,
+            "no_spike_count": 0,
+            "early_done_before_action": false,
+            "collision_sequence": [],
+            "moved_sequence": [],
+            "collision_count": 0,
+            "moved_count": 3,
+            "found_victim_count": 1,
+            "action_histogram": {
+              "0": 3,
+              "1": 1
+            },
+            "snn_action_histogram": {
+              "0": 3,
+              "1": 1
+            },
+            "spike_selected_action_histogram": {
+              "0": 3,
+              "1": 1
+            },
+            "fallback_action_histogram": {},
+            "output_winner_histogram": {
+              "0": 9,
+              "1": 1
+            },
+            "output_column_weight_mean": {
+              "0": 2.19156683504397e-08,
+              "1": -1.71101932495867e-08,
+              "2": 1.6822422733052952e-09
+            },
+            "output_column_weight_std": {
+              "0": 1.0556438885569323e-07,
+              "1": 7.138403384079585e-08,
+              "2": 8.347781817652544e-08
+            },
+            "output_column_effective_score": {
+              "0": 2.19156683504397e-08,
+              "1": -1.71101932495867e-08,
+              "2": 1.6822422733052952e-09
+            },
+            "output_spike_count_by_action": {
+              "0": 9,
+              "1": 1,
+              "2": 4
+            },
+            "output_first_spike_time_by_action_mean": {
+              "0": 2.5,
+              "1": 0.0,
+              "2": 4.0
+            },
+            "pulse_plus_count_by_action": {
+              "0": 2,
+              "1": 7
+            },
+            "pulse_minus_count_by_action": {
+              "0": 6
+            },
+            "reward_by_action": {
+              "0": 1.0566666666666666,
+              "1": -0.002
+            },
+            "event_count_by_action": {
+              "0": {
+                "found_victim": 1,
+                "collision": 0,
+                "moved": 3
+              },
+              "1": {
+                "found_victim": 0,
+                "collision": 0,
+                "moved": 0
+              }
+            },
+            "eval_state_reset_debug": {
+              "hidden_trace_reset": false,
+              "neuron_state_reset": false,
+              "prev_hidden_spikes_reset": false,
+              "output_buffer_reset": false,
+              "action_history_reset": false
+            },
+            "mean_recurrent_to_input_current_ratio": 0.0,
+            "hidden_trace_mean": 0.0,
+            "hidden_trace_nonzero_count": 0.0
+          },
+          "output_column_status_before": {
+            "0": {
+              "conductance_mean": 9.724984216231773e-08,
+              "conductance_std": 5.481261665200449e-08,
+              "g_plus_mean": 1.1035588713425378e-07,
+              "g_minus_mean": 8.414379719038167e-08,
+              "effective_signed_weight_mean": 2.6212089943872102e-08,
+              "effective_signed_weight_norm": 4.3778115647333186e-07,
+              "effective_signed_weight_abs_mean": 9.271531802447487e-08,
+              "effective_signed_weight_std": 1.062600472942199e-07,
+              "effective_signed_weight_min": -1.5893294609047368e-07,
+              "effective_signed_weight_max": 1.6867761799395598e-07,
+              "common_mode_mean": 9.724984216231773e-08
+            },
+            "1": {
+              "conductance_mean": 9.486611475580811e-08,
+              "conductance_std": 3.794987565463486e-08,
+              "g_plus_mean": 8.425720473043072e-08,
+              "g_minus_mean": 1.0547502478118548e-07,
+              "effective_signed_weight_mean": -2.121782005075475e-08,
+              "effective_signed_weight_norm": 2.9675494263996133e-07,
+              "effective_signed_weight_abs_mean": 5.539668654866763e-08,
+              "effective_signed_weight_std": 7.108989106139993e-08,
+              "effective_signed_weight_min": -1.746570702117317e-07,
+              "effective_signed_weight_max": 8.061878390090551e-08,
+              "common_mode_mean": 9.48661147558081e-08
+            },
+            "2": {
+              "conductance_mean": 9.848356827484082e-08,
+              "conductance_std": 4.204439397479475e-08,
+              "g_plus_mean": 9.932468941149347e-08,
+              "g_minus_mean": 9.764244713818816e-08,
+              "effective_signed_weight_mean": 1.6822422733052952e-09,
+              "effective_signed_weight_norm": 3.3397906680698743e-07,
+              "effective_signed_weight_abs_mean": 6.849662951304269e-08,
+              "effective_signed_weight_std": 8.347781817652544e-08,
+              "effective_signed_weight_min": -1.28980852707222e-07,
+              "effective_signed_weight_max": 1.6636895194551806e-07,
+              "common_mode_mean": 9.848356827484082e-08
+            }
+          },
+          "output_column_status_after": {
+            "0": {
+              "conductance_mean": 9.764251446756595e-08,
+              "conductance_std": 5.40164640979266e-08,
+              "g_plus_mean": 1.086003486427858e-07,
+              "g_minus_mean": 8.668468029234609e-08,
+              "effective_signed_weight_mean": 2.19156683504397e-08,
+              "effective_signed_weight_norm": 4.3126115918264607e-07,
+              "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+              "effective_signed_weight_std": 1.0556438885569323e-07,
+              "effective_signed_weight_min": -1.5893294609047368e-07,
+              "effective_signed_weight_max": 1.6867761799395598e-07,
+              "common_mode_mean": 9.764251446756595e-08
+            },
+            "1": {
+              "conductance_mean": 9.471347263548005e-08,
+              "conductance_std": 3.739188262540517e-08,
+              "g_plus_mean": 8.615837601068671e-08,
+              "g_minus_mean": 1.032685692602734e-07,
+              "effective_signed_weight_mean": -1.71101932495867e-08,
+              "effective_signed_weight_norm": 2.93623949988337e-07,
+              "effective_signed_weight_abs_mean": 5.591844249843054e-08,
+              "effective_signed_weight_std": 7.138403384079585e-08,
+              "effective_signed_weight_min": -1.7086574813809848e-07,
+              "effective_signed_weight_max": 8.061878390090551e-08,
+              "common_mode_mean": 9.471347263548005e-08
+            },
+            "2": {
+              "conductance_mean": 9.848356827484082e-08,
+              "conductance_std": 4.204439397479475e-08,
+              "g_plus_mean": 9.932468941149347e-08,
+              "g_minus_mean": 9.764244713818816e-08,
+              "effective_signed_weight_mean": 1.6822422733052952e-09,
+              "effective_signed_weight_norm": 3.3397906680698743e-07,
+              "effective_signed_weight_abs_mean": 6.849662951304269e-08,
+              "effective_signed_weight_std": 8.347781817652544e-08,
+              "effective_signed_weight_min": -1.28980852707222e-07,
+              "effective_signed_weight_max": 1.6636895194551806e-07,
+              "common_mode_mean": 9.848356827484082e-08
+            }
+          },
+          "delta_output_column_status": {
+            "0": {
+              "common_mode_mean": 3.926723052482248e-10,
+              "conductance_mean": 3.926723052482248e-10,
+              "conductance_std": -7.96152554077892e-10,
+              "effective_signed_weight_abs_mean": -2.599783961695338e-09,
+              "effective_signed_weight_max": 0.0,
+              "effective_signed_weight_mean": -4.296421593432401e-09,
+              "effective_signed_weight_min": 0.0,
+              "effective_signed_weight_norm": -6.519997290685796e-09,
+              "effective_signed_weight_std": -6.956584385266637e-10,
+              "g_minus_mean": 2.5408831019644185e-09,
+              "g_plus_mean": -1.7555384914679821e-09
+            },
+            "1": {
+              "common_mode_mean": -1.5264212032804446e-10,
+              "conductance_mean": -1.526421203280577e-10,
+              "conductance_std": -5.579930292296894e-10,
+              "effective_signed_weight_abs_mean": 5.217559497629106e-10,
+              "effective_signed_weight_max": 0.0,
+              "effective_signed_weight_mean": 4.1076268011680514e-09,
+              "effective_signed_weight_min": 3.791322073633223e-09,
+              "effective_signed_weight_norm": -3.130992651624353e-09,
+              "effective_signed_weight_std": 2.94142779395912e-10,
+              "g_minus_mean": -2.20645552091209e-09,
+              "g_plus_mean": 1.901171280255988e-09
+            },
+            "2": {
+              "common_mode_mean": 0.0,
+              "conductance_mean": 0.0,
+              "conductance_std": 0.0,
+              "effective_signed_weight_abs_mean": 0.0,
+              "effective_signed_weight_max": 0.0,
+              "effective_signed_weight_mean": 0.0,
+              "effective_signed_weight_min": 0.0,
+              "effective_signed_weight_norm": 0.0,
+              "effective_signed_weight_std": 0.0,
+              "g_minus_mean": 0.0,
+              "g_plus_mean": 0.0
+            }
+          },
+          "output_column_interference_by_action": {
+            "0": {
+              "conductance_mean": 9.764251446756595e-08,
+              "conductance_std": 5.40164640979266e-08,
+              "g_plus_mean": 1.086003486427858e-07,
+              "g_minus_mean": 8.668468029234609e-08,
+              "effective_signed_weight_mean": 2.19156683504397e-08,
+              "effective_signed_weight_norm": 4.3126115918264607e-07,
+              "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+              "effective_signed_weight_std": 1.0556438885569323e-07,
+              "effective_signed_weight_min": -1.5893294609047368e-07,
+              "effective_signed_weight_max": 1.6867761799395598e-07,
+              "common_mode_mean": 9.764251446756595e-08,
+              "pulse_plus_count": 2,
+              "pulse_minus_count": 6,
+              "reward_sum": 3.17,
+              "positive_reward_sum": 3.17,
+              "negative_reward_sum": 0.0,
+              "positive_update_count": 1,
+              "negative_update_count": 1,
+              "selected_count": 3,
+              "collision_count": 0,
+              "collision_penalty_count": 0,
+              "found_count": 1
+            },
+            "1": {
+              "conductance_mean": 9.471347263548005e-08,
+              "conductance_std": 3.739188262540517e-08,
+              "g_plus_mean": 8.615837601068671e-08,
+              "g_minus_mean": 1.032685692602734e-07,
+              "effective_signed_weight_mean": -1.71101932495867e-08,
+              "effective_signed_weight_norm": 2.93623949988337e-07,
+              "effective_signed_weight_abs_mean": 5.591844249843054e-08,
+              "effective_signed_weight_std": 7.138403384079585e-08,
+              "effective_signed_weight_min": -1.7086574813809848e-07,
+              "effective_signed_weight_max": 8.061878390090551e-08,
+              "common_mode_mean": 9.471347263548005e-08,
+              "pulse_plus_count": 7,
+              "pulse_minus_count": 0,
+              "reward_sum": -0.002,
+              "positive_reward_sum": 0.0,
+              "negative_reward_sum": -0.002,
+              "positive_update_count": 1,
+              "negative_update_count": 0,
+              "selected_count": 1,
+              "collision_count": 0,
+              "collision_penalty_count": 0,
+              "found_count": 0
+            },
+            "2": {
+              "conductance_mean": 9.848356827484082e-08,
+              "conductance_std": 4.204439397479475e-08,
+              "g_plus_mean": 9.932468941149347e-08,
+              "g_minus_mean": 9.764244713818816e-08,
+              "effective_signed_weight_mean": 1.6822422733052952e-09,
+              "effective_signed_weight_norm": 3.3397906680698743e-07,
+              "effective_signed_weight_abs_mean": 6.849662951304269e-08,
+              "effective_signed_weight_std": 8.347781817652544e-08,
+              "effective_signed_weight_min": -1.28980852707222e-07,
+              "effective_signed_weight_max": 1.6636895194551806e-07,
+              "common_mode_mean": 9.848356827484082e-08,
+              "pulse_plus_count": 0,
+              "pulse_minus_count": 0,
+              "reward_sum": 0.0,
+              "positive_reward_sum": 0.0,
+              "negative_reward_sum": 0.0,
+              "positive_update_count": 0,
+              "negative_update_count": 0,
+              "selected_count": 0,
+              "collision_count": 0,
+              "collision_penalty_count": 0,
+              "found_count": 0
+            }
+          }
+        },
+        {
+          "task": "stage_wall_avoid",
+          "episode_index": 3,
+          "train": {
+            "eval_success": 1.0,
+            "action_sequence": [],
+            "raw_action_sequence": [],
+            "valid_actions_only": true,
+            "no_action_count": 0,
+            "no_spike_count": 0,
+            "early_done_before_action": false,
+            "collision_sequence": [],
+            "moved_sequence": [],
+            "collision_count": 0,
+            "moved_count": 3,
+            "found_victim_count": 1,
+            "action_histogram": {
+              "2": 1,
+              "0": 3,
+              "1": 1
+            },
+            "snn_action_histogram": {
+              "2": 1,
+              "0": 3,
+              "1": 1
+            },
+            "spike_selected_action_histogram": {
+              "2": 1,
+              "0": 3,
+              "1": 1
+            },
+            "fallback_action_histogram": {},
+            "output_winner_histogram": {
+              "2": 2,
+              "0": 11,
+              "1": 1
+            },
+            "output_column_weight_mean": {
+              "0": 2.19156683504397e-08,
+              "1": -1.3216832769257159e-08,
+              "2": 6.170951788700615e-09
+            },
+            "output_column_weight_std": {
+              "0": 1.0556438885569323e-07,
+              "1": 7.017675817931633e-08,
+              "2": 8.462369861378005e-08
+            },
+            "output_column_effective_score": {
+              "0": 2.19156683504397e-08,
+              "1": -1.3216832769257159e-08,
+              "2": 6.170951788700615e-09
+            },
+            "output_spike_count_by_action": {
+              "0": 11,
+              "1": 4,
+              "2": 9
+            },
+            "output_first_spike_time_by_action_mean": {
+              "0": 2.6,
+              "1": 0.0,
+              "2": 3.0
+            },
+            "pulse_plus_count_by_action": {
+              "2": 9,
+              "1": 7
+            },
+            "pulse_minus_count_by_action": {},
+            "reward_by_action": {
+              "2": -0.002,
+              "0": 1.0566666666666666,
+              "1": -0.002
+            },
+            "event_count_by_action": {
+              "2": {
+                "found_victim": 0,
+                "collision": 0,
+                "moved": 0
+              },
+              "0": {
+                "found_victim": 1,
+                "collision": 0,
+                "moved": 3
+              },
+              "1": {
+                "found_victim": 0,
+                "collision": 0,
+                "moved": 0
+              }
+            },
+            "eval_state_reset_debug": {
+              "hidden_trace_reset": false,
+              "neuron_state_reset": false,
+              "prev_hidden_spikes_reset": false,
+              "output_buffer_reset": false,
+              "action_history_reset": false
+            },
+            "mean_recurrent_to_input_current_ratio": 0.0,
+            "hidden_trace_mean": 0.0,
+            "hidden_trace_nonzero_count": 0.0
+          },
+          "output_column_status_before": {
+            "0": {
+              "conductance_mean": 9.764251446756595e-08,
+              "conductance_std": 5.40164640979266e-08,
+              "g_plus_mean": 1.086003486427858e-07,
+              "g_minus_mean": 8.668468029234609e-08,
+              "effective_signed_weight_mean": 2.19156683504397e-08,
+              "effective_signed_weight_norm": 4.3126115918264607e-07,
+              "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+              "effective_signed_weight_std": 1.0556438885569323e-07,
+              "effective_signed_weight_min": -1.5893294609047368e-07,
+              "effective_signed_weight_max": 1.6867761799395598e-07,
+              "common_mode_mean": 9.764251446756595e-08
+            },
+            "1": {
+              "conductance_mean": 9.471347263548005e-08,
+              "conductance_std": 3.739188262540517e-08,
+              "g_plus_mean": 8.615837601068671e-08,
+              "g_minus_mean": 1.032685692602734e-07,
+              "effective_signed_weight_mean": -1.71101932495867e-08,
+              "effective_signed_weight_norm": 2.93623949988337e-07,
+              "effective_signed_weight_abs_mean": 5.591844249843054e-08,
+              "effective_signed_weight_std": 7.138403384079585e-08,
+              "effective_signed_weight_min": -1.7086574813809848e-07,
+              "effective_signed_weight_max": 8.061878390090551e-08,
+              "common_mode_mean": 9.471347263548005e-08
+            },
+            "2": {
+              "conductance_mean": 9.848356827484082e-08,
+              "conductance_std": 4.204439397479475e-08,
+              "g_plus_mean": 9.932468941149347e-08,
+              "g_minus_mean": 9.764244713818816e-08,
+              "effective_signed_weight_mean": 1.6822422733052952e-09,
+              "effective_signed_weight_norm": 3.3397906680698743e-07,
+              "effective_signed_weight_abs_mean": 6.849662951304269e-08,
+              "effective_signed_weight_std": 8.347781817652544e-08,
+              "effective_signed_weight_min": -1.28980852707222e-07,
+              "effective_signed_weight_max": 1.6636895194551806e-07,
+              "common_mode_mean": 9.848356827484082e-08
+            }
+          },
+          "output_column_status_after": {
+            "0": {
+              "conductance_mean": 9.764251446756595e-08,
+              "conductance_std": 5.40164640979266e-08,
+              "g_plus_mean": 1.086003486427858e-07,
+              "g_minus_mean": 8.668468029234609e-08,
+              "effective_signed_weight_mean": 2.19156683504397e-08,
+              "effective_signed_weight_norm": 4.3126115918264607e-07,
+              "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+              "effective_signed_weight_std": 1.0556438885569323e-07,
+              "effective_signed_weight_min": -1.5893294609047368e-07,
+              "effective_signed_weight_max": 1.6867761799395598e-07,
+              "common_mode_mean": 9.764251446756595e-08
+            },
+            "1": {
+              "conductance_mean": 9.395030033488316e-08,
+              "conductance_std": 3.627105720232219e-08,
+              "g_plus_mean": 8.73418839502546e-08,
+              "g_minus_mean": 1.0055871671951176e-07,
+              "effective_signed_weight_mean": -1.3216832769257159e-08,
+              "effective_signed_weight_norm": 2.85642071327282e-07,
+              "effective_signed_weight_abs_mean": 5.634373857322246e-08,
+              "effective_signed_weight_std": 7.017675817931633e-08,
+              "effective_signed_weight_min": -1.5586256582077022e-07,
+              "effective_signed_weight_max": 8.061878390090551e-08,
+              "common_mode_mean": 9.395030033488316e-08
+            },
+            "2": {
+              "conductance_mean": 9.823313037528516e-08,
+              "conductance_std": 4.2664129555973304e-08,
+              "g_plus_mean": 1.0131860626963546e-07,
+              "g_minus_mean": 9.514765448093484e-08,
+              "effective_signed_weight_mean": 6.170951788700615e-09,
+              "effective_signed_weight_norm": 3.3939360071879603e-07,
+              "effective_signed_weight_abs_mean": 6.995090658803274e-08,
+              "effective_signed_weight_std": 8.462369861378005e-08,
+              "effective_signed_weight_min": -1.2346933008529893e-07,
+              "effective_signed_weight_max": 1.7107418852030844e-07,
+              "common_mode_mean": 9.823313037528516e-08
+            }
+          },
+          "delta_output_column_status": {
+            "0": {
+              "common_mode_mean": 0.0,
+              "conductance_mean": 0.0,
+              "conductance_std": 0.0,
+              "effective_signed_weight_abs_mean": 0.0,
+              "effective_signed_weight_max": 0.0,
+              "effective_signed_weight_mean": 0.0,
+              "effective_signed_weight_min": 0.0,
+              "effective_signed_weight_norm": 0.0,
+              "effective_signed_weight_std": 0.0,
+              "g_minus_mean": 0.0,
+              "g_plus_mean": 0.0
+            },
+            "1": {
+              "common_mode_mean": -7.631723005968855e-10,
+              "conductance_mean": -7.631723005968855e-10,
+              "conductance_std": -1.120825423082979e-09,
+              "effective_signed_weight_abs_mean": 4.252960747919179e-10,
+              "effective_signed_weight_max": 0.0,
+              "effective_signed_weight_mean": 3.8933604803295404e-09,
+              "effective_signed_weight_min": 1.5003182317328258e-08,
+              "effective_signed_weight_norm": -7.981878661054984e-09,
+              "effective_signed_weight_std": -1.2072756614795115e-09,
+              "g_minus_mean": -2.709852540761631e-09,
+              "g_plus_mean": 1.1835079395678863e-09
+            },
+            "2": {
+              "common_mode_mean": -2.5043789955566294e-10,
+              "conductance_mean": -2.5043789955566294e-10,
+              "conductance_std": 6.19735581178554e-10,
+              "effective_signed_weight_abs_mean": 1.4542770749900436e-09,
+              "effective_signed_weight_max": 4.705236574790388e-09,
+              "effective_signed_weight_mean": 4.48870951539532e-09,
+              "effective_signed_weight_min": 5.511522621923079e-09,
+              "effective_signed_weight_norm": 5.4145339118086e-09,
+              "effective_signed_weight_std": 1.1458804372546108e-09,
+              "g_minus_mean": -2.4947926572533196e-09,
+              "g_plus_mean": 1.9939168581419937e-09
+            }
+          },
+          "output_column_interference_by_action": {
+            "0": {
+              "conductance_mean": 9.764251446756595e-08,
+              "conductance_std": 5.40164640979266e-08,
+              "g_plus_mean": 1.086003486427858e-07,
+              "g_minus_mean": 8.668468029234609e-08,
+              "effective_signed_weight_mean": 2.19156683504397e-08,
+              "effective_signed_weight_norm": 4.3126115918264607e-07,
+              "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+              "effective_signed_weight_std": 1.0556438885569323e-07,
+              "effective_signed_weight_min": -1.5893294609047368e-07,
+              "effective_signed_weight_max": 1.6867761799395598e-07,
+              "common_mode_mean": 9.764251446756595e-08,
+              "pulse_plus_count": 0,
+              "pulse_minus_count": 0,
+              "reward_sum": 3.17,
+              "positive_reward_sum": 3.17,
+              "negative_reward_sum": 0.0,
+              "positive_update_count": 0,
+              "negative_update_count": 0,
+              "selected_count": 3,
+              "collision_count": 0,
+              "collision_penalty_count": 0,
+              "found_count": 1
+            },
+            "1": {
+              "conductance_mean": 9.395030033488316e-08,
+              "conductance_std": 3.627105720232219e-08,
+              "g_plus_mean": 8.73418839502546e-08,
+              "g_minus_mean": 1.0055871671951176e-07,
+              "effective_signed_weight_mean": -1.3216832769257159e-08,
+              "effective_signed_weight_norm": 2.85642071327282e-07,
+              "effective_signed_weight_abs_mean": 5.634373857322246e-08,
+              "effective_signed_weight_std": 7.017675817931633e-08,
+              "effective_signed_weight_min": -1.5586256582077022e-07,
+              "effective_signed_weight_max": 8.061878390090551e-08,
+              "common_mode_mean": 9.395030033488316e-08,
+              "pulse_plus_count": 7,
+              "pulse_minus_count": 0,
+              "reward_sum": -0.002,
+              "positive_reward_sum": 0.0,
+              "negative_reward_sum": -0.002,
+              "positive_update_count": 1,
+              "negative_update_count": 0,
+              "selected_count": 1,
+              "collision_count": 0,
+              "collision_penalty_count": 0,
+              "found_count": 0
+            },
+            "2": {
+              "conductance_mean": 9.823313037528516e-08,
+              "conductance_std": 4.2664129555973304e-08,
+              "g_plus_mean": 1.0131860626963546e-07,
+              "g_minus_mean": 9.514765448093484e-08,
+              "effective_signed_weight_mean": 6.170951788700615e-09,
+              "effective_signed_weight_norm": 3.3939360071879603e-07,
+              "effective_signed_weight_abs_mean": 6.995090658803274e-08,
+              "effective_signed_weight_std": 8.462369861378005e-08,
+              "effective_signed_weight_min": -1.2346933008529893e-07,
+              "effective_signed_weight_max": 1.7107418852030844e-07,
+              "common_mode_mean": 9.823313037528516e-08,
+              "pulse_plus_count": 9,
+              "pulse_minus_count": 0,
+              "reward_sum": -0.002,
+              "positive_reward_sum": 0.0,
+              "negative_reward_sum": -0.002,
+              "positive_update_count": 1,
+              "negative_update_count": 0,
+              "selected_count": 1,
+              "collision_count": 0,
+              "collision_penalty_count": 0,
+              "found_count": 0
+            }
+          }
+        }
+      ],
+      "score": 380.0,
+      "previous_best_score": 380.0,
+      "score_improved": true,
+      "passed": true,
+      "accepted": true,
+      "accepted_by_pass": true,
+      "accepted_by_score": true,
+      "reject_reasons": [],
+      "regression": {
+        "passed": true,
+        "warnings": [],
+        "criteria": {
+          "stage_forward": "eval_success == 1.0",
+          "stage_turn_right": "eval_success == 1.0",
+          "stage_turn_left": "eval_success == 1.0",
+          "stage_wall_avoid": "eval_success == 1.0"
+        },
+        "stages": {
+          "stage_forward": {
+            "eval_success": 1.0,
+            "action_sequence": [
+              0
+            ],
+            "raw_action_sequence": [
+              0
+            ],
+            "valid_actions_only": true,
+            "no_action_count": 0,
+            "no_spike_count": 0,
+            "early_done_before_action": false,
+            "collision_sequence": [
+              false
+            ],
+            "moved_sequence": [
+              true
+            ],
+            "collision_count": 0,
+            "moved_count": 1,
+            "found_victim_count": 1,
+            "action_histogram": {
+              "0": 1
+            },
+            "snn_action_histogram": {
+              "0": 1
+            },
+            "spike_selected_action_histogram": {
+              "0": 1
+            },
+            "fallback_action_histogram": {},
+            "output_winner_histogram": {
+              "0": 2,
+              "2": 1
+            },
+            "output_column_weight_mean": {
+              "0": 2.19156683504397e-08,
+              "1": -1.3216832769257159e-08,
+              "2": 6.170951788700615e-09
+            },
+            "output_column_weight_std": {
+              "0": 1.0556438885569323e-07,
+              "1": 7.017675817931633e-08,
+              "2": 8.462369861378005e-08
+            },
+            "output_column_effective_score": {
+              "0": 2.19156683504397e-08,
+              "1": -1.3216832769257159e-08,
+              "2": 6.170951788700615e-09
+            },
+            "output_spike_count_by_action": {
+              "0": 3,
+              "1": 0,
+              "2": 3
+            },
+            "output_first_spike_time_by_action_mean": {
+              "0": 0.0,
+              "1": -1.0,
+              "2": 0.0
+            },
+            "pulse_plus_count_by_action": {},
+            "pulse_minus_count_by_action": {},
+            "reward_by_action": {
+              "0": 3.1
+            },
+            "event_count_by_action": {
+              "0": {
+                "found_victim": 1,
+                "collision": 0,
+                "moved": 1
+              }
+            },
+            "eval_state_reset_debug": {
+              "hidden_trace_reset": true,
+              "neuron_state_reset": true,
+              "prev_hidden_spikes_reset": true,
+              "output_buffer_reset": true,
+              "action_history_reset": true
+            },
+            "mean_recurrent_to_input_current_ratio": 0.17048538939345173,
+            "hidden_trace_mean": 0.0,
+            "hidden_trace_nonzero_count": 0.0
+          },
+          "stage_turn_right": {
+            "eval_success": 1.0,
+            "action_sequence": [
+              0,
+              2,
+              0,
+              0
+            ],
+            "raw_action_sequence": [
+              0,
+              2,
+              0,
+              0
+            ],
+            "valid_actions_only": true,
+            "no_action_count": 0,
+            "no_spike_count": 0,
+            "early_done_before_action": false,
+            "collision_sequence": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "moved_sequence": [
+              true,
+              false,
+              true,
+              true
+            ],
+            "collision_count": 0,
+            "moved_count": 3,
+            "found_victim_count": 1,
+            "action_histogram": {
+              "0": 3,
+              "2": 1
+            },
+            "snn_action_histogram": {
+              "0": 3,
+              "2": 1
+            },
+            "spike_selected_action_histogram": {
+              "0": 3,
+              "2": 1
+            },
+            "fallback_action_histogram": {},
+            "output_winner_histogram": {
+              "0": 8,
+              "2": 3,
+              "1": 1
+            },
+            "output_column_weight_mean": {
+              "0": 2.19156683504397e-08,
+              "1": -1.3216832769257159e-08,
+              "2": 6.170951788700615e-09
+            },
+            "output_column_weight_std": {
+              "0": 1.0556438885569323e-07,
+              "1": 7.017675817931633e-08,
+              "2": 8.462369861378005e-08
+            },
+            "output_column_effective_score": {
+              "0": 2.19156683504397e-08,
+              "1": -1.3216832769257159e-08,
+              "2": 6.170951788700615e-09
+            },
+            "output_spike_count_by_action": {
+              "0": 11,
+              "1": 6,
+              "2": 11
+            },
+            "output_first_spike_time_by_action_mean": {
+              "0": 0.0,
+              "1": 1.25,
+              "2": 0.0
+            },
+            "pulse_plus_count_by_action": {},
+            "pulse_minus_count_by_action": {},
+            "reward_by_action": {
+              "0": 1.0566666666666666,
+              "2": -0.002
+            },
+            "event_count_by_action": {
+              "0": {
+                "found_victim": 1,
+                "collision": 0,
+                "moved": 3
+              },
+              "2": {
+                "found_victim": 0,
+                "collision": 0,
+                "moved": 0
+              }
+            },
+            "eval_state_reset_debug": {
+              "hidden_trace_reset": true,
+              "neuron_state_reset": true,
+              "prev_hidden_spikes_reset": true,
+              "output_buffer_reset": true,
+              "action_history_reset": true
+            },
+            "mean_recurrent_to_input_current_ratio": 0.1481195737736826,
+            "hidden_trace_mean": 0.0,
+            "hidden_trace_nonzero_count": 0.0
+          },
+          "stage_turn_left": {
+            "eval_success": 1.0,
+            "action_sequence": [
+              0,
+              1,
+              0,
+              0
+            ],
+            "raw_action_sequence": [
+              0,
+              1,
+              0,
+              0
+            ],
+            "valid_actions_only": true,
+            "no_action_count": 0,
+            "no_spike_count": 0,
+            "early_done_before_action": false,
+            "collision_sequence": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "moved_sequence": [
+              true,
+              false,
+              true,
+              true
+            ],
+            "collision_count": 0,
+            "moved_count": 3,
+            "found_victim_count": 1,
+            "action_histogram": {
+              "0": 3,
+              "1": 1
+            },
+            "snn_action_histogram": {
+              "0": 3,
+              "1": 1
+            },
+            "spike_selected_action_histogram": {
+              "0": 3,
+              "1": 1
+            },
+            "fallback_action_histogram": {},
+            "output_winner_histogram": {
+              "0": 7,
+              "2": 4,
+              "1": 1
+            },
+            "output_column_weight_mean": {
+              "0": 2.19156683504397e-08,
+              "1": -1.3216832769257159e-08,
+              "2": 6.170951788700615e-09
+            },
+            "output_column_weight_std": {
+              "0": 1.0556438885569323e-07,
+              "1": 7.017675817931633e-08,
+              "2": 8.462369861378005e-08
+            },
+            "output_column_effective_score": {
+              "0": 2.19156683504397e-08,
+              "1": -1.3216832769257159e-08,
+              "2": 6.170951788700615e-09
+            },
+            "output_spike_count_by_action": {
+              "0": 9,
+              "1": 2,
+              "2": 7
+            },
+            "output_first_spike_time_by_action_mean": {
+              "0": 2.5,
+              "1": 0.0,
+              "2": 4.75
+            },
+            "pulse_plus_count_by_action": {},
+            "pulse_minus_count_by_action": {},
+            "reward_by_action": {
+              "0": 1.0566666666666666,
+              "1": -0.002
+            },
+            "event_count_by_action": {
+              "0": {
+                "found_victim": 1,
+                "collision": 0,
+                "moved": 3
+              },
+              "1": {
+                "found_victim": 0,
+                "collision": 0,
+                "moved": 0
+              }
+            },
+            "eval_state_reset_debug": {
+              "hidden_trace_reset": true,
+              "neuron_state_reset": true,
+              "prev_hidden_spikes_reset": true,
+              "output_buffer_reset": true,
+              "action_history_reset": true
+            },
+            "mean_recurrent_to_input_current_ratio": 0.14562891625890712,
+            "hidden_trace_mean": 0.0,
+            "hidden_trace_nonzero_count": 0.0
+          },
+          "stage_wall_avoid": {
+            "eval_success": 1.0,
+            "action_sequence": [
+              2,
+              0,
+              1,
+              1,
+              0,
+              0,
+              2,
+              0,
+              0
+            ],
+            "raw_action_sequence": [
+              2,
+              0,
+              1,
+              1,
+              0,
+              0,
+              2,
+              0,
+              0
+            ],
+            "valid_actions_only": true,
+            "no_action_count": 0,
+            "no_spike_count": 0,
+            "early_done_before_action": false,
+            "collision_sequence": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "moved_sequence": [
+              false,
+              true,
+              false,
+              false,
+              true,
+              true,
+              false,
+              true,
+              true
+            ],
+            "collision_count": 0,
+            "moved_count": 5,
+            "found_victim_count": 1,
+            "action_histogram": {
+              "2": 2,
+              "0": 5,
+              "1": 2
+            },
+            "snn_action_histogram": {
+              "2": 2,
+              "0": 5,
+              "1": 2
+            },
+            "spike_selected_action_histogram": {
+              "2": 2,
+              "0": 5,
+              "1": 2
+            },
+            "fallback_action_histogram": {},
+            "output_winner_histogram": {
+              "2": 13,
+              "0": 27,
+              "1": 2
+            },
+            "output_column_weight_mean": {
+              "0": 2.19156683504397e-08,
+              "1": -1.3216832769257159e-08,
+              "2": 6.170951788700615e-09
+            },
+            "output_column_weight_std": {
+              "0": 1.0556438885569323e-07,
+              "1": 7.017675817931633e-08,
+              "2": 8.462369861378005e-08
+            },
+            "output_column_effective_score": {
+              "0": 2.19156683504397e-08,
+              "1": -1.3216832769257159e-08,
+              "2": 6.170951788700615e-09
+            },
+            "output_spike_count_by_action": {
+              "0": 29,
+              "1": 7,
+              "2": 24
+            },
+            "output_first_spike_time_by_action_mean": {
+              "0": 0.8888888888888888,
+              "1": 0.0,
+              "2": 1.4444444444444444
+            },
+            "pulse_plus_count_by_action": {},
+            "pulse_minus_count_by_action": {},
+            "reward_by_action": {
+              "2": -0.002,
+              "0": 0.648,
+              "1": -0.002
+            },
+            "event_count_by_action": {
+              "2": {
+                "found_victim": 0,
+                "collision": 0,
+                "moved": 0
+              },
+              "0": {
+                "found_victim": 1,
+                "collision": 0,
+                "moved": 5
+              },
+              "1": {
+                "found_victim": 0,
+                "collision": 0,
+                "moved": 0
+              }
+            },
+            "eval_state_reset_debug": {
+              "hidden_trace_reset": true,
+              "neuron_state_reset": true,
+              "prev_hidden_spikes_reset": true,
+              "output_buffer_reset": true,
+              "action_history_reset": true
+            },
+            "mean_recurrent_to_input_current_ratio": 0.4724940676230729,
+            "hidden_trace_mean": 0.21183268229166666,
+            "hidden_trace_nonzero_count": 12.444444444444445
+          }
+        },
+        "primitive_action_confusion": {
+          "reference_actions": {
+            "stage_forward": 0,
+            "stage_turn_right": 2,
+            "stage_turn_left": 1,
+            "stage_wall_avoid": 2
+          },
+          "action_histogram_confusion": {
+            "stage_forward": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_turn_right": {
+              "0": 3,
+              "1": 0,
+              "2": 1
+            },
+            "stage_turn_left": {
+              "0": 3,
+              "1": 1,
+              "2": 0
+            },
+            "stage_wall_avoid": {
+              "0": 5,
+              "1": 2,
+              "2": 2
+            }
+          },
+          "first_action_confusion": {
+            "stage_forward": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_turn_right": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_turn_left": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_wall_avoid": {
+              "0": 0,
+              "1": 0,
+              "2": 1
+            }
+          },
+          "dominant_action_confusion": {
+            "stage_forward": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_turn_right": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_turn_left": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            },
+            "stage_wall_avoid": {
+              "0": 1,
+              "1": 0,
+              "2": 0
+            }
+          },
+          "action_sequence_entropy": {
+            "stage_forward": -0.0,
+            "stage_turn_right": 0.8112781244591328,
+            "stage_turn_left": 0.8112781244591328,
+            "stage_wall_avoid": 1.4355205042826666
+          },
+          "alternating_lr_oscillation_count": {
+            "stage_forward": 0,
+            "stage_turn_right": 0,
+            "stage_turn_left": 0,
+            "stage_wall_avoid": 0
+          },
+          "action0_suppression_score": {
+            "stage_forward": 0.0,
+            "stage_turn_right": 0.25,
+            "stage_turn_left": 0.25,
+            "stage_wall_avoid": 0.4444444444444444
+          }
+        },
+        "stage_forward": {
+          "eval_success": 1.0,
+          "action_sequence": [
+            0
+          ],
+          "raw_action_sequence": [
+            0
+          ],
+          "valid_actions_only": true,
+          "no_action_count": 0,
+          "no_spike_count": 0,
+          "early_done_before_action": false,
+          "collision_sequence": [
+            false
+          ],
+          "moved_sequence": [
+            true
+          ],
+          "collision_count": 0,
+          "moved_count": 1,
+          "found_victim_count": 1,
+          "action_histogram": {
+            "0": 1
+          },
+          "snn_action_histogram": {
+            "0": 1
+          },
+          "spike_selected_action_histogram": {
+            "0": 1
+          },
+          "fallback_action_histogram": {},
+          "output_winner_histogram": {
+            "0": 2,
+            "2": 1
+          },
+          "output_column_weight_mean": {
+            "0": 2.19156683504397e-08,
+            "1": -1.3216832769257159e-08,
+            "2": 6.170951788700615e-09
+          },
+          "output_column_weight_std": {
+            "0": 1.0556438885569323e-07,
+            "1": 7.017675817931633e-08,
+            "2": 8.462369861378005e-08
+          },
+          "output_column_effective_score": {
+            "0": 2.19156683504397e-08,
+            "1": -1.3216832769257159e-08,
+            "2": 6.170951788700615e-09
+          },
+          "output_spike_count_by_action": {
+            "0": 3,
+            "1": 0,
+            "2": 3
+          },
+          "output_first_spike_time_by_action_mean": {
+            "0": 0.0,
+            "1": -1.0,
+            "2": 0.0
+          },
+          "pulse_plus_count_by_action": {},
+          "pulse_minus_count_by_action": {},
+          "reward_by_action": {
+            "0": 3.1
+          },
+          "event_count_by_action": {
+            "0": {
+              "found_victim": 1,
+              "collision": 0,
+              "moved": 1
+            }
+          },
+          "eval_state_reset_debug": {
+            "hidden_trace_reset": true,
+            "neuron_state_reset": true,
+            "prev_hidden_spikes_reset": true,
+            "output_buffer_reset": true,
+            "action_history_reset": true
+          },
+          "mean_recurrent_to_input_current_ratio": 0.17048538939345173,
+          "hidden_trace_mean": 0.0,
+          "hidden_trace_nonzero_count": 0.0
+        },
+        "stage_turn_right": {
+          "eval_success": 1.0,
+          "action_sequence": [
+            0,
+            2,
+            0,
+            0
+          ],
+          "raw_action_sequence": [
+            0,
+            2,
+            0,
+            0
+          ],
+          "valid_actions_only": true,
+          "no_action_count": 0,
+          "no_spike_count": 0,
+          "early_done_before_action": false,
+          "collision_sequence": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "moved_sequence": [
+            true,
+            false,
+            true,
+            true
+          ],
+          "collision_count": 0,
+          "moved_count": 3,
+          "found_victim_count": 1,
+          "action_histogram": {
+            "0": 3,
+            "2": 1
+          },
+          "snn_action_histogram": {
+            "0": 3,
+            "2": 1
+          },
+          "spike_selected_action_histogram": {
+            "0": 3,
+            "2": 1
+          },
+          "fallback_action_histogram": {},
+          "output_winner_histogram": {
+            "0": 8,
+            "2": 3,
+            "1": 1
+          },
+          "output_column_weight_mean": {
+            "0": 2.19156683504397e-08,
+            "1": -1.3216832769257159e-08,
+            "2": 6.170951788700615e-09
+          },
+          "output_column_weight_std": {
+            "0": 1.0556438885569323e-07,
+            "1": 7.017675817931633e-08,
+            "2": 8.462369861378005e-08
+          },
+          "output_column_effective_score": {
+            "0": 2.19156683504397e-08,
+            "1": -1.3216832769257159e-08,
+            "2": 6.170951788700615e-09
+          },
+          "output_spike_count_by_action": {
+            "0": 11,
+            "1": 6,
+            "2": 11
+          },
+          "output_first_spike_time_by_action_mean": {
+            "0": 0.0,
+            "1": 1.25,
+            "2": 0.0
+          },
+          "pulse_plus_count_by_action": {},
+          "pulse_minus_count_by_action": {},
+          "reward_by_action": {
+            "0": 1.0566666666666666,
+            "2": -0.002
+          },
+          "event_count_by_action": {
+            "0": {
+              "found_victim": 1,
+              "collision": 0,
+              "moved": 3
+            },
+            "2": {
+              "found_victim": 0,
+              "collision": 0,
+              "moved": 0
+            }
+          },
+          "eval_state_reset_debug": {
+            "hidden_trace_reset": true,
+            "neuron_state_reset": true,
+            "prev_hidden_spikes_reset": true,
+            "output_buffer_reset": true,
+            "action_history_reset": true
+          },
+          "mean_recurrent_to_input_current_ratio": 0.1481195737736826,
+          "hidden_trace_mean": 0.0,
+          "hidden_trace_nonzero_count": 0.0
+        },
+        "stage_turn_left": {
+          "eval_success": 1.0,
+          "action_sequence": [
+            0,
+            1,
+            0,
+            0
+          ],
+          "raw_action_sequence": [
+            0,
+            1,
+            0,
+            0
+          ],
+          "valid_actions_only": true,
+          "no_action_count": 0,
+          "no_spike_count": 0,
+          "early_done_before_action": false,
+          "collision_sequence": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "moved_sequence": [
+            true,
+            false,
+            true,
+            true
+          ],
+          "collision_count": 0,
+          "moved_count": 3,
+          "found_victim_count": 1,
+          "action_histogram": {
+            "0": 3,
+            "1": 1
+          },
+          "snn_action_histogram": {
+            "0": 3,
+            "1": 1
+          },
+          "spike_selected_action_histogram": {
+            "0": 3,
+            "1": 1
+          },
+          "fallback_action_histogram": {},
+          "output_winner_histogram": {
+            "0": 7,
+            "2": 4,
+            "1": 1
+          },
+          "output_column_weight_mean": {
+            "0": 2.19156683504397e-08,
+            "1": -1.3216832769257159e-08,
+            "2": 6.170951788700615e-09
+          },
+          "output_column_weight_std": {
+            "0": 1.0556438885569323e-07,
+            "1": 7.017675817931633e-08,
+            "2": 8.462369861378005e-08
+          },
+          "output_column_effective_score": {
+            "0": 2.19156683504397e-08,
+            "1": -1.3216832769257159e-08,
+            "2": 6.170951788700615e-09
+          },
+          "output_spike_count_by_action": {
+            "0": 9,
+            "1": 2,
+            "2": 7
+          },
+          "output_first_spike_time_by_action_mean": {
+            "0": 2.5,
+            "1": 0.0,
+            "2": 4.75
+          },
+          "pulse_plus_count_by_action": {},
+          "pulse_minus_count_by_action": {},
+          "reward_by_action": {
+            "0": 1.0566666666666666,
+            "1": -0.002
+          },
+          "event_count_by_action": {
+            "0": {
+              "found_victim": 1,
+              "collision": 0,
+              "moved": 3
+            },
+            "1": {
+              "found_victim": 0,
+              "collision": 0,
+              "moved": 0
+            }
+          },
+          "eval_state_reset_debug": {
+            "hidden_trace_reset": true,
+            "neuron_state_reset": true,
+            "prev_hidden_spikes_reset": true,
+            "output_buffer_reset": true,
+            "action_history_reset": true
+          },
+          "mean_recurrent_to_input_current_ratio": 0.14562891625890712,
+          "hidden_trace_mean": 0.0,
+          "hidden_trace_nonzero_count": 0.0
+        },
+        "stage_wall_avoid": {
+          "eval_success": 1.0,
+          "action_sequence": [
+            2,
+            0,
+            1,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0
+          ],
+          "raw_action_sequence": [
+            2,
+            0,
+            1,
+            1,
+            0,
+            0,
+            2,
+            0,
+            0
+          ],
+          "valid_actions_only": true,
+          "no_action_count": 0,
+          "no_spike_count": 0,
+          "early_done_before_action": false,
+          "collision_sequence": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "moved_sequence": [
+            false,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true
+          ],
+          "collision_count": 0,
+          "moved_count": 5,
+          "found_victim_count": 1,
+          "action_histogram": {
+            "2": 2,
+            "0": 5,
+            "1": 2
+          },
+          "snn_action_histogram": {
+            "2": 2,
+            "0": 5,
+            "1": 2
+          },
+          "spike_selected_action_histogram": {
+            "2": 2,
+            "0": 5,
+            "1": 2
+          },
+          "fallback_action_histogram": {},
+          "output_winner_histogram": {
+            "2": 13,
+            "0": 27,
+            "1": 2
+          },
+          "output_column_weight_mean": {
+            "0": 2.19156683504397e-08,
+            "1": -1.3216832769257159e-08,
+            "2": 6.170951788700615e-09
+          },
+          "output_column_weight_std": {
+            "0": 1.0556438885569323e-07,
+            "1": 7.017675817931633e-08,
+            "2": 8.462369861378005e-08
+          },
+          "output_column_effective_score": {
+            "0": 2.19156683504397e-08,
+            "1": -1.3216832769257159e-08,
+            "2": 6.170951788700615e-09
+          },
+          "output_spike_count_by_action": {
+            "0": 29,
+            "1": 7,
+            "2": 24
+          },
+          "output_first_spike_time_by_action_mean": {
+            "0": 0.8888888888888888,
+            "1": 0.0,
+            "2": 1.4444444444444444
+          },
+          "pulse_plus_count_by_action": {},
+          "pulse_minus_count_by_action": {},
+          "reward_by_action": {
+            "2": -0.002,
+            "0": 0.648,
+            "1": -0.002
+          },
+          "event_count_by_action": {
+            "2": {
+              "found_victim": 0,
+              "collision": 0,
+              "moved": 0
+            },
+            "0": {
+              "found_victim": 1,
+              "collision": 0,
+              "moved": 5
+            },
+            "1": {
+              "found_victim": 0,
+              "collision": 0,
+              "moved": 0
+            }
+          },
+          "eval_state_reset_debug": {
+            "hidden_trace_reset": true,
+            "neuron_state_reset": true,
+            "prev_hidden_spikes_reset": true,
+            "output_buffer_reset": true,
+            "action_history_reset": true
+          },
+          "mean_recurrent_to_input_current_ratio": 0.4724940676230729,
+          "hidden_trace_mean": 0.21183268229166666,
+          "hidden_trace_nonzero_count": 12.444444444444445
+        }
+      },
+      "output_column_status_before_block": {
+        "0": {
+          "conductance_mean": 9.775178111503212e-08,
+          "conductance_std": 5.4946971242313544e-08,
+          "g_plus_mean": 1.1208929179507281e-07,
+          "g_minus_mean": 8.34142704349914e-08,
+          "effective_signed_weight_mean": 2.8675021360081426e-08,
+          "effective_signed_weight_norm": 4.3869847725524677e-07,
+          "effective_signed_weight_abs_mean": 9.517824944068417e-08,
+          "effective_signed_weight_std": 1.0585964893021512e-07,
+          "effective_signed_weight_min": -1.5893294609047368e-07,
+          "effective_signed_weight_max": 1.6867761799395598e-07,
+          "common_mode_mean": 9.775178111503212e-08
+        },
+        "1": {
+          "conductance_mean": 9.486611475580811e-08,
+          "conductance_std": 3.794987565463486e-08,
+          "g_plus_mean": 8.425720473043072e-08,
+          "g_minus_mean": 1.0547502478118548e-07,
+          "effective_signed_weight_mean": -2.121782005075475e-08,
+          "effective_signed_weight_norm": 2.9675494263996133e-07,
+          "effective_signed_weight_abs_mean": 5.539668654866763e-08,
+          "effective_signed_weight_std": 7.108989106139993e-08,
+          "effective_signed_weight_min": -1.746570702117317e-07,
+          "effective_signed_weight_max": 8.061878390090551e-08,
+          "common_mode_mean": 9.48661147558081e-08
+        },
+        "2": {
+          "conductance_mean": 9.726037827469163e-08,
+          "conductance_std": 4.088600754954849e-08,
+          "g_plus_mean": 9.491700817194295e-08,
+          "g_minus_mean": 9.960374837744029e-08,
+          "effective_signed_weight_mean": -4.686740205497339e-09,
+          "effective_signed_weight_norm": 3.2514047141842737e-07,
+          "effective_signed_weight_abs_mean": 6.551773260217144e-08,
+          "effective_signed_weight_std": 8.114989125614093e-08,
+          "effective_signed_weight_min": -1.3765312930923456e-07,
+          "effective_signed_weight_max": 1.6210881666093508e-07,
+          "common_mode_mean": 9.726037827469163e-08
+        }
+      },
+      "output_column_status_after_candidate_block": {
+        "0": {
+          "conductance_mean": 9.764251446756595e-08,
+          "conductance_std": 5.40164640979266e-08,
+          "g_plus_mean": 1.086003486427858e-07,
+          "g_minus_mean": 8.668468029234609e-08,
+          "effective_signed_weight_mean": 2.19156683504397e-08,
+          "effective_signed_weight_norm": 4.3126115918264607e-07,
+          "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+          "effective_signed_weight_std": 1.0556438885569323e-07,
+          "effective_signed_weight_min": -1.5893294609047368e-07,
+          "effective_signed_weight_max": 1.6867761799395598e-07,
+          "common_mode_mean": 9.764251446756595e-08
+        },
+        "1": {
+          "conductance_mean": 9.395030033488316e-08,
+          "conductance_std": 3.627105720232219e-08,
+          "g_plus_mean": 8.73418839502546e-08,
+          "g_minus_mean": 1.0055871671951176e-07,
+          "effective_signed_weight_mean": -1.3216832769257159e-08,
+          "effective_signed_weight_norm": 2.85642071327282e-07,
+          "effective_signed_weight_abs_mean": 5.634373857322246e-08,
+          "effective_signed_weight_std": 7.017675817931633e-08,
+          "effective_signed_weight_min": -1.5586256582077022e-07,
+          "effective_signed_weight_max": 8.061878390090551e-08,
+          "common_mode_mean": 9.395030033488316e-08
+        },
+        "2": {
+          "conductance_mean": 9.823313037528516e-08,
+          "conductance_std": 4.2664129555973304e-08,
+          "g_plus_mean": 1.0131860626963546e-07,
+          "g_minus_mean": 9.514765448093484e-08,
+          "effective_signed_weight_mean": 6.170951788700615e-09,
+          "effective_signed_weight_norm": 3.3939360071879603e-07,
+          "effective_signed_weight_abs_mean": 6.995090658803274e-08,
+          "effective_signed_weight_std": 8.462369861378005e-08,
+          "effective_signed_weight_min": -1.2346933008529893e-07,
+          "effective_signed_weight_max": 1.7107418852030844e-07,
+          "common_mode_mean": 9.823313037528516e-08
+        }
+      },
+      "delta_output_column_status_candidate_block": {
+        "0": {
+          "common_mode_mean": -1.0926664746616478e-10,
+          "conductance_mean": -1.0926664746616478e-10,
+          "conductance_std": -9.305071443869454e-10,
+          "effective_signed_weight_abs_mean": -5.062715377904645e-09,
+          "effective_signed_weight_max": 0.0,
+          "effective_signed_weight_mean": -6.759353009641724e-09,
+          "effective_signed_weight_min": 0.0,
+          "effective_signed_weight_norm": -7.437318072600707e-09,
+          "effective_signed_weight_std": -2.952600745218864e-10,
+          "g_minus_mean": 3.2704098573546957e-09,
+          "g_plus_mean": -3.488943152287012e-09
+        },
+        "1": {
+          "common_mode_mean": -9.1581442092493e-10,
+          "conductance_mean": -9.158144209249432e-10,
+          "conductance_std": -1.6788184523126685e-09,
+          "effective_signed_weight_abs_mean": 9.470520245548285e-10,
+          "effective_signed_weight_max": 0.0,
+          "effective_signed_weight_mean": 8.000987281497592e-09,
+          "effective_signed_weight_min": 1.879450439096148e-08,
+          "effective_signed_weight_norm": -1.1112871312679337e-08,
+          "effective_signed_weight_std": -9.131328820835994e-10,
+          "g_minus_mean": -4.916308061673721e-09,
+          "g_plus_mean": 3.084679219823874e-09
+        },
+        "2": {
+          "common_mode_mean": 9.72752100593532e-10,
+          "conductance_mean": 9.72752100593532e-10,
+          "conductance_std": 1.7781220064248147e-09,
+          "effective_signed_weight_abs_mean": 4.433173985861293e-09,
+          "effective_signed_weight_max": 8.965371859373367e-09,
+          "effective_signed_weight_mean": 1.0857691994197955e-08,
+          "effective_signed_weight_min": 1.4183799223935634e-08,
+          "effective_signed_weight_norm": 1.4253129300368663e-08,
+          "effective_signed_weight_std": 3.473807357639118e-09,
+          "g_minus_mean": -4.456093896505445e-09,
+          "g_plus_mean": 6.4015980976925095e-09
+        }
+      },
+      "output_column_status_after_accept_or_rollback": {
+        "0": {
+          "conductance_mean": 9.764251446756595e-08,
+          "conductance_std": 5.40164640979266e-08,
+          "g_plus_mean": 1.086003486427858e-07,
+          "g_minus_mean": 8.668468029234609e-08,
+          "effective_signed_weight_mean": 2.19156683504397e-08,
+          "effective_signed_weight_norm": 4.3126115918264607e-07,
+          "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+          "effective_signed_weight_std": 1.0556438885569323e-07,
+          "effective_signed_weight_min": -1.5893294609047368e-07,
+          "effective_signed_weight_max": 1.6867761799395598e-07,
+          "common_mode_mean": 9.764251446756595e-08
+        },
+        "1": {
+          "conductance_mean": 9.395030033488316e-08,
+          "conductance_std": 3.627105720232219e-08,
+          "g_plus_mean": 8.73418839502546e-08,
+          "g_minus_mean": 1.0055871671951176e-07,
+          "effective_signed_weight_mean": -1.3216832769257159e-08,
+          "effective_signed_weight_norm": 2.85642071327282e-07,
+          "effective_signed_weight_abs_mean": 5.634373857322246e-08,
+          "effective_signed_weight_std": 7.017675817931633e-08,
+          "effective_signed_weight_min": -1.5586256582077022e-07,
+          "effective_signed_weight_max": 8.061878390090551e-08,
+          "common_mode_mean": 9.395030033488316e-08
+        },
+        "2": {
+          "conductance_mean": 9.823313037528516e-08,
+          "conductance_std": 4.2664129555973304e-08,
+          "g_plus_mean": 1.0131860626963546e-07,
+          "g_minus_mean": 9.514765448093484e-08,
+          "effective_signed_weight_mean": 6.170951788700615e-09,
+          "effective_signed_weight_norm": 3.3939360071879603e-07,
+          "effective_signed_weight_abs_mean": 6.995090658803274e-08,
+          "effective_signed_weight_std": 8.462369861378005e-08,
+          "effective_signed_weight_min": -1.2346933008529893e-07,
+          "effective_signed_weight_max": 1.7107418852030844e-07,
+          "common_mode_mean": 9.823313037528516e-08
+        }
+      },
+      "output_column_interference_by_action_after_block": {
+        "0": {
+          "conductance_mean": 9.764251446756595e-08,
+          "conductance_std": 5.40164640979266e-08,
+          "g_plus_mean": 1.086003486427858e-07,
+          "g_minus_mean": 8.668468029234609e-08,
+          "effective_signed_weight_mean": 2.19156683504397e-08,
+          "effective_signed_weight_norm": 4.3126115918264607e-07,
+          "effective_signed_weight_abs_mean": 9.011553406277953e-08,
+          "effective_signed_weight_std": 1.0556438885569323e-07,
+          "effective_signed_weight_min": -1.5893294609047368e-07,
+          "effective_signed_weight_max": 1.6867761799395598e-07,
+          "common_mode_mean": 9.764251446756595e-08,
+          "pulse_plus_count": 0,
+          "pulse_minus_count": 0,
+          "reward_sum": 0.0,
+          "positive_reward_sum": 0.0,
+          "negative_reward_sum": 0.0,
+          "positive_update_count": 0,
+          "negative_update_count": 0,
+          "selected_count": 0,
+          "collision_count": 0,
+          "collision_penalty_count": 0,
+          "found_count": 0
+        },
+        "1": {
+          "conductance_mean": 9.395030033488316e-08,
+          "conductance_std": 3.627105720232219e-08,
+          "g_plus_mean": 8.73418839502546e-08,
+          "g_minus_mean": 1.0055871671951176e-07,
+          "effective_signed_weight_mean": -1.3216832769257159e-08,
+          "effective_signed_weight_norm": 2.85642071327282e-07,
+          "effective_signed_weight_abs_mean": 5.634373857322246e-08,
+          "effective_signed_weight_std": 7.017675817931633e-08,
+          "effective_signed_weight_min": -1.5586256582077022e-07,
+          "effective_signed_weight_max": 8.061878390090551e-08,
+          "common_mode_mean": 9.395030033488316e-08,
+          "pulse_plus_count": 0,
+          "pulse_minus_count": 0,
+          "reward_sum": 0.0,
+          "positive_reward_sum": 0.0,
+          "negative_reward_sum": 0.0,
+          "positive_update_count": 0,
+          "negative_update_count": 0,
+          "selected_count": 0,
+          "collision_count": 0,
+          "collision_penalty_count": 0,
+          "found_count": 0
+        },
+        "2": {
+          "conductance_mean": 9.823313037528516e-08,
+          "conductance_std": 4.2664129555973304e-08,
+          "g_plus_mean": 1.0131860626963546e-07,
+          "g_minus_mean": 9.514765448093484e-08,
+          "effective_signed_weight_mean": 6.170951788700615e-09,
+          "effective_signed_weight_norm": 3.3939360071879603e-07,
+          "effective_signed_weight_abs_mean": 6.995090658803274e-08,
+          "effective_signed_weight_std": 8.462369861378005e-08,
+          "effective_signed_weight_min": -1.2346933008529893e-07,
+          "effective_signed_weight_max": 1.7107418852030844e-07,
+          "common_mode_mean": 9.823313037528516e-08,
+          "pulse_plus_count": 0,
+          "pulse_minus_count": 0,
+          "reward_sum": 0.0,
+          "positive_reward_sum": 0.0,
+          "negative_reward_sum": 0.0,
+          "positive_update_count": 0,
+          "negative_update_count": 0,
+          "selected_count": 0,
+          "collision_count": 0,
+          "collision_penalty_count": 0,
+          "found_count": 0
+        }
+      },
+      "output_bias_diagnostics": {
+        "output_column_weight_mean": {
+          "0": 2.19156683504397e-08,
+          "1": -1.3216832769257159e-08,
+          "2": 6.170951788700615e-09
+        },
+        "output_column_weight_std": {
+          "0": 1.0556438885569323e-07,
+          "1": 7.017675817931633e-08,
+          "2": 8.462369861378005e-08
+        },
+        "output_column_effective_score": {
+          "0": 2.19156683504397e-08,
+          "1": -1.3216832769257159e-08,
+          "2": 6.170951788700615e-09
+        },
+        "output_spike_count_by_action": {
+          "0": 52,
+          "1": 15,
+          "2": 45
+        },
+        "first_spike_time_mean_by_action": {
+          "0": 0.8472222222222222,
+          "1": 0.0625,
+          "2": 1.5486111111111112
+        },
+        "pulse_plus_count_by_action": {},
+        "pulse_minus_count_by_action": {},
+        "reward_sum_by_action": {
+          "0": 5.861333333333333,
+          "2": -0.004,
+          "1": -0.004
+        },
+        "reward_mean_by_action": {
+          "0": 1.4653333333333332,
+          "2": -0.002,
+          "1": -0.002
+        },
+        "collision_count_by_action": {
+          "0": 0,
+          "2": 0,
+          "1": 0
+        },
+        "found_count_by_action": {
+          "0": 4,
+          "2": 0,
+          "1": 0
+        }
+      }
+    }
+  ]
+}

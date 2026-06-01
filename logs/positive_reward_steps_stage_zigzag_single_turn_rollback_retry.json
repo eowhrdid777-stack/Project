@@ -1,0 +1,562 @@
+[
+  {
+    "episode_idx": 0,
+    "step_idx": 1,
+    "snn_action": 0,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.0675,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": null,
+    "learning_event_message": "skipped by output column balance (target=0, column_mean=3.0003532492169346e-08, threshold=1.8103164285316017e-08)",
+    "updated_pairs": [],
+    "directions": [],
+    "n_pulses_plus": 0,
+    "n_pulses_minus": 0,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 0,
+    "step_idx": 21,
+    "snn_action": 0,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.0675,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": null,
+    "learning_event_message": "skipped by output column balance (target=0, column_mean=1.6956267489133567e-08, threshold=1.351803924332853e-08)",
+    "updated_pairs": [],
+    "directions": [],
+    "n_pulses_plus": 0,
+    "n_pulses_minus": 0,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 0,
+    "step_idx": 25,
+    "snn_action": 2,
+    "executed_action": 0,
+    "reward": 3.1,
+    "raw_reward": 3.1,
+    "learning_reward": 0.225,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 2,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode.",
+    "updated_pairs": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 3,
+    "n_pulses_minus": 12,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 1,
+    "step_idx": 1,
+    "snn_action": 0,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.0675,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 0,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode.",
+    "updated_pairs": [
+      [
+        1,
+        0
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        7,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 15,
+    "n_pulses_minus": 0,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 2,
+    "step_idx": 7,
+    "snn_action": 1,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.0675,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 1,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode.",
+    "updated_pairs": [
+      [
+        1,
+        0
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        7,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 9,
+    "n_pulses_minus": 6,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 2,
+    "step_idx": 9,
+    "snn_action": 1,
+    "executed_action": 0,
+    "reward": 3.1,
+    "raw_reward": 3.1,
+    "learning_reward": 0.225,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 1,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode.",
+    "updated_pairs": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 3,
+    "n_pulses_minus": 12,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 3,
+    "step_idx": 16,
+    "snn_action": 1,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.0675,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 1,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode.",
+    "updated_pairs": [
+      [
+        1,
+        0
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        7,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 6,
+    "n_pulses_minus": 9,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 3,
+    "step_idx": 24,
+    "snn_action": 1,
+    "executed_action": 0,
+    "reward": 3.1,
+    "raw_reward": 3.1,
+    "learning_reward": 0.225,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 1,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode.",
+    "updated_pairs": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 9,
+    "n_pulses_minus": 6,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 4,
+    "step_idx": 45,
+    "snn_action": 1,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.0675,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 1,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode. surrogate target post used at selected_step.",
+    "updated_pairs": [
+      [
+        1,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        7,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 3,
+    "n_pulses_minus": 6,
+    "used_surrogate_target_post": true
+  },
+  {
+    "episode_idx": 6,
+    "step_idx": 45,
+    "snn_action": 1,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.0675,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 1,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode. surrogate target post used at selected_step.",
+    "updated_pairs": [
+      [
+        1,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        7,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 6,
+    "n_pulses_minus": 6,
+    "used_surrogate_target_post": true
+  },
+  {
+    "episode_idx": 7,
+    "step_idx": 13,
+    "snn_action": 1,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.0675,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 1,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode.",
+    "updated_pairs": [
+      [
+        1,
+        0
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        7,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 6,
+    "n_pulses_minus": 6,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 7,
+    "step_idx": 20,
+    "snn_action": 1,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.0675,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 1,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode. surrogate target post used at selected_step.",
+    "updated_pairs": [
+      [
+        1,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        7,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 3,
+    "n_pulses_minus": 6,
+    "used_surrogate_target_post": true
+  },
+  {
+    "episode_idx": 7,
+    "step_idx": 32,
+    "snn_action": 1,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.0675,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 1,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode.",
+    "updated_pairs": [
+      [
+        1,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        7,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 9,
+    "n_pulses_minus": 3,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 7,
+    "step_idx": 46,
+    "snn_action": 1,
+    "executed_action": 0,
+    "reward": 3.1,
+    "raw_reward": 3.1,
+    "learning_reward": 0.225,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 1,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode.",
+    "updated_pairs": [
+      [
+        1,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 0,
+    "n_pulses_minus": 6,
+    "used_surrogate_target_post": false
+  }
+]

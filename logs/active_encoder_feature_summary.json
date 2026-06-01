@@ -1,0 +1,146 @@
+{
+  "active_encoder_features": [
+    "front_clearance",
+    "left_clearance",
+    "right_clearance",
+    "victim_signal",
+    "sound_signal",
+    "front_open",
+    "front_blocked",
+    "left_open",
+    "left_blocked",
+    "right_open",
+    "right_blocked",
+    "right_more_open_than_left",
+    "left_more_open_than_right",
+    "front_more_open_than_sides",
+    "sides_more_open_than_front"
+  ],
+  "feature_count": 15,
+  "input_neuron_count": 105,
+  "per_feature_population_size": 7,
+  "value_ranges": {
+    "front_clearance": [
+      0.0,
+      1.0
+    ],
+    "left_clearance": [
+      0.0,
+      1.0
+    ],
+    "right_clearance": [
+      0.0,
+      1.0
+    ],
+    "victim_signal": [
+      0.0,
+      1.0
+    ],
+    "sound_signal": [
+      0.0,
+      1.0
+    ],
+    "front_open": [
+      0.0,
+      1.0
+    ],
+    "front_blocked": [
+      0.0,
+      1.0
+    ],
+    "left_open": [
+      0.0,
+      1.0
+    ],
+    "left_blocked": [
+      0.0,
+      1.0
+    ],
+    "right_open": [
+      0.0,
+      1.0
+    ],
+    "right_blocked": [
+      0.0,
+      1.0
+    ],
+    "right_more_open_than_left": [
+      0.0,
+      1.0
+    ],
+    "left_more_open_than_right": [
+      0.0,
+      1.0
+    ],
+    "front_more_open_than_sides": [
+      0.0,
+      1.0
+    ],
+    "sides_more_open_than_front": [
+      0.0,
+      1.0
+    ]
+  },
+  "observed_value_min_max": {
+    "front_clearance": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "left_clearance": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "right_clearance": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "victim_signal": {
+      "min": 0.07557387471306085,
+      "max": 0.6615146556493746
+    },
+    "sound_signal": {
+      "min": 0.07557387471306085,
+      "max": 0.6615146556493746
+    },
+    "front_open": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "front_blocked": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "left_open": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "left_blocked": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "right_open": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "right_blocked": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "right_more_open_than_left": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "left_more_open_than_right": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "front_more_open_than_sides": {
+      "min": 0.0,
+      "max": 0.6666666666666667
+    },
+    "sides_more_open_than_front": {
+      "min": 0.0,
+      "max": 1.0
+    }
+  }
+}

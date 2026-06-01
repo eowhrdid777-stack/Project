@@ -1,0 +1,134 @@
+{
+  "active_encoder_features": [
+    "front_clearance",
+    "left_clearance",
+    "right_clearance",
+    "victim_signal",
+    "sound_signal",
+    "front_open",
+    "front_blocked",
+    "left_open",
+    "left_blocked",
+    "right_open",
+    "right_blocked",
+    "right_more_open_than_left",
+    "left_more_open_than_right",
+    "front_more_open_than_sides",
+    "sides_more_open_than_front"
+  ],
+  "prohibited_encoder_features": [
+    "ground_truth_victim_position",
+    "grid_x",
+    "grid_y",
+    "shortest_path_direction",
+    "map_cell_type_as_action_hint",
+    "last_action",
+    "last_action_forward",
+    "last_action_left",
+    "last_action_right",
+    "last_collision",
+    "last_moved",
+    "found_victim_count_as_input"
+  ],
+  "features": {
+    "front_clearance": {
+      "source": "front distance sensor",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "left_clearance": {
+      "source": "left distance sensor",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "right_clearance": {
+      "source": "right distance sensor",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "victim_signal": {
+      "source": "color sensor or victim marker detector",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "sound_signal": {
+      "source": "single DFR0034 sound intensity sensor",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "front_open": {
+      "source": "derived from front distance sensor",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "front_blocked": {
+      "source": "derived from front distance sensor",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "left_open": {
+      "source": "derived from left distance sensor",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "left_blocked": {
+      "source": "derived from left distance sensor",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "right_open": {
+      "source": "derived from right distance sensor",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "right_blocked": {
+      "source": "derived from right distance sensor",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "right_more_open_than_left": {
+      "source": "derived from left/right distance sensors",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "left_more_open_than_right": {
+      "source": "derived from left/right distance sensors",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "front_more_open_than_sides": {
+      "source": "derived from front/left/right distance sensors",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "sides_more_open_than_front": {
+      "source": "derived from front/left/right distance sensors",
+      "real_robot_feasible": true,
+      "enabled": true
+    },
+    "risk_signal": {
+      "source": "color sensor danger-zone color detector",
+      "real_robot_feasible": true,
+      "optional": true,
+      "enabled": false
+    },
+    "safe_floor_signal": {
+      "source": "inverse of color sensor danger-zone signal",
+      "real_robot_feasible": true,
+      "optional": true,
+      "enabled": false
+    },
+    "heading_sin": {
+      "source": "IMU or encoder odometry",
+      "real_robot_feasible": "optional",
+      "optional": true,
+      "enabled": false
+    },
+    "heading_cos": {
+      "source": "IMU or encoder odometry",
+      "real_robot_feasible": "optional",
+      "optional": true,
+      "enabled": false
+    }
+  }
+}

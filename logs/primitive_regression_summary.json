@@ -1,0 +1,849 @@
+{
+  "passed": true,
+  "source": "stage_eval_immediately_after_each_primitive_training_stage",
+  "warnings": [],
+  "criteria": {
+    "stage_forward": "stage eval_success == 1.0 immediately after primitive training",
+    "stage_turn_right": "stage eval_success == 1.0 immediately after primitive training",
+    "stage_turn_left": "stage eval_success == 1.0 immediately after primitive training",
+    "stage_wall_avoid": "stage eval_success == 1.0 immediately after primitive training"
+  },
+  "stages": {
+    "stage_forward": {
+      "eval_success": 1.0,
+      "action_sequence": [
+        0
+      ],
+      "raw_action_sequence": [
+        0
+      ],
+      "valid_actions_only": true,
+      "no_action_count": 0,
+      "no_spike_count": 0,
+      "early_done_before_action": false,
+      "collision_sequence": [
+        false
+      ],
+      "moved_sequence": [
+        true
+      ],
+      "collision_count": 0,
+      "moved_count": 3,
+      "found_victim_count": 3,
+      "action_histogram": {
+        "0": 3
+      },
+      "snn_action_histogram": {
+        "0": 3
+      },
+      "spike_selected_action_histogram": {
+        "0": 3
+      },
+      "fallback_action_histogram": {},
+      "output_winner_histogram": {
+        "0": 9
+      },
+      "output_column_weight_mean": {
+        "0": 9.681682415794873e-09,
+        "1": 3.5424249027722373e-10,
+        "2": -5.026145207732671e-09
+      },
+      "output_column_weight_std": {
+        "0": 7.680319925756523e-09,
+        "1": 2.4712868173271664e-09,
+        "2": 6.550011337440811e-09
+      },
+      "output_column_effective_score": {
+        "0": 9.681682415794873e-09,
+        "1": 3.5424249027722373e-10,
+        "2": -5.026145207732671e-09
+      },
+      "output_spike_count_by_action": {
+        "0": 9,
+        "1": 0,
+        "2": 0
+      },
+      "output_first_spike_time_by_action_mean": {
+        "0": 0.0,
+        "1": -1.0,
+        "2": -1.0
+      },
+      "pulse_plus_count_by_action": {},
+      "pulse_minus_count_by_action": {},
+      "reward_by_action": {
+        "0": 3.1
+      },
+      "event_count_by_action": {
+        "0": {
+          "found_victim": 3,
+          "collision": 0,
+          "moved": 3
+        }
+      },
+      "eval_state_reset_debug": {
+        "hidden_trace_reset": true,
+        "neuron_state_reset": true,
+        "prev_hidden_spikes_reset": true,
+        "output_buffer_reset": true,
+        "action_history_reset": true
+      },
+      "mean_recurrent_to_input_current_ratio": 0.19307916135575298,
+      "hidden_trace_mean": 0.0,
+      "hidden_trace_nonzero_count": 0.0
+    },
+    "stage_turn_right": {
+      "eval_success": 1.0,
+      "action_sequence": [
+        0,
+        2,
+        2,
+        0,
+        1,
+        0
+      ],
+      "raw_action_sequence": [
+        0,
+        2,
+        2,
+        0,
+        1,
+        0
+      ],
+      "valid_actions_only": true,
+      "no_action_count": 0,
+      "no_spike_count": 0,
+      "early_done_before_action": false,
+      "collision_sequence": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "moved_sequence": [
+        true,
+        false,
+        false,
+        true,
+        false,
+        true
+      ],
+      "collision_count": 0,
+      "moved_count": 9,
+      "found_victim_count": 3,
+      "action_histogram": {
+        "0": 9,
+        "2": 6,
+        "1": 3
+      },
+      "snn_action_histogram": {
+        "0": 9,
+        "2": 6,
+        "1": 3
+      },
+      "spike_selected_action_histogram": {
+        "0": 9,
+        "2": 6,
+        "1": 3
+      },
+      "fallback_action_histogram": {},
+      "output_winner_histogram": {
+        "0": 21,
+        "2": 14,
+        "1": 27
+      },
+      "output_column_weight_mean": {
+        "0": 7.882379147169641e-09,
+        "1": -1.508890025587398e-09,
+        "2": 6.1622231517350775e-09
+      },
+      "output_column_weight_std": {
+        "0": 2.959430365544629e-08,
+        "1": 1.2960175471175695e-07,
+        "2": 5.974909200420973e-08
+      },
+      "output_column_effective_score": {
+        "0": 7.882379147169641e-09,
+        "1": -1.508890025587398e-09,
+        "2": 6.1622231517350775e-09
+      },
+      "output_spike_count_by_action": {
+        "0": 54,
+        "1": 33,
+        "2": 42
+      },
+      "output_first_spike_time_by_action_mean": {
+        "0": 0.0,
+        "1": 1.1666666666666667,
+        "2": 0.7777777777777778
+      },
+      "pulse_plus_count_by_action": {},
+      "pulse_minus_count_by_action": {},
+      "reward_by_action": {
+        "0": 1.0566666666666666,
+        "2": -0.002,
+        "1": -0.002
+      },
+      "event_count_by_action": {
+        "0": {
+          "found_victim": 3,
+          "collision": 0,
+          "moved": 9
+        },
+        "2": {
+          "found_victim": 0,
+          "collision": 0,
+          "moved": 0
+        },
+        "1": {
+          "found_victim": 0,
+          "collision": 0,
+          "moved": 0
+        }
+      },
+      "eval_state_reset_debug": {
+        "hidden_trace_reset": true,
+        "neuron_state_reset": true,
+        "prev_hidden_spikes_reset": true,
+        "output_buffer_reset": true,
+        "action_history_reset": true
+      },
+      "mean_recurrent_to_input_current_ratio": 0.21199265466580158,
+      "hidden_trace_mean": 0.0,
+      "hidden_trace_nonzero_count": 0.0
+    },
+    "stage_turn_left": {
+      "eval_success": 1.0,
+      "action_sequence": [
+        1,
+        0
+      ],
+      "raw_action_sequence": [
+        1,
+        0
+      ],
+      "valid_actions_only": true,
+      "no_action_count": 0,
+      "no_spike_count": 0,
+      "early_done_before_action": false,
+      "collision_sequence": [
+        false,
+        false
+      ],
+      "moved_sequence": [
+        false,
+        true
+      ],
+      "collision_count": 0,
+      "moved_count": 3,
+      "found_victim_count": 3,
+      "action_histogram": {
+        "1": 3,
+        "0": 3
+      },
+      "snn_action_histogram": {
+        "1": 3,
+        "0": 3
+      },
+      "spike_selected_action_histogram": {
+        "1": 3,
+        "0": 3
+      },
+      "fallback_action_histogram": {},
+      "output_winner_histogram": {
+        "1": 15,
+        "0": 3
+      },
+      "output_column_weight_mean": {
+        "0": 5.9602696153368454e-08,
+        "1": 2.3849519289244898e-08,
+        "2": 4.96702441730919e-09
+      },
+      "output_column_weight_std": {
+        "0": 5.5147488179506254e-08,
+        "1": 1.4054719972178904e-07,
+        "2": 5.564632864837038e-08
+      },
+      "output_column_effective_score": {
+        "0": 5.9602696153368454e-08,
+        "1": 2.3849519289244898e-08,
+        "2": 4.96702441730919e-09
+      },
+      "output_spike_count_by_action": {
+        "0": 18,
+        "1": 18,
+        "2": 15
+      },
+      "output_first_spike_time_by_action_mean": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.5
+      },
+      "pulse_plus_count_by_action": {},
+      "pulse_minus_count_by_action": {},
+      "reward_by_action": {
+        "1": -0.002,
+        "0": 3.1
+      },
+      "event_count_by_action": {
+        "1": {
+          "found_victim": 0,
+          "collision": 0,
+          "moved": 0
+        },
+        "0": {
+          "found_victim": 3,
+          "collision": 0,
+          "moved": 3
+        }
+      },
+      "eval_state_reset_debug": {
+        "hidden_trace_reset": true,
+        "neuron_state_reset": true,
+        "prev_hidden_spikes_reset": true,
+        "output_buffer_reset": true,
+        "action_history_reset": true
+      },
+      "mean_recurrent_to_input_current_ratio": 0.17626276599114402,
+      "hidden_trace_mean": 0.0,
+      "hidden_trace_nonzero_count": 0.0
+    },
+    "stage_wall_avoid": {
+      "eval_success": 1.0,
+      "action_sequence": [
+        2,
+        0,
+        1,
+        0,
+        0
+      ],
+      "raw_action_sequence": [
+        2,
+        0,
+        1,
+        0,
+        0
+      ],
+      "valid_actions_only": true,
+      "no_action_count": 0,
+      "no_spike_count": 0,
+      "early_done_before_action": false,
+      "collision_sequence": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "moved_sequence": [
+        false,
+        true,
+        false,
+        true,
+        true
+      ],
+      "collision_count": 0,
+      "moved_count": 9,
+      "found_victim_count": 3,
+      "action_histogram": {
+        "2": 3,
+        "0": 9,
+        "1": 3
+      },
+      "snn_action_histogram": {
+        "2": 3,
+        "0": 9,
+        "1": 3
+      },
+      "spike_selected_action_histogram": {
+        "2": 3,
+        "0": 9,
+        "1": 3
+      },
+      "fallback_action_histogram": {},
+      "output_winner_histogram": {
+        "2": 9,
+        "0": 45,
+        "1": 18
+      },
+      "output_column_weight_mean": {
+        "0": 3.0003532492169346e-08,
+        "1": -2.024797679300817e-08,
+        "2": 1.3864136498126965e-08
+      },
+      "output_column_weight_std": {
+        "0": 1.1889461532229222e-07,
+        "1": 1.294303156363854e-07,
+        "2": 6.602790007871265e-08
+      },
+      "output_column_effective_score": {
+        "0": 3.0003532492169346e-08,
+        "1": -2.024797679300817e-08,
+        "2": 1.3864136498126965e-08
+      },
+      "output_spike_count_by_action": {
+        "0": 51,
+        "1": 42,
+        "2": 45
+      },
+      "output_first_spike_time_by_action_mean": {
+        "0": 0.6,
+        "1": 1.0,
+        "2": 0.6
+      },
+      "pulse_plus_count_by_action": {},
+      "pulse_minus_count_by_action": {},
+      "reward_by_action": {
+        "2": -0.002,
+        "0": 1.0566666666666666,
+        "1": -0.002
+      },
+      "event_count_by_action": {
+        "2": {
+          "found_victim": 0,
+          "collision": 0,
+          "moved": 0
+        },
+        "0": {
+          "found_victim": 3,
+          "collision": 0,
+          "moved": 9
+        },
+        "1": {
+          "found_victim": 0,
+          "collision": 0,
+          "moved": 0
+        }
+      },
+      "eval_state_reset_debug": {
+        "hidden_trace_reset": true,
+        "neuron_state_reset": true,
+        "prev_hidden_spikes_reset": true,
+        "output_buffer_reset": true,
+        "action_history_reset": true
+      },
+      "mean_recurrent_to_input_current_ratio": 0.5680378682738919,
+      "hidden_trace_mean": 0.180859375,
+      "hidden_trace_nonzero_count": 4.6
+    }
+  },
+  "stage_forward": {
+    "eval_success": 1.0,
+    "action_sequence": [
+      0
+    ],
+    "raw_action_sequence": [
+      0
+    ],
+    "valid_actions_only": true,
+    "no_action_count": 0,
+    "no_spike_count": 0,
+    "early_done_before_action": false,
+    "collision_sequence": [
+      false
+    ],
+    "moved_sequence": [
+      true
+    ],
+    "collision_count": 0,
+    "moved_count": 3,
+    "found_victim_count": 3,
+    "action_histogram": {
+      "0": 3
+    },
+    "snn_action_histogram": {
+      "0": 3
+    },
+    "spike_selected_action_histogram": {
+      "0": 3
+    },
+    "fallback_action_histogram": {},
+    "output_winner_histogram": {
+      "0": 9
+    },
+    "output_column_weight_mean": {
+      "0": 9.681682415794873e-09,
+      "1": 3.5424249027722373e-10,
+      "2": -5.026145207732671e-09
+    },
+    "output_column_weight_std": {
+      "0": 7.680319925756523e-09,
+      "1": 2.4712868173271664e-09,
+      "2": 6.550011337440811e-09
+    },
+    "output_column_effective_score": {
+      "0": 9.681682415794873e-09,
+      "1": 3.5424249027722373e-10,
+      "2": -5.026145207732671e-09
+    },
+    "output_spike_count_by_action": {
+      "0": 9,
+      "1": 0,
+      "2": 0
+    },
+    "output_first_spike_time_by_action_mean": {
+      "0": 0.0,
+      "1": -1.0,
+      "2": -1.0
+    },
+    "pulse_plus_count_by_action": {},
+    "pulse_minus_count_by_action": {},
+    "reward_by_action": {
+      "0": 3.1
+    },
+    "event_count_by_action": {
+      "0": {
+        "found_victim": 3,
+        "collision": 0,
+        "moved": 3
+      }
+    },
+    "eval_state_reset_debug": {
+      "hidden_trace_reset": true,
+      "neuron_state_reset": true,
+      "prev_hidden_spikes_reset": true,
+      "output_buffer_reset": true,
+      "action_history_reset": true
+    },
+    "mean_recurrent_to_input_current_ratio": 0.19307916135575298,
+    "hidden_trace_mean": 0.0,
+    "hidden_trace_nonzero_count": 0.0
+  },
+  "stage_turn_right": {
+    "eval_success": 1.0,
+    "action_sequence": [
+      0,
+      2,
+      2,
+      0,
+      1,
+      0
+    ],
+    "raw_action_sequence": [
+      0,
+      2,
+      2,
+      0,
+      1,
+      0
+    ],
+    "valid_actions_only": true,
+    "no_action_count": 0,
+    "no_spike_count": 0,
+    "early_done_before_action": false,
+    "collision_sequence": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "moved_sequence": [
+      true,
+      false,
+      false,
+      true,
+      false,
+      true
+    ],
+    "collision_count": 0,
+    "moved_count": 9,
+    "found_victim_count": 3,
+    "action_histogram": {
+      "0": 9,
+      "2": 6,
+      "1": 3
+    },
+    "snn_action_histogram": {
+      "0": 9,
+      "2": 6,
+      "1": 3
+    },
+    "spike_selected_action_histogram": {
+      "0": 9,
+      "2": 6,
+      "1": 3
+    },
+    "fallback_action_histogram": {},
+    "output_winner_histogram": {
+      "0": 21,
+      "2": 14,
+      "1": 27
+    },
+    "output_column_weight_mean": {
+      "0": 7.882379147169641e-09,
+      "1": -1.508890025587398e-09,
+      "2": 6.1622231517350775e-09
+    },
+    "output_column_weight_std": {
+      "0": 2.959430365544629e-08,
+      "1": 1.2960175471175695e-07,
+      "2": 5.974909200420973e-08
+    },
+    "output_column_effective_score": {
+      "0": 7.882379147169641e-09,
+      "1": -1.508890025587398e-09,
+      "2": 6.1622231517350775e-09
+    },
+    "output_spike_count_by_action": {
+      "0": 54,
+      "1": 33,
+      "2": 42
+    },
+    "output_first_spike_time_by_action_mean": {
+      "0": 0.0,
+      "1": 1.1666666666666667,
+      "2": 0.7777777777777778
+    },
+    "pulse_plus_count_by_action": {},
+    "pulse_minus_count_by_action": {},
+    "reward_by_action": {
+      "0": 1.0566666666666666,
+      "2": -0.002,
+      "1": -0.002
+    },
+    "event_count_by_action": {
+      "0": {
+        "found_victim": 3,
+        "collision": 0,
+        "moved": 9
+      },
+      "2": {
+        "found_victim": 0,
+        "collision": 0,
+        "moved": 0
+      },
+      "1": {
+        "found_victim": 0,
+        "collision": 0,
+        "moved": 0
+      }
+    },
+    "eval_state_reset_debug": {
+      "hidden_trace_reset": true,
+      "neuron_state_reset": true,
+      "prev_hidden_spikes_reset": true,
+      "output_buffer_reset": true,
+      "action_history_reset": true
+    },
+    "mean_recurrent_to_input_current_ratio": 0.21199265466580158,
+    "hidden_trace_mean": 0.0,
+    "hidden_trace_nonzero_count": 0.0
+  },
+  "stage_turn_left": {
+    "eval_success": 1.0,
+    "action_sequence": [
+      1,
+      0
+    ],
+    "raw_action_sequence": [
+      1,
+      0
+    ],
+    "valid_actions_only": true,
+    "no_action_count": 0,
+    "no_spike_count": 0,
+    "early_done_before_action": false,
+    "collision_sequence": [
+      false,
+      false
+    ],
+    "moved_sequence": [
+      false,
+      true
+    ],
+    "collision_count": 0,
+    "moved_count": 3,
+    "found_victim_count": 3,
+    "action_histogram": {
+      "1": 3,
+      "0": 3
+    },
+    "snn_action_histogram": {
+      "1": 3,
+      "0": 3
+    },
+    "spike_selected_action_histogram": {
+      "1": 3,
+      "0": 3
+    },
+    "fallback_action_histogram": {},
+    "output_winner_histogram": {
+      "1": 15,
+      "0": 3
+    },
+    "output_column_weight_mean": {
+      "0": 5.9602696153368454e-08,
+      "1": 2.3849519289244898e-08,
+      "2": 4.96702441730919e-09
+    },
+    "output_column_weight_std": {
+      "0": 5.5147488179506254e-08,
+      "1": 1.4054719972178904e-07,
+      "2": 5.564632864837038e-08
+    },
+    "output_column_effective_score": {
+      "0": 5.9602696153368454e-08,
+      "1": 2.3849519289244898e-08,
+      "2": 4.96702441730919e-09
+    },
+    "output_spike_count_by_action": {
+      "0": 18,
+      "1": 18,
+      "2": 15
+    },
+    "output_first_spike_time_by_action_mean": {
+      "0": 0.0,
+      "1": 0.0,
+      "2": 1.5
+    },
+    "pulse_plus_count_by_action": {},
+    "pulse_minus_count_by_action": {},
+    "reward_by_action": {
+      "1": -0.002,
+      "0": 3.1
+    },
+    "event_count_by_action": {
+      "1": {
+        "found_victim": 0,
+        "collision": 0,
+        "moved": 0
+      },
+      "0": {
+        "found_victim": 3,
+        "collision": 0,
+        "moved": 3
+      }
+    },
+    "eval_state_reset_debug": {
+      "hidden_trace_reset": true,
+      "neuron_state_reset": true,
+      "prev_hidden_spikes_reset": true,
+      "output_buffer_reset": true,
+      "action_history_reset": true
+    },
+    "mean_recurrent_to_input_current_ratio": 0.17626276599114402,
+    "hidden_trace_mean": 0.0,
+    "hidden_trace_nonzero_count": 0.0
+  },
+  "stage_wall_avoid": {
+    "eval_success": 1.0,
+    "action_sequence": [
+      2,
+      0,
+      1,
+      0,
+      0
+    ],
+    "raw_action_sequence": [
+      2,
+      0,
+      1,
+      0,
+      0
+    ],
+    "valid_actions_only": true,
+    "no_action_count": 0,
+    "no_spike_count": 0,
+    "early_done_before_action": false,
+    "collision_sequence": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "moved_sequence": [
+      false,
+      true,
+      false,
+      true,
+      true
+    ],
+    "collision_count": 0,
+    "moved_count": 9,
+    "found_victim_count": 3,
+    "action_histogram": {
+      "2": 3,
+      "0": 9,
+      "1": 3
+    },
+    "snn_action_histogram": {
+      "2": 3,
+      "0": 9,
+      "1": 3
+    },
+    "spike_selected_action_histogram": {
+      "2": 3,
+      "0": 9,
+      "1": 3
+    },
+    "fallback_action_histogram": {},
+    "output_winner_histogram": {
+      "2": 9,
+      "0": 45,
+      "1": 18
+    },
+    "output_column_weight_mean": {
+      "0": 3.0003532492169346e-08,
+      "1": -2.024797679300817e-08,
+      "2": 1.3864136498126965e-08
+    },
+    "output_column_weight_std": {
+      "0": 1.1889461532229222e-07,
+      "1": 1.294303156363854e-07,
+      "2": 6.602790007871265e-08
+    },
+    "output_column_effective_score": {
+      "0": 3.0003532492169346e-08,
+      "1": -2.024797679300817e-08,
+      "2": 1.3864136498126965e-08
+    },
+    "output_spike_count_by_action": {
+      "0": 51,
+      "1": 42,
+      "2": 45
+    },
+    "output_first_spike_time_by_action_mean": {
+      "0": 0.6,
+      "1": 1.0,
+      "2": 0.6
+    },
+    "pulse_plus_count_by_action": {},
+    "pulse_minus_count_by_action": {},
+    "reward_by_action": {
+      "2": -0.002,
+      "0": 1.0566666666666666,
+      "1": -0.002
+    },
+    "event_count_by_action": {
+      "2": {
+        "found_victim": 0,
+        "collision": 0,
+        "moved": 0
+      },
+      "0": {
+        "found_victim": 3,
+        "collision": 0,
+        "moved": 9
+      },
+      "1": {
+        "found_victim": 0,
+        "collision": 0,
+        "moved": 0
+      }
+    },
+    "eval_state_reset_debug": {
+      "hidden_trace_reset": true,
+      "neuron_state_reset": true,
+      "prev_hidden_spikes_reset": true,
+      "output_buffer_reset": true,
+      "action_history_reset": true
+    },
+    "mean_recurrent_to_input_current_ratio": 0.5680378682738919,
+    "hidden_trace_mean": 0.180859375,
+    "hidden_trace_nonzero_count": 4.6
+  }
+}

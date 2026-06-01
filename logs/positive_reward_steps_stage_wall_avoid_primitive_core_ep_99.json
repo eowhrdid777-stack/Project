@@ -1,0 +1,214 @@
+[
+  {
+    "episode_idx": 0,
+    "step_idx": 7,
+    "snn_action": 0,
+    "executed_action": 0,
+    "reward": 0.1,
+    "raw_reward": 0.1,
+    "learning_reward": 0.05,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 0,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode.",
+    "updated_pairs": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        11,
+        0
+      ],
+      [
+        13,
+        0
+      ],
+      [
+        14,
+        0
+      ],
+      [
+        15,
+        0
+      ],
+      [
+        16,
+        0
+      ],
+      [
+        20,
+        0
+      ],
+      [
+        22,
+        0
+      ],
+      [
+        23,
+        0
+      ],
+      [
+        26,
+        0
+      ],
+      [
+        27,
+        0
+      ],
+      [
+        29,
+        0
+      ],
+      [
+        31,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 24,
+    "n_pulses_minus": 30,
+    "used_surrogate_target_post": false
+  },
+  {
+    "episode_idx": 0,
+    "step_idx": 8,
+    "snn_action": 0,
+    "executed_action": 0,
+    "reward": 3.1,
+    "raw_reward": 3.1,
+    "learning_reward": 0.5,
+    "target": 0,
+    "used_fallback": false,
+    "delayed_credit_updates": [],
+    "output_winner": 0,
+    "learning_event_message": "Output R-STDP pulse update executed. target-positive abs eligibility mode.",
+    "updated_pairs": [
+      [
+        0,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        9,
+        0
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        13,
+        0
+      ],
+      [
+        15,
+        0
+      ],
+      [
+        16,
+        0
+      ],
+      [
+        18,
+        0
+      ],
+      [
+        22,
+        0
+      ],
+      [
+        23,
+        0
+      ],
+      [
+        24,
+        0
+      ],
+      [
+        29,
+        0
+      ],
+      [
+        30,
+        0
+      ],
+      [
+        31,
+        0
+      ]
+    ],
+    "directions": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "n_pulses_plus": 24,
+    "n_pulses_minus": 21,
+    "used_surrogate_target_post": false
+  }
+]

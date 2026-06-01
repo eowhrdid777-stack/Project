@@ -25,6 +25,8 @@ try:
 except Exception:  # pragma: no cover
     serial = None  # type: ignore
 
+from sensor_features import augment_observation_with_sensor_features
+
 
 ACTION_ID_TO_NAME = {
     0: "forward",
@@ -105,13 +107,13 @@ class RobotRawReading:
         color_confident = int(self.c) >= int(cal.min_clear_channel)
         victim_colors = {str(name).lower().strip() for name in cal.victim_color_names}
         victim_signal = 1.0 if color_confident and color_name in victim_colors else 0.0
-        return {
+        return augment_observation_with_sensor_features({
             "front_clearance": normalize_distance_mm(self.front_mm, cal),
             "left_clearance": normalize_distance_mm(self.left_mm, cal),
             "right_clearance": normalize_distance_mm(self.right_mm, cal),
             "victim_signal": victim_signal,
             "sound_signal": normalize_sound_raw(self.sound_raw, cal),
-        }
+        })
 
 
 class ArduinoRobotInterface:
