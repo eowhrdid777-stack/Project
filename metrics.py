@@ -66,6 +66,7 @@ class StepMetrics:
     # reward
     reward: float
 
+<<<<<<< HEAD
     # env.step(action).info diagnostics
     found_victim: bool
     collision: bool
@@ -92,6 +93,12 @@ class StepMetrics:
     wall_avoid_turn_reward_applied: bool = False
     wall_avoid_repeated_turn_spin: bool = False
     env_info: Dict[str, Any] = field(default_factory=dict)
+=======
+    collision: bool
+    moved: bool
+    danger_zone: bool
+    found_victim: bool
+>>>>>>> 791ac2528253af560762704ec2a507d4af97e674
 
 
 # ============================================================
@@ -154,6 +161,7 @@ class MetricsSummary:
     total_depression_count: int
 
     # action 선택 분포
+<<<<<<< HEAD
     # env / action diagnostics
     found_victim_count: int
     collision_count: int
@@ -164,6 +172,12 @@ class MetricsSummary:
     final_rescued_count: int
     final_remaining_victims: int
 
+=======
+    collision_rate: float
+    moved_rate: float
+    danger_zone_rate: float
+    found_victim_count: int
+>>>>>>> 791ac2528253af560762704ec2a507d4af97e674
     action_histogram: Dict[int, int] = field(default_factory=dict)
     snn_action_histogram: Dict[int, int] = field(default_factory=dict)
     executed_action_histogram: Dict[int, int] = field(default_factory=dict)
@@ -577,13 +591,38 @@ class SNNMetrics:
             False,
         )
 
+        env_info = rollout_info.get("env_info", {})
+
+        collision = bool(
+            rollout_info.get("collision", env_info.get("collision", False))
+        )
+
+        moved = bool(
+            rollout_info.get("moved", env_info.get("moved", False))
+        )
+
+        danger_zone = bool(
+            rollout_info.get("danger_zone", env_info.get("danger_zone", False))
+        )
+
+        found_victim = bool(
+            rollout_info.get("found_victim", env_info.get("found_victim", False))
+        )
+
         # learning 없는 경우
         if learning_event is None:
             pulses_plus = 0
             pulses_minus = 0
             n_refresh = 0
 
+<<<<<<< HEAD
             reward = self._safe_float(rollout_info.get("reward", 0.0), 0.0)
+=======
+            reward = self._safe_float(
+                rollout_info.get("reward", 0.0),
+                0.0,
+            )
+>>>>>>> 791ac2528253af560762704ec2a507d4af97e674
 
             winner = -1
             target = -1
@@ -672,6 +711,7 @@ class SNNMetrics:
             target=target,
 
             reward=reward,
+<<<<<<< HEAD
             found_victim=found_victim,
             collision=collision,
             moved=moved,
@@ -697,6 +737,13 @@ class SNNMetrics:
             wall_avoid_turn_reward_applied=wall_avoid_turn_reward_applied,
             wall_avoid_repeated_turn_spin=wall_avoid_repeated_turn_spin,
             env_info=env_info,
+=======
+
+            collision=collision,
+            moved=moved,
+            danger_zone=danger_zone,
+            found_victim=found_victim,
+>>>>>>> 791ac2528253af560762704ec2a507d4af97e674
         )
 
         # 저장
@@ -772,6 +819,7 @@ class SNNMetrics:
                 total_potentiation_count=0,
                 total_depression_count=0,
 
+<<<<<<< HEAD
                 found_victim_count=0,
                 collision_count=0,
                 moved_count=0,
@@ -780,6 +828,13 @@ class SNNMetrics:
                 final_distance_to_victim=0.0,
                 final_rescued_count=0,
                 final_remaining_victims=0,
+=======
+                collision_rate=0.0,
+                moved_rate=0.0,
+                danger_zone_rate=0.0,
+                found_victim_count=0,
+
+>>>>>>> 791ac2528253af560762704ec2a507d4af97e674
                 action_histogram={},
                 snn_action_histogram={},
                 executed_action_histogram={},
@@ -924,27 +979,44 @@ class SNNMetrics:
             dtype=float,
         )
 
+<<<<<<< HEAD
         found_victims = np.asarray(
             [s.found_victim for s in self.steps],
             dtype=float,
         )
 
+=======
+>>>>>>> 791ac2528253af560762704ec2a507d4af97e674
         collisions = np.asarray(
             [s.collision for s in self.steps],
             dtype=float,
         )
 
+<<<<<<< HEAD
         moved = np.asarray(
+=======
+        moved_arr = np.asarray(
+>>>>>>> 791ac2528253af560762704ec2a507d4af97e674
             [s.moved for s in self.steps],
             dtype=float,
         )
 
+<<<<<<< HEAD
         distances = np.asarray(
             [s.distance_to_nearest_victim for s in self.steps],
             dtype=float,
         )
         delayed_credit_counts = np.asarray(
             [s.delayed_credit_update_count for s in self.steps],
+=======
+        danger_zones = np.asarray(
+            [s.danger_zone for s in self.steps],
+            dtype=float,
+        )
+
+        found_victims = np.asarray(
+            [s.found_victim for s in self.steps],
+>>>>>>> 791ac2528253af560762704ec2a507d4af97e674
             dtype=float,
         )
 
@@ -1247,6 +1319,7 @@ class SNNMetrics:
             total_potentiation_count=int(pot_counts.sum()),
             total_depression_count=int(dep_counts.sum()),
 
+<<<<<<< HEAD
             found_victim_count=int(found_victims.sum()),
             collision_count=int(collisions.sum()),
             moved_count=int(moved.sum()),
@@ -1255,6 +1328,13 @@ class SNNMetrics:
             final_distance_to_victim=float(final_distance_to_victim),
             final_rescued_count=int(self.steps[-1].rescued_count),
             final_remaining_victims=int(self.steps[-1].remaining_victims),
+=======
+            collision_rate=float(collisions.mean()),
+            moved_rate=float(moved_arr.mean()),
+            danger_zone_rate=float(danger_zones.mean()),
+            found_victim_count=int(found_victims.sum()),
+
+>>>>>>> 791ac2528253af560762704ec2a507d4af97e674
             action_histogram=action_histogram,
             snn_action_histogram=snn_action_histogram,
             executed_action_histogram=executed_action_histogram,
@@ -1357,6 +1437,7 @@ class SNNMetrics:
             "total_potentiation_count": s.total_potentiation_count,
             "total_depression_count": s.total_depression_count,
 
+<<<<<<< HEAD
             "found_victim_count": s.found_victim_count,
             "collision_count": s.collision_count,
             "moved_count": s.moved_count,
@@ -1365,6 +1446,12 @@ class SNNMetrics:
             "final_distance_to_victim": s.final_distance_to_victim,
             "final_rescued_count": s.final_rescued_count,
             "final_remaining_victims": s.final_remaining_victims,
+=======
+            "collision_rate": s.collision_rate,
+            "moved_rate": s.moved_rate,
+            "danger_zone_rate": s.danger_zone_rate,
+            "found_victim_count": s.found_victim_count,
+>>>>>>> 791ac2528253af560762704ec2a507d4af97e674
 
             "action_histogram": s.action_histogram,
             "snn_action_histogram": s.snn_action_histogram,
